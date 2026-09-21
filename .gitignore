@@ -1,0 +1,32 @@
+# 本机密钥和环境配置
+.env
+.env.*
+*.key
+*.pem
+*.p12
+secrets.*
+
+# 语流开发诊断数据（可能包含用户选词和局部原文）
+语流-诊断记录-*.json
+diagnostics-export/
+diagnostic-data/
+
+# 本地构建、打包和依赖
+node_modules/
+dist/
+build/
+*.crx
+*.zip
+
+# 日志和临时文件
+*.log
+*.tmp
+*.bak
+*.swp
+~$*
+
+# 操作系统与编辑器文件
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

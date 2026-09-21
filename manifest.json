@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "语流",
+  "version": "0.9.1",
+  "description": "选中阅读障碍，再双击选区，在不中断阅读的情况下理解它在这里具体指什么。",
+  "permissions": ["storage"],
+  "host_permissions": ["https://open.bigmodel.cn/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "语流设置",
+    "default_popup": "popup.html"
+  },
+  "options_ui": {
+    "page": "popup.html",
+    "open_in_tab": true
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["parser.js", "content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

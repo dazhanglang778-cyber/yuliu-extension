@@ -1,0 +1,8 @@
+# 仓库内统一使用LF，Windows检出时由Git按平台处理，减少无意义的整文件差异。
+* text=auto
+*.js text eol=lf
+*.json text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+*.md text eol=lf
+*.txt text eol=lf

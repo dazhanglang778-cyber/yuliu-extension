@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>语流设置</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main>
+      <div class="brand">“ 语流 ”</div>
+      <h1>连接免费模型 <small id="version"></small></h1>
+      <p class="intro">API Key 只保存在这个 Chrome 插件中，不会写入网页。</p>
+
+      <label for="apiKey">智谱 API Key</label>
+      <div class="key-row">
+        <input id="apiKey" type="password" autocomplete="off" placeholder="粘贴你的 API Key" />
+        <button id="toggleKey" class="quiet" type="button">显示</button>
+      </div>
+
+      <button id="save" class="primary" type="button">保存到此 Chrome（只需一次）</button>
+      <p id="status" role="status"></p>
+
+      <div class="steps">
+        <strong>使用方法</strong>
+        <span>1. 先用鼠标选中疑惑内容</span>
+        <span>2. 再双击刚才的选区</span>
+      </div>
+
+      <section class="diagnostic-setting">
+        <div class="diagnostic-heading">
+          <div>
+            <strong>开发诊断模式</strong>
+            <span>本地记录每次解释的搜索、辨义、校验、耗时和最终结果。</span>
+          </div>
+          <label class="switch" title="开启开发诊断模式">
+            <input id="diagnosticsEnabled" type="checkbox" />
+            <span></span>
+          </label>
+        </div>
+        <p class="privacy">默认关闭；不记录 API Key，不上传诊断记录，只保留最近 100 次。</p>
+        <button id="openDiagnostics" class="diagnostic-button" type="button">打开诊断后台</button>
+      </section>
+    </main>
+    <script src="popup.js"></script>
+  </body>
+</html>
