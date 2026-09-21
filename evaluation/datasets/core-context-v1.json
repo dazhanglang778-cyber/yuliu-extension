@@ -1,0 +1,386 @@
+{
+  "dataset_id": "yuliu-core-context-v1",
+  "version": "1.0.0",
+  "documents": [
+    {
+      "document_id": "agent-harness",
+      "title": "Agent 如何在环境中持续运行",
+      "file": "documents/agent-harness.html",
+      "source_type": "synthetic_controlled",
+      "cases": [
+        {
+          "case_id": "harness-definition",
+          "category": "document_defined_term",
+          "difficulty": "contextual",
+          "selection": { "exact": "Harness", "anchor_block_id": "p-4", "occurrence_index": 0 },
+          "expected": {
+            "sense": "组织模型、工具与环境交互的运行框架",
+            "referent_type": "generic_concept",
+            "maximum_specificity": "category",
+            "certainty": "clear",
+            "allow_inference": false,
+            "must_include_groups": [["运行框架"], ["交互", "连接"]],
+            "must_not_include": ["DeepSeek Harness", "DSH", "插件开发", "版本切换"],
+            "reference_answer": "在这里指组织模型、工具与环境交互的一套运行框架。",
+            "author_intent_required": false
+          },
+          "evidence": [{ "block_id": "p-4", "quote": "组织这些交互环节的运行框架统称为 Harness", "role": "direct_support" }]
+        },
+        {
+          "case_id": "harness-later-use",
+          "category": "unjustified_specificity",
+          "difficulty": "adversarial",
+          "selection": { "exact": "Harness", "anchor_block_id": "p-5", "occurrence_index": 0 },
+          "expected": {
+            "sense": "前文定义的 Agent 运行框架",
+            "referent_type": "generic_concept",
+            "maximum_specificity": "category",
+            "certainty": "clear",
+            "allow_inference": true,
+            "must_include_groups": [["运行框架", "交互框架"], ["模型", "Agent"], ["环境", "工具"]],
+            "must_not_include": ["DeepSeek Harness", "DSH", "Atlas Runner"],
+            "reference_answer": "在这里沿用前文定义，指连接模型、工具与环境的 Agent 运行框架。",
+            "author_intent_required": false
+          },
+          "evidence": [
+            { "block_id": "p-4", "quote": "组织这些交互环节的运行框架统称为 Harness", "role": "direct_support" },
+            { "block_id": "p-5", "quote": "Harness 的设计会直接影响任务能否可靠执行", "role": "coreference_support" }
+          ]
+        }
+      ]
+    },
+    {
+      "document_id": "apple-two-senses",
+      "title": "两个名为 Apple 的对象",
+      "file": "documents/apple-two-senses.html",
+      "source_type": "synthetic_controlled",
+      "cases": [
+        {
+          "case_id": "apple-fruit",
+          "category": "common_word_entity_disambiguation",
+          "difficulty": "basic",
+          "selection": { "exact": "Apple", "anchor_block_id": "p-1", "occurrence_index": 0 },
+          "expected": {
+            "sense": "作为实验样本的苹果水果",
+            "referent_type": "other",
+            "maximum_specificity": "category",
+            "certainty": "clear",
+            "allow_inference": false,
+            "must_include_groups": [["苹果", "水果"], ["样本"]],
+            "must_not_include": ["苹果公司", "科技公司", "产品生态"],
+            "reference_answer": "在这里指作为冷藏实验样本的苹果这种水果。",
+            "author_intent_required": false
+          },
+          "evidence": [{ "block_id": "p-1", "quote": "Apple 被作为水果样本切片称重", "role": "direct_support" }]
+        },
+        {
+          "case_id": "apple-company",
+          "category": "common_word_entity_disambiguation",
+          "difficulty": "basic",
+          "selection": { "exact": "Apple", "anchor_block_id": "p-4", "occurrence_index": 0 },
+          "expected": {
+            "sense": "美国科技公司苹果公司",
+            "referent_type": "organization",
+            "maximum_specificity": "named_entity",
+            "certainty": "clear",
+            "allow_inference": true,
+            "must_include_groups": [["苹果公司", "科技公司"], ["硬件", "产品生态"]],
+            "must_not_include": ["水果样本", "糖度", "硬度"],
+            "reference_answer": "在这里指苹果公司，文中讨论的是它由硬件、系统和服务构成的产品生态。",
+            "author_intent_required": false
+          },
+          "evidence": [
+            { "block_id": "p-3", "quote": "Apple 指美国科技公司苹果公司", "role": "direct_support" },
+            { "block_id": "p-4", "quote": "Apple 通过硬件、操作系统和服务组成产品生态", "role": "coreference_support" }
+          ]
+        }
+      ]
+    },
+    {
+      "document_id": "agent-skills",
+      "title": "人的技能与 Agent Skills",
+      "file": "documents/agent-skills.html",
+      "source_type": "synthetic_controlled",
+      "cases": [
+        {
+          "case_id": "skills-human",
+          "category": "domain_sense_disambiguation",
+          "difficulty": "basic",
+          "selection": { "exact": "Skills", "anchor_block_id": "p-2", "occurrence_index": 0 },
+          "expected": {
+            "sense": "人通过学习和实践获得的技能",
+            "referent_type": "generic_concept",
+            "maximum_specificity": "category",
+            "certainty": "clear",
+            "allow_inference": false,
+            "must_include_groups": [["人的", "员工"], ["技能", "能力"], ["学习", "实践"]],
+            "must_not_include": ["Agent 模块", "脚本", "加载"],
+            "reference_answer": "在这里指人通过学习和实践获得的实际技能。",
+            "author_intent_required": false
+          },
+          "evidence": [{ "block_id": "p-2", "quote": "Skills 属于人的实际能力，需要通过学习和实践逐渐形成", "role": "direct_support" }]
+        },
+        {
+          "case_id": "skills-agent-module",
+          "category": "domain_sense_disambiguation",
+          "difficulty": "adversarial",
+          "selection": { "exact": "Skills", "anchor_block_id": "p-4", "occurrence_index": 0 },
+          "expected": {
+            "sense": "供 Agent 按任务加载的可复用能力模块",
+            "referent_type": "generic_concept",
+            "maximum_specificity": "category",
+            "certainty": "clear",
+            "allow_inference": true,
+            "must_include_groups": [["Agent"], ["模块", "操作说明"], ["加载", "复用"]],
+            "must_not_include": ["人的实际能力", "员工熟练程度", "教育"],
+            "reference_answer": "在这里指 Agent 可按任务加载的、封装了操作说明和资源的可复用能力模块。",
+            "author_intent_required": false
+          },
+          "evidence": [
+            { "block_id": "p-3", "quote": "把一组可复用的操作说明、脚本和资源封装成能力模块", "role": "direct_support" },
+            { "block_id": "p-4", "quote": "Agent 可以按任务加载不同 Skills", "role": "coreference_support" }
+          ]
+        }
+      ]
+    },
+    {
+      "document_id": "benchmark-domains",
+      "title": "Benchmark 在不同领域的含义",
+      "file": "documents/benchmark-domains.html",
+      "source_type": "synthetic_controlled",
+      "cases": [
+        {
+          "case_id": "benchmark-survey",
+          "category": "cross_domain_polysemy",
+          "difficulty": "contextual",
+          "selection": { "exact": "Benchmark", "anchor_block_id": "p-2", "occurrence_index": 0 },
+          "expected": {
+            "sense": "测绘中高程已知且位置稳定的水准基点",
+            "referent_type": "generic_concept",
+            "maximum_specificity": "category",
+            "certainty": "clear",
+            "allow_inference": true,
+            "must_include_groups": [["测量", "测绘"], ["水准基点", "固定标记"]],
+            "must_not_include": ["模型评测", "任务集", "评分规则"],
+            "reference_answer": "在这里指测绘中高程已知、供后续测量引用的固定水准基点。",
+            "author_intent_required": false
+          },
+          "evidence": [
+            { "block_id": "p-1", "quote": "高程已知的固定标记", "role": "direct_support" },
+            { "block_id": "p-2", "quote": "后续测量引用的水准基点", "role": "direct_support" }
+          ]
+        },
+        {
+          "case_id": "benchmark-model-evaluation",
+          "category": "cross_domain_polysemy",
+          "difficulty": "adversarial",
+          "selection": { "exact": "Benchmark", "anchor_block_id": "p-4", "occurrence_index": 0 },
+          "expected": {
+            "sense": "用于比较模型表现的一套固定评测基准",
+            "referent_type": "metric",
+            "maximum_specificity": "category",
+            "certainty": "clear",
+            "allow_inference": true,
+            "must_include_groups": [["模型"], ["评测", "比较"], ["任务", "数据", "评分"]],
+            "must_not_include": ["永久标记", "地理位置", "水准点"],
+            "reference_answer": "在这里指由固定任务、数据和评分规则组成、用于比较模型表现的评测基准。",
+            "author_intent_required": false
+          },
+          "evidence": [
+            { "block_id": "p-3", "quote": "一组固定任务、输入数据、评分规则和基线结果", "role": "direct_support" },
+            { "block_id": "p-4", "quote": "运行同一套 Benchmark，以比较能力、稳定性和成本", "role": "coreference_support" }
+          ]
+        }
+      ]
+    },
+    {
+      "document_id": "echo-budget",
+      "title": "长文中的“回声预算”",
+      "file": "documents/echo-budget.html",
+      "source_type": "synthetic_controlled",
+      "cases": [
+        {
+          "case_id": "echo-budget-definition",
+          "category": "author_defined_term",
+          "difficulty": "contextual",
+          "selection": { "exact": "回声预算", "anchor_block_id": "p-1", "occurrence_index": 0 },
+          "expected": {
+            "sense": "旧反馈可被后续任务继续引用的最大轮数",
+            "referent_type": "document_defined_term",
+            "maximum_specificity": "exact_variant",
+            "certainty": "clear",
+            "allow_inference": false,
+            "must_include_groups": [["旧反馈"], ["最大轮数", "多少轮"]],
+            "must_not_include": ["金钱", "回声实验室", "机构"],
+            "reference_answer": "在本文中指一次决策后，旧反馈还能被后续任务引用的最大轮数。",
+            "author_intent_required": false
+          },
+          "evidence": [{ "block_id": "p-1", "quote": "允许系统继续引用旧反馈的最大轮数称为“回声预算”", "role": "direct_support" }]
+        },
+        {
+          "case_id": "echo-budget-long-distance",
+          "category": "long_distance_definition",
+          "difficulty": "adversarial",
+          "selection": { "exact": "回声预算", "anchor_block_id": "p-6", "occurrence_index": 0 },
+          "expected": {
+            "sense": "前文定义的旧反馈最大可引用轮数",
+            "referent_type": "document_defined_term",
+            "maximum_specificity": "exact_variant",
+            "certainty": "clear",
+            "allow_inference": true,
+            "must_include_groups": [["旧反馈", "过时经验"], ["轮数", "多久"]],
+            "must_not_include": ["回声实验室", "资金", "财务预算"],
+            "reference_answer": "在这里沿用前文定义，指旧反馈最多还能被后续任务使用多少轮。",
+            "author_intent_required": false
+          },
+          "evidence": [
+            { "block_id": "p-1", "quote": "允许系统继续引用旧反馈的最大轮数称为“回声预算”", "role": "direct_support" },
+            { "block_id": "p-6", "quote": "缩短回声预算，避免过时经验持续影响新的判断", "role": "coreference_support" }
+          ]
+        }
+      ]
+    },
+    {
+      "document_id": "training-recipe",
+      "title": "从烹饪配方到训练 Recipe",
+      "file": "documents/training-recipe.html",
+      "source_type": "synthetic_controlled",
+      "cases": [
+        {
+          "case_id": "recipe-cooking",
+          "category": "borrowed_metaphor_disambiguation",
+          "difficulty": "basic",
+          "selection": { "exact": "recipe", "anchor_block_id": "p-1", "occurrence_index": 0 },
+          "expected": {
+            "sense": "烹饪配方",
+            "referent_type": "generic_concept",
+            "maximum_specificity": "category",
+            "certainty": "clear",
+            "allow_inference": false,
+            "must_include_groups": [["烹饪", "厨房"], ["配方", "食谱"]],
+            "must_not_include": ["学习率", "优化器", "训练轮数"],
+            "reference_answer": "在这里就是烹饪配方，列出食材、用量、步骤和火候。",
+            "author_intent_required": false
+          },
+          "evidence": [{ "block_id": "p-1", "quote": "厨房里的 recipe 会列出食材、用量、步骤和火候", "role": "direct_support" }]
+        },
+        {
+          "case_id": "training-recipe-mixed-language",
+          "category": "mixed_language_technical_term",
+          "difficulty": "contextual",
+          "selection": { "exact": "训练 Recipe", "anchor_block_id": "p-4", "occurrence_index": 0 },
+          "expected": {
+            "sense": "训练配方，即训练设置及执行方式的整体组合",
+            "referent_type": "method",
+            "maximum_specificity": "category",
+            "certainty": "clear",
+            "allow_inference": true,
+            "must_include_groups": [["训练配方"], ["组合", "整套"], ["数据", "优化器", "学习率", "训练选择"]],
+            "must_not_include": ["食材", "火候", "菜谱"],
+            "reference_answer": "“训练 Recipe”可译为“训练配方”，在这里指数据处理、优化设置和执行安排等训练选择的整体组合。",
+            "author_intent_required": false
+          },
+          "evidence": [
+            { "block_id": "p-2", "quote": "把训练所需的一整套搭配称为训练配方", "role": "direct_support" },
+            { "block_id": "p-3", "quote": "共同规定数据处理、优化器、学习率、批量大小、训练轮数和评测安排", "role": "direct_support" },
+            { "block_id": "p-4", "quote": "修改这些训练选择如何组合和执行", "role": "coreference_support" }
+          ]
+        }
+      ]
+    },
+    {
+      "document_id": "rsi-special-terms",
+      "title": "自我改进系统中的反馈与增长",
+      "file": "documents/rsi-special-terms.html",
+      "source_type": "synthetic_controlled",
+      "cases": [
+        {
+          "case_id": "experience-return",
+          "category": "document_defined_term",
+          "difficulty": "contextual",
+          "selection": { "exact": "经验回流", "anchor_block_id": "p-6", "occurrence_index": 0 },
+          "expected": {
+            "sense": "把已验证结果写回系统供下一轮任务使用",
+            "referent_type": "document_defined_term",
+            "maximum_specificity": "exact_variant",
+            "certainty": "clear",
+            "allow_inference": true,
+            "must_include_groups": [["验证"], ["写入", "写回"], ["下一轮", "后续任务"]],
+            "must_not_include": ["自动驾驶", "Oak", "外部监督"],
+            "reference_answer": "在这里指把经过验证的任务结果写回数据、策略或规则，供下一轮任务继续使用。",
+            "author_intent_required": false
+          },
+          "evidence": [
+            { "block_id": "p-2", "quote": "经过验证的结果重新写入数据、策略或运行规则，使其参与下一轮任务，称为经验回流", "role": "direct_support" },
+            { "block_id": "p-6", "quote": "让经验回流保持可追踪、可撤销", "role": "coreference_support" }
+          ]
+        },
+        {
+          "case_id": "intelligence-explosion",
+          "category": "technical_concept_in_context",
+          "difficulty": "basic",
+          "selection": { "exact": "智能爆炸", "anchor_block_id": "p-4", "occurrence_index": 0 },
+          "expected": {
+            "sense": "智能系统自我改进形成能力快速增长的正反馈过程",
+            "referent_type": "generic_concept",
+            "maximum_specificity": "category",
+            "certainty": "clear",
+            "allow_inference": false,
+            "must_include_groups": [["自我改进", "改进自身"], ["快速增长", "正反馈"]],
+            "must_not_include": ["已经实现", "现实必然", "无限增长"],
+            "reference_answer": "在这里指智能系统改进自身后进一步加快改进，可能形成能力快速增长的正反馈过程。",
+            "author_intent_required": false
+          },
+          "evidence": [{ "block_id": "p-4", "quote": "智能系统改进自身后进一步加快改进，最终可能形成能力快速增长的正反馈过程", "role": "direct_support" }]
+        }
+      ]
+    },
+    {
+      "document_id": "mercury-ambiguity",
+      "title": "Mercury 项目会议摘录",
+      "file": "documents/mercury-ambiguity.html",
+      "source_type": "synthetic_controlled",
+      "cases": [
+        {
+          "case_id": "mercury-unresolved",
+          "category": "genuine_ambiguity",
+          "difficulty": "adversarial",
+          "selection": { "exact": "Mercury", "anchor_block_id": "p-3", "occurrence_index": 0 },
+          "expected": {
+            "sense": "可能指数据工具，也可能指材料实验中的汞，原文不足以唯一确定",
+            "referent_type": "other",
+            "maximum_specificity": "category",
+            "certainty": "ambiguous",
+            "allow_inference": false,
+            "must_include_groups": [["无法确定", "不能确定", "可能"], ["数据工具", "工具"], ["汞", "材料实验"]],
+            "must_not_include": ["就是数据工具", "就是化学元素", "水星"],
+            "reference_answer": "这里无法唯一确定：它可能指内部数据工具，也可能指材料实验中的汞。",
+            "author_intent_required": false
+          },
+          "evidence": [
+            { "block_id": "p-1", "quote": "同时维护一个代号为 Mercury 的数据工具，并开展金属汞的材料实验", "role": "sense_disambiguation" },
+            { "block_id": "p-3", "quote": "没有注明发言属于哪一组", "role": "direct_support" }
+          ]
+        },
+        {
+          "case_id": "mercury-chemical",
+          "category": "named_entity_disambiguation",
+          "difficulty": "basic",
+          "selection": { "exact": "Mercury", "anchor_block_id": "p-4", "occurrence_index": 0 },
+          "expected": {
+            "sense": "化学元素汞",
+            "referent_type": "other",
+            "maximum_specificity": "named_entity",
+            "certainty": "clear",
+            "allow_inference": false,
+            "must_include_groups": [["化学元素", "汞"], ["Hg"]],
+            "must_not_include": ["数据导入工具", "水星", "项目代号"],
+            "reference_answer": "在这里指化学元素汞，元素符号是 Hg。",
+            "author_intent_required": false
+          },
+          "evidence": [{ "block_id": "p-4", "quote": "Mercury 明确表示化学元素汞，符号为 Hg", "role": "direct_support" }]
+        }
+      ]
+    }
+  ]
+}
