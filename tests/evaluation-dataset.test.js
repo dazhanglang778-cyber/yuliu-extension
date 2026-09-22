@@ -43,10 +43,10 @@ function occurrenceCount(text, exact) {
   return count;
 }
 
-test("首批测试集包含8份完整内容和16个精确选区", () => {
+test("核心测试集包含12份完整内容和20个精确选区", () => {
   assert.equal(dataset.dataset_id, "yuliu-core-context-v1");
-  assert.equal(dataset.documents.length, 8);
-  assert.equal(dataset.documents.reduce((total, document) => total + document.cases.length, 0), 16);
+  assert.equal(dataset.documents.length, 12);
+  assert.equal(dataset.documents.reduce((total, document) => total + document.cases.length, 0), 20);
 });
 
 test("文档、案例、正文块和选中位置均唯一且真实存在", () => {
@@ -121,7 +121,29 @@ test("首批测试集确实包含核心风险类型", () => {
     "long_distance_definition",
     "mixed_language_technical_term",
     "genuine_ambiguity",
+    "knowledge_assisted_contextual_inference",
+    "acronym_contextual_inference",
+    "genuine_insufficient_context",
   ]) {
     assert.ok(categories.has(required), `未覆盖核心风险类型：${required}`);
   }
+});
+
+test("知识辅助案例不要求原文提供词典定义，但必须保留语境辨义线索", () => {
+  const caseIds = ["harness-context-without-definition", "fde-ai-context-without-expansion"];
+  const cases = dataset.documents.flatMap((document) => document.cases);
+  for (const caseId of caseIds) {
+    const item = cases.find((entry) => entry.case_id === caseId);
+    assert.ok(item, `缺少知识辅助案例：${caseId}`);
+    assert.equal(item.expected.certainty, "inferred");
+    assert.equal(item.expected.allow_inference, true);
+    assert.ok(item.evidence.length >= 2);
+    assert.ok(item.evidence.every((evidence) => evidence.role === "sense_disambiguation"), `${caseId} 不应把语境线索伪装成直接定义`);
+  }
+});
+
+test("真正歧义和真正信息不足分别保留，不用统一拒答掩盖差异", () => {
+  const cases = dataset.documents.flatMap((document) => document.cases);
+  assert.equal(cases.find((item) => item.case_id === "harness-two-domains-unresolved").expected.certainty, "ambiguous");
+  assert.equal(cases.find((item) => item.case_id === "fde-bare-acronym-insufficient").expected.certainty, "insufficient");
 });

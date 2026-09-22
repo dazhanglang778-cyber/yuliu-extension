@@ -2,7 +2,7 @@
 
 - 模式：retrieval
 - 数据集：yuliu-core-context-v1
-- 生成时间：2026-09-22T07:03:02.721Z
+- 生成时间：2026-09-22T08:28:27.229Z
 
 ## 检索阶段
 
@@ -15,6 +15,10 @@
 
 - harness-definition：通过
 - harness-later-use：通过
+- harness-context-without-definition：通过
+- harness-two-domains-unresolved：通过
+- fde-ai-context-without-expansion：通过
+- fde-bare-acronym-insufficient：通过
 - apple-fruit：通过
 - apple-company：通过
 - skills-human：通过

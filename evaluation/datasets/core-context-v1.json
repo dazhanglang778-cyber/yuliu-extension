@@ -1,6 +1,6 @@
 {
   "dataset_id": "yuliu-core-context-v1",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "documents": [
     {
       "document_id": "agent-harness",
@@ -45,6 +45,125 @@
           "evidence": [
             { "block_id": "p-4", "quote": "组织这些交互环节的运行框架统称为 Harness", "role": "direct_support" },
             { "block_id": "p-5", "quote": "Harness 的设计会直接影响任务能否可靠执行", "role": "coreference_support" }
+          ]
+        }
+      ]
+    },
+    {
+      "document_id": "harness-contextual-engineering",
+      "title": "Harness Engineering 为什么影响 Agent 表现",
+      "file": "documents/harness-contextual-engineering.html",
+      "source_type": "synthetic_controlled",
+      "cases": [
+        {
+          "case_id": "harness-context-without-definition",
+          "category": "knowledge_assisted_contextual_inference",
+          "difficulty": "contextual",
+          "selection": { "exact": "Harness", "anchor_block_id": "p-2", "occurrence_index": 0 },
+          "expected": {
+            "sense": "围绕 AI Agent 组织工具接口、任务执行和反馈的外围工程系统",
+            "referent_type": "generic_concept",
+            "maximum_specificity": "category",
+            "certainty": "inferred",
+            "allow_inference": true,
+            "must_include_groups": [["Agent", "模型"], ["工具", "接口"], ["运行", "执行", "反馈", "环境"]],
+            "must_not_include": ["马具", "线束", "DeepSeek Harness", "无法确定", "不能确定"],
+            "reference_answer": "Harness 在这里指围绕 AI Agent 组织工具接口、任务执行与反馈的一套外围工程系统。",
+            "author_intent_required": true
+          },
+          "evidence": [
+            { "block_id": "p-2", "quote": "只改变 Harness 的工具格式和编辑接口", "role": "sense_disambiguation" },
+            { "block_id": "p-3", "quote": "调整了终端调用、测试反馈和失败恢复流程", "role": "sense_disambiguation" },
+            { "block_id": "p-5", "quote": "真正限制 Agent 的不一定是写代码的能力，也可能是围绕它的结构、工具和反馈机制没有跟上", "role": "sense_disambiguation" }
+          ]
+        }
+      ]
+    },
+    {
+      "document_id": "harness-unresolved-mention",
+      "title": "机器人实验室联席会议",
+      "file": "documents/harness-unresolved-mention.html",
+      "source_type": "adversarial_variant",
+      "cases": [
+        {
+          "case_id": "harness-two-domains-unresolved",
+          "category": "genuine_ambiguity",
+          "difficulty": "adversarial",
+          "selection": { "exact": "Harness", "anchor_block_id": "p-3", "occurrence_index": 0 },
+          "expected": {
+            "sense": "可能指机器人线束，也可能指软件任务运行框架",
+            "referent_type": "other",
+            "maximum_specificity": "category",
+            "certainty": "ambiguous",
+            "allow_inference": false,
+            "must_include_groups": [["可能", "无法确定", "不能确定"], ["线束", "电线"], ["软件", "运行框架", "开发框架"]],
+            "must_not_include": ["就是线束", "就是软件框架", "DeepSeek Harness"],
+            "reference_answer": "这里无法唯一确定：Harness 可能指机器人的电气线束，也可能指软件组的任务运行框架。",
+            "author_intent_required": false
+          },
+          "evidence": [
+            { "block_id": "p-1", "quote": "硬件组正在检查机器人内部的线束、连接器和绝缘材料", "role": "sense_disambiguation" },
+            { "block_id": "p-2", "quote": "软件组同时在维护一套用于组织任务运行、工具调用和测试反馈的开发框架", "role": "sense_disambiguation" },
+            { "block_id": "p-3", "quote": "没有注明这句话来自硬件组还是软件组", "role": "direct_support" }
+          ]
+        }
+      ]
+    },
+    {
+      "document_id": "fde-ai-camp",
+      "title": "两天 AI 工程实战营发布清单",
+      "file": "documents/fde-ai-camp.html",
+      "source_type": "adversarial_variant",
+      "cases": [
+        {
+          "case_id": "fde-ai-context-without-expansion",
+          "category": "acronym_contextual_inference",
+          "difficulty": "contextual",
+          "selection": { "exact": "FDE", "anchor_block_id": "p-2", "occurrence_index": 0 },
+          "expected": {
+            "sense": "AI 领域中面向实际业务问题并负责工程实现与部署落地的一类工程角色",
+            "referent_type": "generic_concept",
+            "maximum_specificity": "category",
+            "certainty": "inferred",
+            "allow_inference": true,
+            "must_include_groups": [["AI", "Agent"], ["工程", "工程师"], ["部署", "落地", "业务"]],
+            "must_not_include": ["实战营的运营方法", "活动运营方法", "前端开发工程师", "无法确定"],
+            "reference_answer": "FDE 在这里指 AI 领域中直接面向实际业务问题、兼顾工程实现与部署落地的一类工程角色；本文没有展开其英文全称。",
+            "author_intent_required": false
+          },
+          "evidence": [
+            { "block_id": "p-2", "quote": "学员要直接处理真实业务约束", "role": "sense_disambiguation" },
+            { "block_id": "p-3", "quote": "FDE、Codex、Agent 和 AI 工程", "role": "sense_disambiguation" },
+            { "block_id": "p-4", "quote": "既需要理解客户需求、又要亲手完成技术落地的工程实践者", "role": "sense_disambiguation" }
+          ]
+        }
+      ]
+    },
+    {
+      "document_id": "fde-unresolved-mention",
+      "title": "跨部门周会议程摘录",
+      "file": "documents/fde-unresolved-mention.html",
+      "source_type": "adversarial_variant",
+      "cases": [
+        {
+          "case_id": "fde-bare-acronym-insufficient",
+          "category": "genuine_insufficient_context",
+          "difficulty": "adversarial",
+          "selection": { "exact": "FDE", "anchor_block_id": "p-3", "occurrence_index": 0 },
+          "expected": {
+            "sense": "缺少领域线索，无法确定 FDE 的当前含义或唯一英文全称",
+            "referent_type": "other",
+            "maximum_specificity": "category",
+            "certainty": "insufficient",
+            "allow_inference": false,
+            "must_include_groups": [["无法确定", "不能确定", "不能判断"], ["缩写", "英文全称"]],
+            "must_not_include": ["工程师", "前端开发", "流程工程", "运营方法", "Forward Deployed"],
+            "reference_answer": "FDE 是未展开的缩写，当前摘录没有提供所属领域或任务线索，因此无法确定这里的含义和英文全称。",
+            "author_intent_required": false
+          },
+          "evidence": [
+            { "block_id": "p-3", "quote": "没有补充任何领域、任务或对象信息", "role": "direct_support" },
+            { "block_id": "p-5", "quote": "仅凭这份摘录无法判断 FDE 对应哪一个英文全称", "role": "direct_support" }
           ]
         }
       ]

@@ -1,9 +1,9 @@
 {
   "mode": "retrieval",
   "dataset_id": "yuliu-core-context-v1",
-  "generated_at": "2026-09-22T07:03:02.721Z",
+  "generated_at": "2026-09-22T08:28:27.229Z",
   "summary": {
-    "total_cases": 16,
+    "total_cases": 20,
     "anchor_recall": 100,
     "support_recall": 100,
     "gold_evidence_recall": 100,
@@ -41,6 +41,70 @@
         "p-6",
         "p-3",
         "h-2",
+        "p-2",
+        "p-1",
+        "h-1"
+      ]
+    },
+    {
+      "case_id": "harness-context-without-definition",
+      "document_id": "harness-contextual-engineering",
+      "anchor_recalled": true,
+      "support_recalled": true,
+      "gold_evidence_recall": 1,
+      "failures": [],
+      "retrieved_block_ids": [
+        "p-2",
+        "p-4",
+        "h-1",
+        "p-3",
+        "p-1",
+        "p-5"
+      ]
+    },
+    {
+      "case_id": "harness-two-domains-unresolved",
+      "document_id": "harness-unresolved-mention",
+      "anchor_recalled": true,
+      "support_recalled": true,
+      "gold_evidence_recall": 1,
+      "failures": [],
+      "retrieved_block_ids": [
+        "p-3",
+        "p-4",
+        "p-2",
+        "p-1",
+        "p-5",
+        "h-1"
+      ]
+    },
+    {
+      "case_id": "fde-ai-context-without-expansion",
+      "document_id": "fde-ai-camp",
+      "anchor_recalled": true,
+      "support_recalled": true,
+      "gold_evidence_recall": 1,
+      "failures": [],
+      "retrieved_block_ids": [
+        "p-2",
+        "p-5",
+        "p-3",
+        "p-1",
+        "h-1",
+        "p-4"
+      ]
+    },
+    {
+      "case_id": "fde-bare-acronym-insufficient",
+      "document_id": "fde-unresolved-mention",
+      "anchor_recalled": true,
+      "support_recalled": true,
+      "gold_evidence_recall": 1,
+      "failures": [],
+      "retrieved_block_ids": [
+        "p-3",
+        "p-5",
+        "p-4",
         "p-2",
         "p-1",
         "h-1"

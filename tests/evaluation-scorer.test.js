@@ -78,14 +78,66 @@ test("检索已有正确证据但回答未采用时归因给生成阶段", () =>
   assert.ok(!scored.failures.includes("RETRIEVAL_MISS"));
 });
 
-test("批量检索评测覆盖全部16个案例并达到当前基线", () => {
+test("Harness有充分语境时返回信息不足会被识别为过度拒答", () => {
+  const document = dataset.documents.find((item) => item.document_id === "harness-contextual-engineering");
+  const gold = document.cases.find((item) => item.case_id === "harness-context-without-definition");
+  const blocks = Scorer.documentBlocksFromHtml(fs.readFileSync(path.join(evaluationRoot, document.file), "utf8"));
+  const prediction = {
+    result: {
+      selected_text: "Harness",
+      resolved_sense: { label: "当前所指无法确定", referent_type: "other", specificity: "category" },
+      meaning_here: "当前原文信息不足，暂时无法可靠确定这里的具体所指。",
+      author_intent: null,
+      certainty: "insufficient",
+      claims: [],
+      evidence: [],
+      notice_code: "insufficient_context",
+    },
+    _meta: { validation_attempts: 2 },
+  };
+  const scored = Scorer.evaluateCase(gold, prediction, blocks, {
+    retrieved_block_ids: ["p-2", "p-3", "p-5"], expected_certainty: "inferred",
+  });
+  assert.equal(scored.passed, false);
+  assert.ok(scored.failures.includes("MISSING_KEY_INFORMATION"));
+  assert.ok(scored.failures.includes("CERTAINTY_MISMATCH"));
+  assert.ok(scored.failures.includes("NOTICE_FALSE_POSITIVE"));
+});
+
+test("把FDE编成实战营运营方法会被金标准明确拦截", () => {
+  const document = dataset.documents.find((item) => item.document_id === "fde-ai-camp");
+  const gold = document.cases.find((item) => item.case_id === "fde-ai-context-without-expansion");
+  const blocks = Scorer.documentBlocksFromHtml(fs.readFileSync(path.join(evaluationRoot, document.file), "utf8"));
+  const prediction = {
+    result: {
+      selected_text: "FDE",
+      resolved_sense: { label: "一种实战营的运营方法", referent_type: "method", specificity: "category" },
+      meaning_here: "这里指一种实战营的运营方法。",
+      author_intent: null,
+      certainty: "clear",
+      claims: [{ claim_id: "c1", text: "FDE是一种运营方法", risk: "ordinary", evidence_ids: ["e1"] }],
+      evidence: [{ evidence_id: "e1", block_id: "p-2", quote: "北京两天 FDE 实战营", role: "sense_disambiguation" }],
+      notice_code: "none",
+    },
+    _meta: { validation_attempts: 1 },
+  };
+  const scored = Scorer.evaluateCase(gold, prediction, blocks, {
+    retrieved_block_ids: ["p-2", "p-3", "p-4"], expected_certainty: "inferred",
+  });
+  assert.equal(scored.passed, false);
+  assert.ok(scored.failures.includes("FORBIDDEN_CONTENT"));
+  assert.ok(scored.failures.includes("MISSING_KEY_INFORMATION"));
+  assert.ok(scored.failures.includes("REFERENT_TYPE_MISMATCH"));
+});
+
+test("批量检索评测覆盖全部20个案例并达到当前基线", () => {
   const prepared = Runner.prepareCases(dataset, {});
   const traces = prepared.map((entry) => ({
     case_id: entry.gold.case_id,
     retrieved_block_ids: entry.retrieval.candidates.map((item) => item.block_id),
   }));
   const report = Scorer.evaluateRetrieval(dataset, traces);
-  assert.equal(report.summary.total_cases, 16);
+  assert.equal(report.summary.total_cases, 20);
   assert.equal(report.summary.anchor_recall, 100);
   assert.equal(report.summary.support_recall, 100);
   assert.equal(report.summary.retrieval_misses, 0);

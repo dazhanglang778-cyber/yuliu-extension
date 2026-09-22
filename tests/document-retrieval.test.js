@@ -73,7 +73,7 @@ test("当前选区永远进入候选证据且排名第一", () => {
   }
 });
 
-test("首批16个案例的人工金标准证据全部被召回", () => {
+test("当前20个案例的人工金标准证据全部被召回", () => {
   let checked = 0;
   for (const document of dataset.documents) {
     for (const item of document.cases) {
@@ -85,7 +85,7 @@ test("首批16个案例的人工金标准证据全部被召回", () => {
       checked += 1;
     }
   }
-  assert.equal(checked, 16);
+  assert.equal(checked, 20);
 });
 
 test("Harness定义段落排在无关具体产品名单之前", () => {
