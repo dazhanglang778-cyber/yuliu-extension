@@ -1,5 +1,5 @@
 try {
-  if (typeof importScripts === "function") importScripts("grounding.js", "term-knowledge.js");
+  if (typeof importScripts === "function") importScripts("grounding-contract-v2.js", "grounding.js", "term-knowledge.js");
 } catch (_) {}
 const Grounding = globalThis.YuliuGrounding;
 const TermKnowledge = globalThis.YuliuTermKnowledge;
@@ -269,8 +269,8 @@ async function runGroundedInitial(port, request, apiKey) {
   let validation = null;
   for (let attempt = 0; attempt < 2; attempt += 1) {
     const messages = Grounding.buildMessages(preparedRequest, attempt ? { errors: validation.errors, raw } : null);
-    raw = await completeModel({ apiKey, messages, maxTokens: 900 });
-    validation = Grounding.validateStructured(raw, request);
+    raw = await completeModel({ apiKey, messages, maxTokens: 1400 });
+    validation = Grounding.validateStructured(raw, preparedRequest);
     void recordDiagnosticEvent({
       ...diagnostics,
       eventType: validation.ok ? "grounding_validated" : "grounding_validation_failed",
@@ -285,7 +285,7 @@ async function runGroundedInitial(port, request, apiKey) {
       safePost(port, { type: "STATUS", requestId: request.requestId, message: "初稿的证据没有完全对齐，正在自动校正……" });
     }
   }
-  const fallback = Grounding.fallbackResult(request);
+  const fallback = Grounding.fallbackResult(preparedRequest);
   void recordDiagnosticEvent({
     ...diagnostics,
     eventType: "grounding_safe_fallback",
@@ -365,7 +365,7 @@ async function runEvaluationCase(message) {
   }
   for (attempts = 1; attempts <= 2; attempts += 1) {
     const messages = Grounding.buildMessages(request, attempts === 2 ? { errors: validation.errors, raw } : null);
-    raw = await completeModel({ apiKey: bigmodelApiKey.trim(), messages, maxTokens: 900 });
+    raw = await completeModel({ apiKey: bigmodelApiKey.trim(), messages, maxTokens: 1400 });
     validation = Grounding.validateStructured(raw, request);
     if (validation.ok) break;
   }

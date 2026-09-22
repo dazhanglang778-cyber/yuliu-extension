@@ -46,7 +46,7 @@
   }
 
   function normalizeCertainty(value) {
-    const match = String(value || "").toLocaleLowerCase().match(/\b(clear|inferred|ambiguous|insufficient)\b/);
+    const match = String(value || "").toLocaleLowerCase().match(/\b(clear|inferred|ambiguous|insufficient|unrecognized)\b/);
     return match?.[1] || "";
   }
 
@@ -70,6 +70,29 @@
   function parseInitial(raw) {
     const text = String(raw || "");
     const json = tryJson(text);
+    if (json?.schema_version === "2.0") {
+      const senses = Array.isArray(json.candidate_senses) ? json.candidate_senses : [];
+      const selectedSenseId = json.resolution?.selected_sense_id;
+      const selectedSense = senses.find((item) => item?.sense_id === selectedSenseId) || null;
+      return {
+        structured: true,
+        schemaVersion: "2.0",
+        selectedText: cleanVisible(json.selected_text),
+        resolvedSense: selectedSense ? {
+          label: cleanVisible(selectedSense.label),
+          referent_type: selectedSense.referent_type || "other",
+          specificity: json.resolution?.specificity || "category",
+        } : null,
+        meaning: cleanVisible(json.meaning_here?.text),
+        intent: cleanVisible(json.author_intent?.text),
+        certainty: normalizeCertainty(json.resolution?.status),
+        note: "",
+        noticeCode: cleanVisible(json.notice_code),
+        claims: Array.isArray(json.claims) ? json.claims : [],
+        evidence: Array.isArray(json.page_evidence) ? json.page_evidence : [],
+        externalSources: Array.isArray(json.external_sources) ? json.external_sources : [],
+      };
+    }
     if (json) return {
       structured: !!json.selected_text && !!json.resolved_sense,
       selectedText: cleanVisible(json.selected_text),

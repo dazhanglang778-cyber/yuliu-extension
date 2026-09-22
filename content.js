@@ -434,6 +434,8 @@
       multiple_senses: "原文存在多种合理理解，目前无法唯一确定。",
       insufficient_context: "当前原文信息不足，暂时无法可靠确定这里的具体所指。",
       external_knowledge_needed: "当前原文只能确定大致义项，完整解释还需要外部资料。",
+      term_unrecognized: "暂时无法可靠识别这个词；它可能是生僻术语、拼写变体或乱码。",
+      external_lookup_failed: "需要核对的外部资料暂时没有加载成功，当前仅保留能够可靠说明的范围。",
     };
     const programNotice = notices[parsed.noticeCode] || "";
     const legacyUncertain = !parsed.structured && parsed.certainty && !["clear", "inferred"].includes(parsed.certainty);

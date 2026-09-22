@@ -47,8 +47,26 @@
     return "none";
   }
 
+  function resultView(value) {
+    if (!value || value.schema_version !== "2.0") return value;
+    const senses = Array.isArray(value.candidate_senses) ? value.candidate_senses : [];
+    const selected = senses.find((item) => item?.sense_id === value.resolution?.selected_sense_id) || null;
+    return {
+      ...value,
+      resolved_sense: selected ? {
+        label: selected.label,
+        referent_type: selected.referent_type,
+        specificity: value.resolution?.specificity,
+      } : { label: "当前所指尚未唯一确定", referent_type: "other", specificity: value.resolution?.specificity || "category" },
+      meaning_here: value.meaning_here?.text || "",
+      author_intent: value.author_intent?.text || null,
+      certainty: value.resolution?.status || "",
+      evidence: Array.isArray(value.page_evidence) ? value.page_evidence : [],
+    };
+  }
+
   function evaluateCase(gold, prediction, blockMap = new Map(), trace = {}) {
-    const result = prediction?.result || prediction || null;
+    const result = resultView(prediction?.result || prediction || null);
     const failures = [];
     const checks = {};
     checks.output_schema = !!result

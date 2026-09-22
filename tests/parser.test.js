@@ -123,6 +123,27 @@ test("提示字段中的无和内部空值不会显示", () => {
   }
 });
 
+test("第二版结构能分别读取这里指什么、作者意图和页面依据", () => {
+  const result = parser.parseInitial(JSON.stringify({
+    schema_version: "2.0",
+    selected_text: "Harness",
+    candidate_senses: [{ sense_id: "s1", label: "Agent运行框架", referent_type: "generic_concept" }],
+    resolution: { status: "inferred", selected_sense_id: "s1", specificity: "category" },
+    meaning_here: { text: "Harness 在这里指支撑Agent运行的外围工程系统。" },
+    author_intent: { text: "作者强调外围系统也会限制Agent能力。", claim_ids: ["c2"] },
+    claims: [],
+    page_evidence: [{ evidence_id: "e1", block_id: "p1", quote: "Harness设计", role: "sense_disambiguation" }],
+    external_sources: [],
+    notice_code: "none",
+  }));
+  assert.equal(result.structured, true);
+  assert.equal(result.schemaVersion, "2.0");
+  assert.equal(result.meaning, "Harness 在这里指支撑Agent运行的外围工程系统。");
+  assert.equal(result.intent, "作者强调外围系统也会限制Agent能力。");
+  assert.equal(result.certainty, "inferred");
+  assert.equal(result.evidence[0].block_id, "p1");
+});
+
 let passed = 0;
 for (const item of cases) {
   try {
