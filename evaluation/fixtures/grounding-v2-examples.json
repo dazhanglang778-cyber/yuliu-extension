@@ -1,0 +1,134 @@
+{
+  "harness_inferred": {
+    "schema_version": "2.0",
+    "selected_text": "Harness",
+    "candidate_senses": [
+      {
+        "sense_id": "s1",
+        "label": "AI Agent 的外围运行与开发系统",
+        "gloss": "围绕 Agent 组织工具接口、任务执行、反馈和恢复流程的一套工程系统",
+        "referent_type": "generic_concept",
+        "chinese_name": "外围运行与开发系统",
+        "english_full_name": null,
+        "supports": [
+          { "source_kind": "model_knowledge" },
+          { "source_kind": "page_evidence", "source_id": "e1" },
+          { "source_kind": "page_evidence", "source_id": "e2" }
+        ]
+      },
+      {
+        "sense_id": "s2",
+        "label": "物理线束或挽具",
+        "gloss": "用于连接、固定或牵引的物理组件",
+        "referent_type": "generic_concept",
+        "chinese_name": "线束或挽具",
+        "english_full_name": null,
+        "supports": [{ "source_kind": "model_knowledge" }]
+      }
+    ],
+    "resolution": {
+      "status": "inferred",
+      "selected_sense_id": "s1",
+      "alternative_sense_ids": ["s2"],
+      "confidence": "medium",
+      "specificity": "category"
+    },
+    "meaning_here": {
+      "text": "Harness 在这里指围绕 AI Agent 组织工具接口、任务执行和反馈的一套外围工程系统。",
+      "chinese_name": "外围运行与开发系统",
+      "english_full_name": null,
+      "contextual_role": "影响同一模型完成任务的能力和稳定性"
+    },
+    "author_intent": {
+      "text": "作者想强调，Agent 的瓶颈不一定来自模型本身，外围结构、工具和反馈机制同样重要。",
+      "claim_ids": ["c3"]
+    },
+    "claims": [
+      {
+        "claim_id": "c1",
+        "claim_type": "lexical_knowledge",
+        "text": "Harness 在 AI 工程中可以指围绕 Agent 的外围运行与开发系统",
+        "supports": [{ "source_kind": "model_knowledge" }]
+      },
+      {
+        "claim_id": "c2",
+        "claim_type": "contextual_mapping",
+        "text": "本文采用的是 AI Agent 工程义项",
+        "supports": [
+          { "source_kind": "page_evidence", "source_id": "e1" },
+          { "source_kind": "page_evidence", "source_id": "e2" }
+        ]
+      },
+      {
+        "claim_id": "c3",
+        "claim_type": "author_intent",
+        "text": "作者强调外围工程系统也可能成为 Agent 的瓶颈",
+        "supports": [{ "source_kind": "page_evidence", "source_id": "e3" }]
+      }
+    ],
+    "page_evidence": [
+      { "evidence_id": "e1", "block_id": "p-2", "quote": "只改变 Harness 的工具格式和编辑接口", "role": "sense_disambiguation" },
+      { "evidence_id": "e2", "block_id": "p-3", "quote": "调整了终端调用、测试反馈和失败恢复流程", "role": "sense_disambiguation" },
+      { "evidence_id": "e3", "block_id": "p-5", "quote": "真正限制 Agent 的不一定是写代码的能力", "role": "author_intent_support" }
+    ],
+    "external_sources": [],
+    "notice_code": "none"
+  },
+  "fde_insufficient": {
+    "schema_version": "2.0",
+    "selected_text": "FDE",
+    "candidate_senses": [
+      {
+        "sense_id": "s1",
+        "label": "AI 工程领域中的部署落地角色",
+        "gloss": "面向真实业务环境推进技术实现和部署的一类工程角色",
+        "referent_type": "generic_concept",
+        "chinese_name": null,
+        "english_full_name": null,
+        "supports": [{ "source_kind": "model_knowledge" }]
+      },
+      {
+        "sense_id": "s2",
+        "label": "其他领域缩写",
+        "gloss": "FDE 在不同组织和行业中还可能对应其他全称",
+        "referent_type": "other",
+        "chinese_name": null,
+        "english_full_name": null,
+        "supports": [{ "source_kind": "model_knowledge" }]
+      }
+    ],
+    "resolution": {
+      "status": "insufficient",
+      "selected_sense_id": null,
+      "alternative_sense_ids": ["s1", "s2"],
+      "confidence": "low",
+      "specificity": "category"
+    },
+    "meaning_here": {
+      "text": "FDE 是一个可能对应多种含义的缩写；当前摘录没有提供所属领域，暂时无法确定这里具体采用哪一种。",
+      "chinese_name": null,
+      "english_full_name": null,
+      "contextual_role": null
+    },
+    "author_intent": null,
+    "claims": [
+      {
+        "claim_id": "c1",
+        "claim_type": "lexical_knowledge",
+        "text": "FDE 是可能对应多种含义的缩写",
+        "supports": [{ "source_kind": "model_knowledge" }]
+      },
+      {
+        "claim_id": "c2",
+        "claim_type": "contextual_mapping",
+        "text": "当前摘录没有提供足以选择唯一义项的领域信息",
+        "supports": [{ "source_kind": "page_evidence", "source_id": "e1" }]
+      }
+    ],
+    "page_evidence": [
+      { "evidence_id": "e1", "block_id": "p-3", "quote": "没有补充任何领域、任务或对象信息", "role": "direct_support" }
+    ],
+    "external_sources": [],
+    "notice_code": "insufficient_context"
+  }
+}

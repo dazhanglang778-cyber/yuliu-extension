@@ -5,8 +5,10 @@
 ## 目录
 
 - `schema/context-case.schema.json`：测试集的机器可读格式约束。
+- `schema/grounding-v2.schema.json`：双通道语境释义第二版输出约束。
 - `datasets/core-context-v1.json`：首批人工控制案例及金标准。
 - `documents/*.html`：可直接在 Chrome 中打开、也可被自动测试读取的完整页面。
+- `fixtures/grounding-v2-examples.json`：Harness 推断与 FDE 信息不足的第二版完整输出示例。
 - `tests/evaluation-dataset.test.js`：检查选区、证据引文、段落编号和标注完整性。
 
 ## 一个案例包含什么
