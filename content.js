@@ -1,5 +1,6 @@
 (() => {
   const Parser = globalThis.ContextExplainerParser;
+  const EvidenceViewModel = globalThis.YuliuEvidenceViewModel;
   const DocumentContext = globalThis.YuliuDocumentContext;
   const DocumentRetrieval = globalThis.YuliuDocumentRetrieval;
   const HOST_ID = "context-explainer-host";
@@ -222,7 +223,7 @@
           </div>
           <div class="evidence-panel" hidden>
             <button class="evidence-toggle" type="button" aria-expanded="false">
-              <span>依据原文 · <b data-field="evidence-count">0</b>处</span><i aria-hidden="true">⌄</i>
+              <span data-field="evidence-summary">依据</span><i aria-hidden="true">⌄</i>
             </button>
             <div class="evidence-list" hidden></div>
           </div>
@@ -445,21 +446,23 @@
     } else if (done) {
       notice.hidden = true;
     }
-    renderEvidencePanel(shadow, parsed.evidence, done);
+    renderEvidencePanel(shadow, parsed.evidence, parsed.externalSources, done);
   }
 
-  function renderEvidencePanel(shadow, evidence, done) {
+  function renderEvidencePanel(shadow, evidence, externalSources, done) {
     const panel = shadow.querySelector(".evidence-panel");
     const list = shadow.querySelector(".evidence-list");
     const toggle = shadow.querySelector(".evidence-toggle");
-    const items = done && Array.isArray(evidence) ? evidence.filter((item) => item?.block_id && item?.quote) : [];
-    if (!items.length) {
+    const groups = done && EvidenceViewModel
+      ? EvidenceViewModel.build(evidence, externalSources)
+      : { page: [], terminology: [], total: 0, summary: "" };
+    if (!groups.total) {
       panel.hidden = true;
       list.replaceChildren();
       return;
     }
     panel.hidden = false;
-    shadow.querySelector("[data-field='evidence-count']").textContent = String(items.length);
+    shadow.querySelector("[data-field='evidence-summary']").textContent = groups.summary;
     list.replaceChildren();
     list.hidden = true;
     toggle.setAttribute("aria-expanded", "false");
@@ -469,18 +472,58 @@
       toggle.setAttribute("aria-expanded", String(!list.hidden));
       toggle.querySelector("i").textContent = list.hidden ? "⌄" : "⌃";
     };
-    for (const [index, item] of items.entries()) {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "evidence-item";
-      const meta = document.createElement("span");
-      meta.className = "evidence-meta";
-      meta.textContent = evidencePositionLabel(item, activeDiagnosticItem, index);
-      const quote = document.createElement("q");
-      quote.textContent = item.quote;
-      button.append(meta, quote);
-      button.addEventListener("click", () => focusEvidence(item, activeDiagnosticItem));
-      list.append(button);
+    if (groups.page.length) {
+      const pageGroup = document.createElement("section");
+      pageGroup.className = "evidence-group page-evidence-group";
+      const heading = document.createElement("h4");
+      heading.textContent = `原文依据 · ${groups.page.length}处`;
+      pageGroup.append(heading);
+      for (const [index, item] of groups.page.entries()) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "evidence-item";
+        const meta = document.createElement("span");
+        meta.className = "evidence-meta";
+        meta.textContent = evidencePositionLabel(item, activeDiagnosticItem, index);
+        const quote = document.createElement("q");
+        quote.textContent = item.quote;
+        button.append(meta, quote);
+        button.addEventListener("click", () => focusEvidence(item, activeDiagnosticItem));
+        pageGroup.append(button);
+      }
+      list.append(pageGroup);
+    }
+    if (groups.terminology.length) {
+      const sourceGroup = document.createElement("section");
+      sourceGroup.className = "evidence-group terminology-source-group";
+      const heading = document.createElement("h4");
+      heading.textContent = `术语资料 · ${groups.terminology.length}条`;
+      sourceGroup.append(heading);
+      for (const source of groups.terminology) {
+        const link = document.createElement("a");
+        link.className = "terminology-source";
+        link.href = source.url;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        const title = document.createElement("strong");
+        title.textContent = source.title;
+        const meta = document.createElement("span");
+        meta.className = "source-meta";
+        meta.textContent = [source.publisher, source.host].filter(Boolean).join(" · ");
+        link.append(title, meta);
+        if (source.excerpt) {
+          const excerpt = document.createElement("span");
+          excerpt.className = "source-excerpt";
+          excerpt.textContent = source.excerpt;
+          link.append(excerpt);
+        }
+        link.addEventListener("click", () => sendDiagnosticEvent("terminology_source_opened", {
+          sourceId: source.source_id,
+          host: source.host,
+        }, "", activeDiagnosticItem));
+        sourceGroup.append(link);
+      }
+      list.append(sourceGroup);
     }
   }
 
@@ -1049,7 +1092,7 @@
       *, *::before, *::after { box-sizing: border-box; }
       .card { position: relative; display: flex; flex-direction: column; width: 100%; height: auto; max-height: min(600px, calc(100vh - 24px)); overflow: hidden; color: #222b32; background: rgba(255, 253, 248, .98); border: 1px solid #dfbd82; border-radius: 15px; box-shadow: 0 16px 42px rgba(57, 44, 25, .18); font: 15px/1.75 "Microsoft YaHei UI", "Microsoft YaHei", sans-serif; }
       .card-header { position: relative; flex: 0 0 auto; padding: 20px 26px 0; background: rgba(255, 253, 248, .99); }
-      .card-body { flex: 0 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 0 26px 18px; scrollbar-width: thin; scrollbar-color: #c9a567 #f3ecdf; }
+      .card-body { flex: 0 1 auto; min-width: 0; min-height: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; padding: 0 26px 18px; scrollbar-width: thin; scrollbar-color: #c9a567 #f3ecdf; }
       .card-body::-webkit-scrollbar { width: 8px; }
       .card-body::-webkit-scrollbar-track { background: #f3ecdf; border-radius: 8px; }
       .card-body::-webkit-scrollbar-thumb { background: #c9a567; border-radius: 8px; border: 2px solid #f3ecdf; }
@@ -1068,17 +1111,25 @@
       @keyframes orbit { to { transform: rotate(360deg); } }
       .section { margin: 0 0 17px; }
       .section[hidden] { display: none; }
-      .evidence-panel { margin: -2px 0 17px 29px; border-top: 1px solid #eee1cb; }
+      .evidence-panel { min-width: 0; margin: -2px 0 17px 29px; border-top: 1px solid #eee1cb; }
       .evidence-panel[hidden], .evidence-list[hidden] { display: none; }
       .evidence-toggle { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 9px 0 3px; color: #8f651f; background: transparent; border: 0; font: 600 13px/1.6 "Microsoft YaHei UI", sans-serif; cursor: pointer; text-align: left; }
       .evidence-toggle b { font: inherit; }
       .evidence-toggle i { font-style: normal; font-size: 17px; }
-      .evidence-list { display: grid; gap: 7px; margin-top: 5px; }
-      .evidence-item { width: 100%; padding: 8px 10px; color: #3b4650; background: #faf6ed; border: 1px solid #eadcc2; border-radius: 7px; cursor: pointer; text-align: left; }
+      .evidence-list { display: grid; min-width: 0; gap: 10px; margin-top: 5px; }
+      .evidence-group { display: grid; min-width: 0; gap: 7px; }
+      .evidence-group h4 { margin: 0; color: #80683e; font: 600 12px/1.5 "Microsoft YaHei UI", sans-serif; }
+      .evidence-item { min-width: 0; width: 100%; padding: 8px 10px; color: #3b4650; background: #faf6ed; border: 1px solid #eadcc2; border-radius: 7px; cursor: pointer; text-align: left; }
       .evidence-item:hover { border-color: #d5b479; background: #fffaf0; }
       .evidence-meta { display: block; margin-bottom: 3px; color: #9a702b; font: 600 11px/1.5 "Microsoft YaHei UI", sans-serif; }
       .evidence-item q { display: block; overflow: hidden; color: #48525b; font: 12px/1.65 "Microsoft YaHei UI", sans-serif; text-overflow: ellipsis; white-space: nowrap; }
       .evidence-item q::before, .evidence-item q::after { color: #b58a45; }
+      .terminology-source { display: grid; min-width: 0; gap: 2px; padding: 8px 10px; overflow: hidden; color: #394752; background: #f7f4ed; border: 1px solid #e4dac8; border-radius: 7px; text-decoration: none; }
+      .terminology-source:hover { border-color: #caa96e; background: #fffaf0; }
+      .terminology-source strong, .source-meta, .source-excerpt { min-width: 0; max-width: 100%; overflow-wrap: anywhere; word-break: break-word; }
+      .terminology-source strong { color: #2f3b45; font: 600 12px/1.55 "Microsoft YaHei UI", sans-serif; }
+      .source-meta { color: #9a702b; font: 11px/1.5 "Microsoft YaHei UI", sans-serif; }
+      .source-excerpt { display: -webkit-box; overflow: hidden; color: #69727a; font: 11px/1.55 "Microsoft YaHei UI", sans-serif; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
       .normal-answer[hidden], .simple-answer[hidden] { display: none; }
       .simple-answer { margin: 0 0 17px; padding: 14px 15px; background: #f8f3e9; border-radius: 9px; }
       .simple-answer h3 { margin-bottom: 8px; }
