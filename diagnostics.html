@@ -36,12 +36,36 @@
         <button id="clear" class="danger" type="button">清空本地记录</button>
       </section>
 
+      <section class="evaluation" aria-labelledby="evaluation-title">
+        <div class="evaluation-heading">
+          <div>
+            <p class="eyebrow">Golden Dataset · 16 个固定语境案例</p>
+            <h2 id="evaluation-title">核心语义实时评测</h2>
+            <p>使用插件已保存的免费模型密钥，逐项执行“检索—辨义—证据校验—评分”。密钥不会进入本页面或评测报告。</p>
+          </div>
+          <div class="evaluation-actions">
+            <button id="runEvaluation" type="button">运行完整评测</button>
+            <button id="exportEvaluation" type="button" disabled>导出评测报告</button>
+          </div>
+        </div>
+        <div id="evaluationProgress" class="evaluation-progress" hidden>
+          <progress max="16" value="0"></progress>
+          <span>准备评测……</span>
+        </div>
+        <p id="evaluationMessage" class="evaluation-message">尚未运行实时模型评测。检索基线已通过，但这不能替代最终语义评分。</p>
+        <div id="evaluationSummary" class="evaluation-summary" hidden></div>
+        <div id="evaluationFailures" class="evaluation-failures" hidden></div>
+      </section>
+
       <section id="empty" class="empty">
         <strong>还没有诊断记录</strong>
         <span>打开“记录新会话”，再到网页中完成一次选词解释；记录会自动出现在这里。</span>
       </section>
       <section id="sessions" class="sessions" aria-live="polite"></section>
     </main>
+    <script src="document-retrieval.js"></script>
+    <script src="evaluation/scorer.js"></script>
+    <script src="evaluation/browser-runner.js"></script>
     <script src="diagnostics.js"></script>
   </body>
 </html>

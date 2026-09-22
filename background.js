@@ -22,17 +22,26 @@ chrome.storage?.onChanged?.addListener?.((changes, area) => {
   }
 });
 
-chrome.runtime?.onMessage?.addListener?.((message) => {
-  if (message?.type !== "DIAGNOSTIC_EVENT") return;
-  recordDiagnosticEvent({
-    sessionId: message.sessionId,
-    requestId: message.requestId,
-    eventType: message.eventType,
-    selection: message.selection,
-    pageTitle: message.pageTitle,
-    localContext: message.localContext,
-    data: message.data,
-  });
+chrome.runtime?.onMessage?.addListener?.((message, _sender, sendResponse) => {
+  if (message?.type === "DIAGNOSTIC_EVENT") {
+    recordDiagnosticEvent({
+      sessionId: message.sessionId,
+      requestId: message.requestId,
+      eventType: message.eventType,
+      selection: message.selection,
+      pageTitle: message.pageTitle,
+      localContext: message.localContext,
+      data: message.data,
+    });
+    return;
+  }
+  if (message?.type === "EVALUATION_CASE") {
+    runEvaluationCase(message).then(sendResponse).catch((error) => sendResponse({
+      ok: false,
+      error: friendlyError(error),
+    }));
+    return true;
+  }
 });
 chrome.runtime.onConnect.addListener((port) => {
   if (port.name !== "context-explainer") return;
@@ -265,6 +274,45 @@ async function runGroundedInitial(port, request, apiKey) {
   });
   safePost(port, { type: "GROUNDED_RESULT", requestId: request.requestId, result: fallback });
   safePost(port, { type: "DONE", requestId: request.requestId, model: "deterministic-fallback" });
+}
+
+async function runEvaluationCase(message) {
+  const { bigmodelApiKey = "" } = await chrome.storage.local.get("bigmodelApiKey");
+  if (!bigmodelApiKey.trim()) return { ok: false, error: "请先在语流设置中保存智谱 API Key。", code: "NEED_KEY" };
+  const request = {
+    selection: String(message.selection || "").trim(),
+    documentContext: message.documentContext || null,
+  };
+  if (!request.selection || !request.documentContext || !Grounding) {
+    return { ok: false, error: "评测案例缺少选区或文档证据。", code: "INVALID_EVALUATION_CASE" };
+  }
+  let raw = "";
+  let validation = null;
+  let attempts = 0;
+  const startedAt = Date.now();
+  for (attempts = 1; attempts <= 2; attempts += 1) {
+    const messages = Grounding.buildMessages(request, attempts === 2 ? { errors: validation.errors, raw } : null);
+    raw = await completeModel({ apiKey: bigmodelApiKey.trim(), messages, maxTokens: 900 });
+    validation = Grounding.validateStructured(raw, request);
+    if (validation.ok) break;
+  }
+  const valid = validation?.ok === true;
+  return {
+    ok: true,
+    prediction: {
+      case_id: String(message.caseId || ""),
+      result: valid ? validation.result : Grounding.fallbackResult(request),
+      _meta: {
+        validation_attempts: Math.min(attempts, 2),
+        valid,
+        validation_errors: validation?.errors || [],
+        elapsed_ms: Date.now() - startedAt,
+      },
+      trace: {
+        retrieved_block_ids: (request.documentContext.evidence_candidates || []).map((item) => item.block_id),
+      },
+    },
+  };
 }
 
 async function planGeneralDefinition({ apiKey, term, senseMeaning, strict = false, diagnostics = {} }) {

@@ -20,6 +20,26 @@ h1 { margin: 7px 0 8px; font-family: SimSun, serif; font-size: 36px; font-weight
 .summary strong { display: block; margin-top: 7px; font-size: 24px; }
 .toolbar { display: flex; gap: 10px; margin-bottom: 16px; }
 .toolbar input { flex: 1; min-width: 180px; padding: 11px 13px; border: 1px solid #d7d3ca; border-radius: 10px; background: white; outline: none; }
+.evaluation { margin: 0 0 18px; padding: 20px; border: 1px solid #dfcfb3; border-radius: 14px; background: rgba(255,252,246,.94); }
+.evaluation-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; }
+.evaluation h2 { margin: 5px 0 6px; font: 500 24px/1.3 SimSun, serif; }
+.evaluation-heading p:not(.eyebrow) { max-width: 720px; margin: 0; color: #697077; font-size: 13px; line-height: 1.65; }
+.evaluation-actions { display: flex; flex: 0 0 auto; gap: 8px; }
+.evaluation-progress { display: grid; grid-template-columns: minmax(160px, 1fr) auto; align-items: center; gap: 14px; margin-top: 16px; }
+.evaluation-progress[hidden], .evaluation-summary[hidden], .evaluation-failures[hidden] { display: none; }
+.evaluation-progress progress { width: 100%; accent-color: #bd842b; }
+.evaluation-progress span, .evaluation-message { color: #746c60; font-size: 12px; }
+.evaluation-message { margin: 14px 0 0; }
+.evaluation-message.error { color: #a13f36; }
+.evaluation-summary { display: grid; grid-template-columns: repeat(5, 1fr); gap: 9px; margin-top: 16px; }
+.evaluation-summary article { padding: 11px 12px; border-radius: 9px; background: #f5efe3; }
+.evaluation-summary span { display: block; color: #777066; font-size: 11px; }
+.evaluation-summary strong { display: block; margin-top: 4px; font-size: 18px; }
+.evaluation-summary article.gate-pass { background: #edf6ed; color: #347044; }
+.evaluation-summary article.gate-fail { background: #fff0ed; color: #a23f35; }
+.evaluation-failures { margin-top: 13px; padding-top: 13px; border-top: 1px solid #e8ddc9; }
+.evaluation-failures strong { display: block; margin-bottom: 7px; color: #795b26; }
+.evaluation-failures ul { margin: 0; padding-left: 20px; color: #5a6065; font-size: 12px; line-height: 1.7; }
 button { padding: 10px 14px; border: 1px solid #bd852d; border-radius: 10px; background: #fffaf0; color: #8b641f; font: inherit; font-weight: 700; cursor: pointer; }
 button:hover { background: #f9edda; }
 button.danger { border-color: #d2aaa6; color: #a13f36; background: #fff9f8; }
@@ -45,6 +65,8 @@ button.danger { border-color: #d2aaa6; color: #a13f36; background: #fff9f8; }
   .privacy-card { grid-template-columns: 1fr; }
   .summary { grid-template-columns: 1fr 1fr; }
   .toolbar { flex-wrap: wrap; }
+  .evaluation-heading { flex-direction: column; }
+  .evaluation-summary { grid-template-columns: 1fr 1fr; }
   .session > summary { grid-template-columns: 1fr 90px; }
   .session > summary .meta { display: none; }
   .event { grid-template-columns: 75px 1fr; }
