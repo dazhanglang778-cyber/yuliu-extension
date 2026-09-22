@@ -60,7 +60,19 @@ async function runRequest(port, request) {
     selection: request.selection,
     pageTitle: request.title,
     localContext: request.localContext,
-    data: { mode: request.mode, strictSimple: request.strictSimple, strictGeneral: request.strictGeneral },
+    data: {
+      mode: request.mode,
+      strictSimple: request.strictSimple,
+      strictGeneral: request.strictGeneral,
+      documentContextSummary: request.documentContext ? {
+        snapshotVersion: request.documentContext.snapshot_version,
+        occurrenceId: request.documentContext.selection?.occurrence_id,
+        anchorBlockId: request.documentContext.selection?.anchor_block_id,
+        blockCount: request.documentContext.extraction?.block_count,
+        characterCount: request.documentContext.extraction?.character_count,
+        truncated: request.documentContext.extraction?.truncated,
+      } : null,
+    },
   });
   const { bigmodelApiKey = "" } = await chrome.storage.local.get("bigmodelApiKey");
   if (!bigmodelApiKey.trim()) {

@@ -1,5 +1,6 @@
 (() => {
   const Parser = globalThis.ContextExplainerParser;
+  const DocumentContext = globalThis.YuliuDocumentContext;
   const HOST_ID = "context-explainer-host";
   const HIGHLIGHT_CLASS = "context-explainer-selection-mark";
   const HIGHLIGHT_NAME = "context-explainer-active-selection";
@@ -75,6 +76,9 @@
       rects,
       anchorRect: range.getBoundingClientRect(),
       context: contextInfo.text,
+      localContext: contextInfo.localContext,
+      documentContext: contextInfo.documentContext,
+      blockElements: contextInfo.blockElements,
       readingRect: contextInfo.readingRect,
       readingBlock: contextInfo.readingBlock,
       title: document.title,
@@ -112,6 +116,17 @@
   }
 
   function collectContext(range, selectedText) {
+    const structured = DocumentContext?.collect?.(range, selectedText);
+    if (structured) {
+      return {
+        text: structured.legacyContext,
+        localContext: structured.localContext,
+        documentContext: structured.snapshot,
+        blockElements: structured.elementByBlockId,
+        readingBlock: structured.readingBlock,
+        readingRect: structured.readingRect,
+      };
+    }
     let element = range.commonAncestorContainer;
     if (element.nodeType !== Node.ELEMENT_NODE) element = element.parentElement;
     const readingBlock = element?.closest("p, li, blockquote, pre, td, article") || element;
@@ -120,6 +135,9 @@
     const readingRect = readingBlock?.getBoundingClientRect?.() || range.getBoundingClientRect();
     const result = {
       text,
+      localContext: cleanText(readingBlock?.innerText || selectedText).slice(0, 1200),
+      documentContext: null,
+      blockElements: new Map(),
       readingBlock,
       readingRect: {
         left: readingRect.left,
@@ -275,8 +293,11 @@
       mode,
       selection: item.text,
       senseMeaning: "",
-      localContext: mode === "initial" ? cleanText(item.readingBlock?.innerText || item.text).slice(0, 1200) : "",
+      localContext: mode === "initial" ? (item.localContext || cleanText(item.readingBlock?.innerText || item.text).slice(0, 1200)) : "",
       context: mode === "initial" ? item.context : "",
+      documentContext: mode === "initial" && item.documentContext
+        ? { ...item.documentContext, request_id: requestId }
+        : null,
       title: mode === "initial" ? item.title : "",
       existing: mode === "simplify" ? previousAnswer : "",
       strictSimple: mode === "simplify" && focusRetry > 0,
@@ -819,7 +840,7 @@
         eventType,
         selection: item?.text || "",
         pageTitle: item?.title || document.title,
-        localContext: cleanText(item?.readingBlock?.innerText || item?.text || "").slice(0, 1200),
+        localContext: (item?.localContext || cleanText(item?.readingBlock?.innerText || item?.text || "")).slice(0, 1200),
         data,
       });
     } catch (_) {}
