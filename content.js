@@ -1,6 +1,7 @@
 (() => {
   const Parser = globalThis.ContextExplainerParser;
   const DocumentContext = globalThis.YuliuDocumentContext;
+  const DocumentRetrieval = globalThis.YuliuDocumentRetrieval;
   const HOST_ID = "context-explainer-host";
   const HIGHLIGHT_CLASS = "context-explainer-selection-mark";
   const HIGHLIGHT_NAME = "context-explainer-active-selection";
@@ -118,8 +119,13 @@
   function collectContext(range, selectedText) {
     const structured = DocumentContext?.collect?.(range, selectedText);
     if (structured) {
+      const retrieval = DocumentRetrieval?.retrieve?.(structured.snapshot) || null;
+      if (retrieval) {
+        structured.snapshot.evidence_candidates = retrieval.candidates;
+        structured.snapshot.retrieval = retrieval.summary;
+      }
       return {
-        text: structured.legacyContext,
+        text: retrieval?.promptContext || structured.legacyContext,
         localContext: structured.localContext,
         documentContext: structured.snapshot,
         blockElements: structured.elementByBlockId,
@@ -296,7 +302,8 @@
       localContext: mode === "initial" ? (item.localContext || cleanText(item.readingBlock?.innerText || item.text).slice(0, 1200)) : "",
       context: mode === "initial" ? item.context : "",
       documentContext: mode === "initial" && item.documentContext
-        ? { ...item.documentContext, request_id: requestId }
+        ? (DocumentRetrieval?.compactSnapshot?.(item.documentContext, requestId)
+          || { ...item.documentContext, request_id: requestId })
         : null,
       title: mode === "initial" ? item.title : "",
       existing: mode === "simplify" ? previousAnswer : "",

@@ -71,6 +71,10 @@ async function runRequest(port, request) {
         blockCount: request.documentContext.extraction?.block_count,
         characterCount: request.documentContext.extraction?.character_count,
         truncated: request.documentContext.extraction?.truncated,
+        retrievalStrategy: request.documentContext.retrieval?.strategy,
+        candidateCount: request.documentContext.retrieval?.candidate_count,
+        termOccurrenceCount: request.documentContext.retrieval?.term_occurrence_count,
+        definitionMatchCount: request.documentContext.retrieval?.definition_match_count,
       } : null,
     },
   });
@@ -951,7 +955,7 @@ ${request.strictGeneral ? `上一次输出没有通过检查。本次必须逐�
           ? `【要解释的词】\n${request.selection}\n\n【中性义项身份——已经完成语境比对，不含文章内容】\n中文名称：${request.senseIdentity?.chineseName || ""}\n英文全称：${request.senseIdentity?.englishFullName || ""}\n概念类型：${request.senseIdentity?.conceptType || ""}\n完整义项：${request.senseIdentity?.neutralIdentity || request.selection}\n\n【外部专业资料】\n${sourceText}`
         : request.mode === "expand_example"
             ? `【要解释的词】\n${request.selection}\n\n【中性义项身份】\n${request.senseIdentity?.neutralIdentity || request.senseMeaning || request.selection}\n\n【已核验通用定义】\n${request.generalDefinition || ""}`
-            : `【唯一要解释的选中内容——最高优先级】\n${selectedTerm}\n\n【选词所在的局部段落——用于精确定位】\n${request.localContext || ""}\n\n【较完整的文章语境——用于理解作者整体表达，不得替代解释对象】\n${context}\n\n【页面标题——仅供辅助，不是解释对象】\n${request.title || ""}\n\n【输出前必须确认】\n回答的主语和解释对象只能是“${selectedTerm}”。文章主题即使出现次数更多，也绝不能取代“${selectedTerm}”。${existing}`,
+            : `【唯一要解释的选中内容——最高优先级】\n${selectedTerm}\n\n【本次选区定位】\n出现编号：${request.documentContext?.selection?.occurrence_id || "未结构化"}\n锚点段落：${request.documentContext?.selection?.anchor_block_id || "未结构化"}\n精确文本前缀：${request.documentContext?.selection?.text_quote?.prefix || ""}\n精确文本后缀：${request.documentContext?.selection?.text_quote?.suffix || ""}\n\n【选词所在的局部段落——用于精确定位】\n${request.localContext || ""}\n\n【从全文检索出的候选证据——段落ID必须保留，不得把无关同名实体强行绑定到选词】\n${context}\n\n【页面标题——仅供辅助，不能单独证明具体义项】\n${request.title || ""}\n\n【输出前必须确认】\n回答的主语和解释对象只能是“${selectedTerm}”。文章主题即使出现次数更多，也绝不能取代“${selectedTerm}”。只有同页共现而没有定义、指代或结构关系的专名，不得写入解释。${existing}`,
     },
   ];
 }

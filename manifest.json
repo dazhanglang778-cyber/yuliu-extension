@@ -19,7 +19,7 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["parser.js", "document-context.js", "content.js"],
+      "js": ["parser.js", "document-context.js", "document-retrieval.js", "content.js"],
       "run_at": "document_idle"
     }
   ]
