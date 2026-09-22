@@ -46,6 +46,25 @@
 - 页面标题只能辅助辨义，不能成为具体实体指认的唯一证据。
 - 更新金标准时必须说明原因，不能为了让当前模型通过而降低标准。
 
-## 当前阶段的使用方式
+## 批量评测
 
-现阶段自动测试只验证“测试集本身是否可靠”；第 9 步接入模型批量评测后，再自动统计义项正确率、证据有效率、无依据具体化率和提示误报率。
+第 9 步已经接入批量评测器，分成三种运行方式：
+
+```powershell
+# 只评测本地RAG能否召回正确证据，不调用模型
+node evaluation/run-batch.js --retrieval-only --output evaluation/results/retrieval-baseline-v1
+
+# 评分一份已有预测文件
+node evaluation/run-batch.js --predictions evaluation/results/predictions.json --output evaluation/results/scored
+
+# 使用智谱模型完成整套实时语义评测
+$env:BIGMODEL_API_KEY="你的密钥"
+node evaluation/run-batch.js --live --output evaluation/results/live
+Remove-Item Env:BIGMODEL_API_KEY
+```
+
+实时评测默认执行全部案例。调试时可加 `--case harness-later-use` 或 `--limit 3`。密钥只从临时环境变量读取，不写入预测、报告或仓库。
+
+每次运行同时生成 JSON 机器报告和 Markdown 人读报告。核心指标包括：义项正确率、确定性正确率、证据有效率、关键证据支持率、全部金标准证据召回率、无依据具体化率、提示误报率和首次成功率。
+
+失败分类及对应责任模块见 `failure-taxonomy.md`。其中 `RETRIEVAL_MISS` 表示正确证据没有进入候选集；`GENERATION_IGNORED_RETRIEVED_EVIDENCE` 表示 RAG 已经找到正确证据，但 WSD/生成阶段没有采用。两者不得混为同一种“模型答错”。

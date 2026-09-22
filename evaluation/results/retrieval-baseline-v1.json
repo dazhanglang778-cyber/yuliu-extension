@@ -1,0 +1,296 @@
+{
+  "mode": "retrieval",
+  "dataset_id": "yuliu-core-context-v1",
+  "generated_at": "2026-09-22T07:03:02.721Z",
+  "summary": {
+    "total_cases": 16,
+    "anchor_recall": 100,
+    "support_recall": 100,
+    "gold_evidence_recall": 100,
+    "retrieval_misses": 0
+  },
+  "cases": [
+    {
+      "case_id": "harness-definition",
+      "document_id": "agent-harness",
+      "anchor_recalled": true,
+      "support_recalled": true,
+      "gold_evidence_recall": 1,
+      "failures": [],
+      "retrieved_block_ids": [
+        "p-4",
+        "p-5",
+        "p-6",
+        "p-3",
+        "p-2",
+        "p-1",
+        "h-1",
+        "h-2"
+      ]
+    },
+    {
+      "case_id": "harness-later-use",
+      "document_id": "agent-harness",
+      "anchor_recalled": true,
+      "support_recalled": true,
+      "gold_evidence_recall": 1,
+      "failures": [],
+      "retrieved_block_ids": [
+        "p-5",
+        "p-4",
+        "p-6",
+        "p-3",
+        "h-2",
+        "p-2",
+        "p-1",
+        "h-1"
+      ]
+    },
+    {
+      "case_id": "apple-fruit",
+      "document_id": "apple-two-senses",
+      "anchor_recalled": true,
+      "support_recalled": true,
+      "gold_evidence_recall": 1,
+      "failures": [],
+      "retrieved_block_ids": [
+        "p-1",
+        "p-3",
+        "h-1",
+        "p-4",
+        "h-2",
+        "p-2",
+        "h-3",
+        "p-5"
+      ]
+    },
+    {
+      "case_id": "apple-company",
+      "document_id": "apple-two-senses",
+      "anchor_recalled": true,
+      "support_recalled": true,
+      "gold_evidence_recall": 1,
+      "failures": [],
+      "retrieved_block_ids": [
+        "p-4",
+        "p-3",
+        "p-1",
+        "h-1",
+        "p-5",
+        "h-3",
+        "h-2",
+        "p-2"
+      ]
+    },
+    {
+      "case_id": "skills-human",
+      "document_id": "agent-skills",
+      "anchor_recalled": true,
+      "support_recalled": true,
+      "gold_evidence_recall": 1,
+      "failures": [],
+      "retrieved_block_ids": [
+        "p-2",
+        "p-4",
+        "h-1",
+        "p-1",
+        "h-2",
+        "h-3",
+        "p-3",
+        "p-5"
+      ]
+    },
+    {
+      "case_id": "skills-agent-module",
+      "document_id": "agent-skills",
+      "anchor_recalled": true,
+      "support_recalled": true,
+      "gold_evidence_recall": 1,
+      "failures": [],
+      "retrieved_block_ids": [
+        "p-4",
+        "p-2",
+        "h-1",
+        "p-3",
+        "p-5",
+        "h-3",
+        "p-1",
+        "h-2"
+      ]
+    },
+    {
+      "case_id": "benchmark-survey",
+      "document_id": "benchmark-domains",
+      "anchor_recalled": true,
+      "support_recalled": true,
+      "gold_evidence_recall": 1,
+      "failures": [],
+      "retrieved_block_ids": [
+        "p-2",
+        "p-4",
+        "h-1",
+        "p-1",
+        "h-2",
+        "h-3",
+        "p-3",
+        "p-5"
+      ]
+    },
+    {
+      "case_id": "benchmark-model-evaluation",
+      "document_id": "benchmark-domains",
+      "anchor_recalled": true,
+      "support_recalled": true,
+      "gold_evidence_recall": 1,
+      "failures": [],
+      "retrieved_block_ids": [
+        "p-4",
+        "p-2",
+        "h-1",
+        "p-5",
+        "p-3",
+        "h-3",
+        "h-2",
+        "p-1"
+      ]
+    },
+    {
+      "case_id": "echo-budget-definition",
+      "document_id": "echo-budget",
+      "anchor_recalled": true,
+      "support_recalled": true,
+      "gold_evidence_recall": 1,
+      "failures": [],
+      "retrieved_block_ids": [
+        "p-1",
+        "h-1",
+        "p-7",
+        "p-6",
+        "p-2",
+        "h-2",
+        "p-3",
+        "p-4",
+        "p-5",
+        "h-3"
+      ]
+    },
+    {
+      "case_id": "echo-budget-long-distance",
+      "document_id": "echo-budget",
+      "anchor_recalled": true,
+      "support_recalled": true,
+      "gold_evidence_recall": 1,
+      "failures": [],
+      "retrieved_block_ids": [
+        "p-6",
+        "p-1",
+        "p-7",
+        "h-1",
+        "h-3",
+        "p-5",
+        "p-4",
+        "p-3",
+        "h-2",
+        "p-2"
+      ]
+    },
+    {
+      "case_id": "recipe-cooking",
+      "document_id": "training-recipe",
+      "anchor_recalled": true,
+      "support_recalled": true,
+      "gold_evidence_recall": 1,
+      "failures": [],
+      "retrieved_block_ids": [
+        "p-1",
+        "h-1",
+        "p-4",
+        "p-2",
+        "p-3",
+        "p-5"
+      ]
+    },
+    {
+      "case_id": "training-recipe-mixed-language",
+      "document_id": "training-recipe",
+      "anchor_recalled": true,
+      "support_recalled": true,
+      "gold_evidence_recall": 1,
+      "failures": [],
+      "retrieved_block_ids": [
+        "p-4",
+        "h-1",
+        "p-3",
+        "p-5",
+        "p-2",
+        "p-1"
+      ]
+    },
+    {
+      "case_id": "experience-return",
+      "document_id": "rsi-special-terms",
+      "anchor_recalled": true,
+      "support_recalled": true,
+      "gold_evidence_recall": 1,
+      "failures": [],
+      "retrieved_block_ids": [
+        "p-6",
+        "p-2",
+        "p-5",
+        "p-4",
+        "p-1",
+        "p-3",
+        "h-1"
+      ]
+    },
+    {
+      "case_id": "intelligence-explosion",
+      "document_id": "rsi-special-terms",
+      "anchor_recalled": true,
+      "support_recalled": true,
+      "gold_evidence_recall": 1,
+      "failures": [],
+      "retrieved_block_ids": [
+        "p-4",
+        "p-5",
+        "p-3",
+        "p-6",
+        "p-2",
+        "h-1",
+        "p-1"
+      ]
+    },
+    {
+      "case_id": "mercury-unresolved",
+      "document_id": "mercury-ambiguity",
+      "anchor_recalled": true,
+      "support_recalled": true,
+      "gold_evidence_recall": 1,
+      "failures": [],
+      "retrieved_block_ids": [
+        "p-3",
+        "p-4",
+        "p-5",
+        "p-1",
+        "h-1",
+        "p-2"
+      ]
+    },
+    {
+      "case_id": "mercury-chemical",
+      "document_id": "mercury-ambiguity",
+      "anchor_recalled": true,
+      "support_recalled": true,
+      "gold_evidence_recall": 1,
+      "failures": [],
+      "retrieved_block_ids": [
+        "p-4",
+        "p-5",
+        "p-3",
+        "p-1",
+        "h-1",
+        "p-2"
+      ]
+    }
+  ]
+}
