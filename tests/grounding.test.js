@@ -43,6 +43,7 @@ test("证据支持的 Harness 类别义项可以通过", () => {
   const checked = Grounding.validateStructured(validResult(), request());
   assert.equal(checked.ok, true, checked.errors.join(", "));
   assert.equal(checked.result.author_intent, null);
+  assert.deepEqual(checked.result.evidence[0].heading_path, []);
 });
 
 test("同页出现的 DeepSeek Harness 不能冒充当前 Harness 的具体身份", () => {

@@ -116,6 +116,8 @@
         block_id: blockId,
         quote,
         role: EVIDENCE_ROLES.has(candidate.role) ? candidate.role : "sense_disambiguation",
+        heading_path: Array.isArray(candidate.heading_path) ? candidate.heading_path.map((part) => visibleText(part, 120)).filter(Boolean) : [],
+        relation_to_selection: visibleText(candidate.relation_to_selection, 60),
       });
     }
 

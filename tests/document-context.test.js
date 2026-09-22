@@ -61,6 +61,14 @@ test("根据Range近似位置定位同一段中的正确一次同名词", () => 
   assert.ok(second.prefix.includes("稍后"));
 });
 
+test("原文引文定位索引会折叠空白并保留字符位置", () => {
+  const indexed = DocumentContext.buildNormalizedTextIndex(["Harness  是", "组织\nAgent 交互的", "运行框架。"]);
+  assert.equal(indexed.text, "Harness 是组织 Agent 交互的运行框架。");
+  const start = indexed.text.indexOf("组织 Agent");
+  assert.deepEqual(indexed.positions[start], { chunkIndex: 1, offset: 0 });
+  assert.equal(indexed.positions[start + "组织 Agent".length - 1].chunkIndex, 1);
+});
+
 test("旧接口过渡文本以选区所在块为锚点且不在段落中间截断", () => {
   const blocks = DocumentContext.createBlockRecords([
     { tagName: "p", text: "前文定义" },

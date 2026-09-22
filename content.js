@@ -5,6 +5,8 @@
   const HOST_ID = "context-explainer-host";
   const HIGHLIGHT_CLASS = "context-explainer-selection-mark";
   const HIGHLIGHT_NAME = "context-explainer-active-selection";
+  const EVIDENCE_HIGHLIGHT_NAME = "context-explainer-active-evidence";
+  const EVIDENCE_FALLBACK_CLASS = "context-explainer-evidence-target";
   let armedSelection = null;
   let armTimer = null;
   let activePort = null;
@@ -23,6 +25,8 @@
   let expansionBusy = false;
   let activeDiagnosticSessionId = "";
   let activeDiagnosticItem = null;
+  let evidenceHighlightTimer = null;
+  let fallbackEvidenceElement = null;
 
   window.addEventListener("mousedown", rememberExistingSelection, true);
   window.addEventListener("mouseup", rememberDraggedSelection, true);
@@ -215,6 +219,12 @@
               <h3><span>✎</span> 作者想表达什么</h3>
               <p data-field="intent"><span class="streaming">正在结合上下文</span></p>
             </div>
+          </div>
+          <div class="evidence-panel" hidden>
+            <button class="evidence-toggle" type="button" aria-expanded="false">
+              <span>依据原文 · <b data-field="evidence-count">0</b>处</span><i aria-hidden="true">⌄</i>
+            </button>
+            <div class="evidence-list" hidden></div>
           </div>
           <div class="simple-answer" hidden>
             <h3>一句话解释：</h3>
@@ -433,6 +443,94 @@
     } else if (done) {
       notice.hidden = true;
     }
+    renderEvidencePanel(shadow, parsed.evidence, done);
+  }
+
+  function renderEvidencePanel(shadow, evidence, done) {
+    const panel = shadow.querySelector(".evidence-panel");
+    const list = shadow.querySelector(".evidence-list");
+    const toggle = shadow.querySelector(".evidence-toggle");
+    const items = done && Array.isArray(evidence) ? evidence.filter((item) => item?.block_id && item?.quote) : [];
+    if (!items.length) {
+      panel.hidden = true;
+      list.replaceChildren();
+      return;
+    }
+    panel.hidden = false;
+    shadow.querySelector("[data-field='evidence-count']").textContent = String(items.length);
+    list.replaceChildren();
+    list.hidden = true;
+    toggle.setAttribute("aria-expanded", "false");
+    toggle.querySelector("i").textContent = "⌄";
+    toggle.onclick = () => {
+      list.hidden = !list.hidden;
+      toggle.setAttribute("aria-expanded", String(!list.hidden));
+      toggle.querySelector("i").textContent = list.hidden ? "⌄" : "⌃";
+    };
+    for (const [index, item] of items.entries()) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "evidence-item";
+      const meta = document.createElement("span");
+      meta.className = "evidence-meta";
+      meta.textContent = evidencePositionLabel(item, activeDiagnosticItem, index);
+      const quote = document.createElement("q");
+      quote.textContent = item.quote;
+      button.append(meta, quote);
+      button.addEventListener("click", () => focusEvidence(item, activeDiagnosticItem));
+      list.append(button);
+    }
+  }
+
+  function evidencePositionLabel(evidence, item, index) {
+    const anchorId = item?.documentContext?.selection?.anchor_block_id;
+    let relation = "文内依据";
+    if (evidence.block_id === anchorId) relation = "当前段";
+    else if (evidence.role === "direct_support") relation = "原文定义";
+    else if (evidence.relation_to_selection === "neighbor") relation = "相邻段落";
+    else if (evidence.relation_to_selection === "same_section") relation = "同一章节";
+    else if (evidence.relation_to_selection === "term_occurrence") relation = "同词位置";
+    const heading = Array.isArray(evidence.heading_path) ? evidence.heading_path.at(-1) : "";
+    return `${index + 1}. ${relation}${heading ? ` · ${heading}` : ""}`;
+  }
+
+  function focusEvidence(evidence, item) {
+    const element = item?.blockElements?.get?.(evidence.block_id);
+    if (!element?.isConnected) return;
+    element.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+    clearEvidenceFocus();
+    const range = DocumentContext?.findTextQuoteRange?.(element, evidence.quote);
+    if (range && globalThis.CSS?.highlights && globalThis.Highlight) {
+      ensureEvidenceHighlightStyle();
+      CSS.highlights.set(EVIDENCE_HIGHLIGHT_NAME, new Highlight(range));
+    } else {
+      ensureEvidenceHighlightStyle();
+      element.classList.add(EVIDENCE_FALLBACK_CLASS);
+      fallbackEvidenceElement = element;
+    }
+    sendDiagnosticEvent("evidence_navigated", {
+      evidenceId: evidence.evidence_id,
+      blockId: evidence.block_id,
+      role: evidence.role,
+    }, "", item);
+    evidenceHighlightTimer = setTimeout(clearEvidenceFocus, 3500);
+  }
+
+  function ensureEvidenceHighlightStyle() {
+    let style = document.getElementById("context-explainer-evidence-highlight-style");
+    if (style) return;
+    style = document.createElement("style");
+    style.id = "context-explainer-evidence-highlight-style";
+    style.textContent = `::highlight(${EVIDENCE_HIGHLIGHT_NAME}) { background: rgba(112, 176, 255, .38); text-decoration: underline 2px rgba(49, 114, 194, .92); } .${EVIDENCE_FALLBACK_CLASS} { background: rgba(112, 176, 255, .18) !important; outline: 2px solid rgba(49, 114, 194, .72) !important; outline-offset: 4px !important; }`;
+    document.documentElement.appendChild(style);
+  }
+
+  function clearEvidenceFocus() {
+    clearTimeout(evidenceHighlightTimer);
+    evidenceHighlightTimer = null;
+    globalThis.CSS?.highlights?.delete?.(EVIDENCE_HIGHLIGHT_NAME);
+    fallbackEvidenceElement?.classList?.remove?.(EVIDENCE_FALLBACK_CLASS);
+    fallbackEvidenceElement = null;
   }
 
   function renderSimple(shadow, raw, done) {
@@ -842,6 +940,7 @@
     disconnectExpansionPorts();
     activePort = null;
     clearTimeout(waitingTimer);
+    clearEvidenceFocus();
     if (!preserveHighlight) clearSelectionPaint();
     activeDiagnosticSessionId = "";
     activeDiagnosticItem = null;
@@ -967,6 +1066,17 @@
       @keyframes orbit { to { transform: rotate(360deg); } }
       .section { margin: 0 0 17px; }
       .section[hidden] { display: none; }
+      .evidence-panel { margin: -2px 0 17px 29px; border-top: 1px solid #eee1cb; }
+      .evidence-panel[hidden], .evidence-list[hidden] { display: none; }
+      .evidence-toggle { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 9px 0 3px; color: #8f651f; background: transparent; border: 0; font: 600 13px/1.6 "Microsoft YaHei UI", sans-serif; cursor: pointer; text-align: left; }
+      .evidence-toggle b { font: inherit; }
+      .evidence-toggle i { font-style: normal; font-size: 17px; }
+      .evidence-list { display: grid; gap: 7px; margin-top: 5px; }
+      .evidence-item { width: 100%; padding: 8px 10px; color: #3b4650; background: #faf6ed; border: 1px solid #eadcc2; border-radius: 7px; cursor: pointer; text-align: left; }
+      .evidence-item:hover { border-color: #d5b479; background: #fffaf0; }
+      .evidence-meta { display: block; margin-bottom: 3px; color: #9a702b; font: 600 11px/1.5 "Microsoft YaHei UI", sans-serif; }
+      .evidence-item q { display: block; overflow: hidden; color: #48525b; font: 12px/1.65 "Microsoft YaHei UI", sans-serif; text-overflow: ellipsis; white-space: nowrap; }
+      .evidence-item q::before, .evidence-item q::after { color: #b58a45; }
       .normal-answer[hidden], .simple-answer[hidden] { display: none; }
       .simple-answer { margin: 0 0 17px; padding: 14px 15px; background: #f8f3e9; border-radius: 9px; }
       .simple-answer h3 { margin-bottom: 8px; }

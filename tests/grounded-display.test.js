@@ -11,6 +11,10 @@ assert.ok(/data-section="intent"[\s\S]{0,160}作者想表达什么/.test(content
 assert.ok(content.includes('intentSection.hidden = done && !parsed.intent'), "作者意图为空时必须隐藏板块");
 assert.ok(content.includes('multiple_senses: "原文存在多种合理理解，目前无法唯一确定。"'));
 assert.ok(content.includes('insufficient_context: "当前原文信息不足，暂时无法可靠确定这里的具体所指。"'));
+assert.ok(content.includes("依据原文 · "), "卡片必须提供简洁的原文依据入口");
+assert.ok(content.includes("function focusEvidence"), "原文依据必须支持点击定位");
+assert.ok(content.includes("DocumentContext?.findTextQuoteRange"), "定位后必须尝试高亮精确引文而不只是整段");
+assert.ok(content.includes('sendDiagnosticEvent("evidence_navigated"'), "证据定位操作必须进入诊断记录");
 assert.ok(background.includes('request.mode === "initial" && request.documentContext && Grounding'), "结构化文档请求必须走证据校验链");
 assert.ok(background.includes("Grounding.validateStructured"));
 assert.ok(background.includes("Grounding.fallbackResult"));

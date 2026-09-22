@@ -132,6 +132,50 @@
     };
   }
 
+  function buildNormalizedTextIndex(chunks) {
+    const text = [];
+    const positions = [];
+    for (let chunkIndex = 0; chunkIndex < (chunks || []).length; chunkIndex += 1) {
+      const chunk = String(chunks[chunkIndex] || "");
+      for (let offset = 0; offset < chunk.length; offset += 1) {
+        const character = chunk[offset];
+        if (/\s/.test(character)) {
+          if (!text.length || text[text.length - 1] === " ") continue;
+          text.push(" ");
+          positions.push({ chunkIndex, offset });
+        } else {
+          text.push(character);
+          positions.push({ chunkIndex, offset });
+        }
+      }
+    }
+    while (text[text.length - 1] === " ") {
+      text.pop();
+      positions.pop();
+    }
+    return { text: text.join(""), positions };
+  }
+
+  function findTextQuoteRange(element, quote, documentObject = element?.ownerDocument) {
+    if (!element || !documentObject?.createRange) return null;
+    const showText = documentObject.defaultView?.NodeFilter?.SHOW_TEXT || globalThis.NodeFilter?.SHOW_TEXT || 4;
+    const walker = documentObject.createTreeWalker(element, showText);
+    const nodes = [];
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) nodes.push(node);
+    if (!nodes.length) return null;
+    const indexed = buildNormalizedTextIndex(nodes.map((node) => node.nodeValue || ""));
+    const target = normalizeText(quote);
+    const start = indexed.text.indexOf(target);
+    if (start < 0 || !target) return null;
+    const first = indexed.positions[start];
+    const last = indexed.positions[start + target.length - 1];
+    if (!first || !last) return null;
+    const range = documentObject.createRange();
+    range.setStart(nodes[first.chunkIndex], first.offset);
+    range.setEnd(nodes[last.chunkIndex], last.offset + 1);
+    return range;
+  }
+
   function buildLegacyContext(blocks, anchorBlockId, limit = 6000) {
     const list = Array.isArray(blocks) ? blocks : [];
     if (!list.length) return "";
@@ -326,6 +370,8 @@
     createBlockRecords,
     nearestOccurrence,
     createTextQuote,
+    buildNormalizedTextIndex,
+    findTextQuoteRange,
     buildLegacyContext,
     collect,
   };
