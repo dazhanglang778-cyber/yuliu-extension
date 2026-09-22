@@ -1,3 +1,7 @@
+try {
+  if (typeof importScripts === "function") importScripts("grounding.js");
+} catch (_) {}
+const Grounding = globalThis.YuliuGrounding;
 const API_URL = "https://open.bigmodel.cn/api/paas/v4/chat/completions";
 const SEARCH_URL = "https://open.bigmodel.cn/api/paas/v4/web_search";
 const FREE_MODELS = ["glm-4.7-flash", "glm-4-flash-250414"];
@@ -91,6 +95,11 @@ async function runRequest(port, request) {
       type: "NEED_KEY",
       requestId: request.requestId,
     });
+    return;
+  }
+
+  if (request.mode === "initial" && request.documentContext && Grounding) {
+    await runGroundedInitial(port, request, bigmodelApiKey.trim());
     return;
   }
 
@@ -218,6 +227,44 @@ async function runRequest(port, request) {
   }
 
   throw lastError || new Error("模型暂时没有完成请求");
+}
+
+async function runGroundedInitial(port, request, apiKey) {
+  const diagnostics = {
+    sessionId: request.diagnosticSessionId,
+    requestId: request.requestId,
+    selection: request.selection,
+    mode: request.mode,
+  };
+  safePost(port, { type: "STATUS", requestId: request.requestId, message: "正在辨别当前义项并核对原文证据……" });
+  let raw = "";
+  let validation = null;
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const messages = Grounding.buildMessages(request, attempt ? { errors: validation.errors, raw } : null);
+    raw = await completeModel({ apiKey, messages, maxTokens: 900 });
+    validation = Grounding.validateStructured(raw, request);
+    void recordDiagnosticEvent({
+      ...diagnostics,
+      eventType: validation.ok ? "grounding_validated" : "grounding_validation_failed",
+      data: { attempt: attempt + 1, errors: validation.errors, rawOutput: raw },
+    });
+    if (validation.ok) {
+      safePost(port, { type: "GROUNDED_RESULT", requestId: request.requestId, result: validation.result });
+      safePost(port, { type: "DONE", requestId: request.requestId, model: "structured-grounded" });
+      return;
+    }
+    if (attempt === 0) {
+      safePost(port, { type: "STATUS", requestId: request.requestId, message: "初稿的证据没有完全对齐，正在自动校正……" });
+    }
+  }
+  const fallback = Grounding.fallbackResult(request);
+  void recordDiagnosticEvent({
+    ...diagnostics,
+    eventType: "grounding_safe_fallback",
+    data: { errors: validation?.errors || ["UNKNOWN_VALIDATION_FAILURE"] },
+  });
+  safePost(port, { type: "GROUNDED_RESULT", requestId: request.requestId, result: fallback });
+  safePost(port, { type: "DONE", requestId: request.requestId, model: "deterministic-fallback" });
 }
 
 async function planGeneralDefinition({ apiKey, term, senseMeaning, strict = false, diagnostics = {} }) {

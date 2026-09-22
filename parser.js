@@ -71,10 +71,16 @@
     const text = String(raw || "");
     const json = tryJson(text);
     if (json) return {
+      structured: !!json.selected_text && !!json.resolved_sense,
+      selectedText: cleanVisible(json.selected_text),
+      resolvedSense: json.resolved_sense || null,
       meaning: cleanVisible(json.meaning_here),
       intent: cleanVisible(json.author_intent),
       certainty: normalizeCertainty(json.certainty),
       note: cleanOptionalNote(json.note),
+      noticeCode: cleanVisible(json.notice_code),
+      claims: Array.isArray(json.claims) ? json.claims : [],
+      evidence: Array.isArray(json.evidence) ? json.evidence : [],
     };
 
     const meaningMarker = find(patterns.meaning, text);
@@ -92,7 +98,7 @@
       ? normalizeCertainty(sliceAfter(text, certaintyMarker, [patterns.note, patterns.intent]))
       : "";
     const note = noteMarker ? cleanOptionalNote(sliceAfter(text, noteMarker, [])) : "";
-    return { meaning, intent, certainty, note };
+    return { structured: false, selectedText: "", resolvedSense: null, meaning, intent, certainty, note, noticeCode: "", claims: [], evidence: [] };
   }
 
   function parseExpanded(raw) {

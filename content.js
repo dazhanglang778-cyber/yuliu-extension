@@ -211,7 +211,7 @@
               <h3><span>♧</span> 这里指什么</h3>
               <p data-field="meaning"><span class="streaming">正在理解这里的意思</span></p>
             </div>
-            <div class="section">
+            <div class="section" data-section="intent">
               <h3><span>✎</span> 作者想表达什么</h3>
               <p data-field="intent"><span class="streaming">正在结合上下文</span></p>
             </div>
@@ -262,6 +262,7 @@
     }, 3500);
     if (mode === "initial") {
       initialAnswer = "";
+      shadow.querySelector("[data-section='intent']").hidden = false;
       shadow.querySelector("[data-field='meaning']").innerHTML = '<span class="cursor"></span>';
       shadow.querySelector("[data-field='intent']").innerHTML = '<span class="cursor"></span>';
     } else if (mode === "simplify") {
@@ -335,6 +336,12 @@
       activeSources = Array.isArray(message.sources) ? message.sources : [];
       return;
     }
+    if (message.type === "GROUNDED_RESULT") {
+      initialAnswer = JSON.stringify(message.result || {});
+      hideLoading(shadow);
+      renderInitial(shadow, initialAnswer, false);
+      return;
+    }
     if (message.type === "DELTA") {
       initialAnswer += message.delta;
       if (mode === "simplify") {
@@ -351,24 +358,19 @@
     if (message.type === "DONE") {
       hideLoading(shadow);
       const parsedInitial = mode === "initial" ? parseInitial(initialAnswer) : null;
-      const missedSelection = mode === "initial" && !answerNamesSelection(parsedInitial.meaning, item.text);
-      const missedIntent = mode === "initial" && parsedInitial.intent.trim().length < 4;
-      if (missedSelection || missedIntent) {
+      const missedSelection = mode === "initial" && !parsedInitial.structured && !answerNamesSelection(parsedInitial.meaning, item.text);
+      if (missedSelection) {
         sendDiagnosticEvent("validation_failed", {
           mode,
-          rule: missedSelection ? "回答必须聚焦选中词" : "作者表达意图不能为空",
+          rule: "回答必须聚焦选中词",
           attempt: focusRetry + 1,
           rawOutput: initialAnswer,
         }, message.requestId);
         if (focusRetry < 1) {
-          showLoading(shadow, missedSelection
-            ? `回答没有聚焦“${item.text}”，正在自动纠正……`
-            : "作者表达意图没有完整生成，正在自动补全……");
+          showLoading(shadow, `回答没有聚焦“${item.text}”，正在自动纠正……`);
           requestExplanation("initial", item, focusRetry + 1);
         } else {
-          showError(shadow, missedSelection
-            ? `模型连续两次没有正确解释“${item.text}”，请重新双击尝试。`
-            : "模型连续两次没有完整生成作者表达意图，请重新双击尝试。", false);
+          showError(shadow, `模型连续两次没有正确解释“${item.text}”，请重新双击尝试。`, false);
         }
         return;
       }
@@ -411,15 +413,23 @@
   function renderInitial(shadow, raw, done) {
     const parsed = parseInitial(raw);
     setStreamText(shadow.querySelector("[data-field='meaning']"), parsed.meaning, done);
-    setStreamText(shadow.querySelector("[data-field='intent']"), parsed.intent, done);
+    const intentSection = shadow.querySelector("[data-section='intent']");
+    intentSection.hidden = done && !parsed.intent;
+    if (parsed.intent || !done) setStreamText(shadow.querySelector("[data-field='intent']"), parsed.intent, done);
 
     const notice = shadow.querySelector(".notice");
     notice.classList.remove("error");
     notice.removeAttribute("title");
-    const uncertain = parsed.certainty && parsed.certainty !== "clear";
-    if (done && (uncertain || parsed.note)) {
+    const notices = {
+      multiple_senses: "原文存在多种合理理解，目前无法唯一确定。",
+      insufficient_context: "当前原文信息不足，暂时无法可靠确定这里的具体所指。",
+      external_knowledge_needed: "当前原文只能确定大致义项，完整解释还需要外部资料。",
+    };
+    const programNotice = notices[parsed.noticeCode] || "";
+    const legacyUncertain = !parsed.structured && parsed.certainty && !["clear", "inferred"].includes(parsed.certainty);
+    if (done && (programNotice || legacyUncertain || (!parsed.structured && parsed.note))) {
       notice.hidden = false;
-      notice.textContent = parsed.note || "原文没有完全说明，以上是结合语境作出的判断。";
+      notice.textContent = programNotice || parsed.note || "当前原文信息不足，暂时无法可靠确定这里的具体所指。";
     } else if (done) {
       notice.hidden = true;
     }
@@ -956,6 +966,7 @@
       .loading-orbit i { position: absolute; left: 5px; top: -2px; width: 4px; height: 4px; background: #c58c2f; border-radius: 50%; transform-origin: 2px 9px; animation: orbit 1.05s linear infinite; }
       @keyframes orbit { to { transform: rotate(360deg); } }
       .section { margin: 0 0 17px; }
+      .section[hidden] { display: none; }
       .normal-answer[hidden], .simple-answer[hidden] { display: none; }
       .simple-answer { margin: 0 0 17px; padding: 14px 15px; background: #f8f3e9; border-radius: 9px; }
       .simple-answer h3 { margin-bottom: 8px; }
