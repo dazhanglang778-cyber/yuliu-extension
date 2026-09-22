@@ -1,12 +1,16 @@
 (function attachYuliuGrounding(root, factory) {
   let contract = root.YuliuGroundingContractV2;
+  let claimVerification = root.YuliuClaimVerification;
   if (!contract && typeof module !== "undefined" && module.exports) {
     try { contract = require("./grounding-contract-v2.js"); } catch (_) {}
   }
-  const api = factory(contract);
+  if (!claimVerification && typeof module !== "undefined" && module.exports) {
+    try { claimVerification = require("./claim-verification.js"); } catch (_) {}
+  }
+  const api = factory(contract, claimVerification);
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   root.YuliuGrounding = api;
-})(typeof globalThis !== "undefined" ? globalThis : this, function createYuliuGrounding(ContractV2) {
+})(typeof globalThis !== "undefined" ? globalThis : this, function createYuliuGrounding(ContractV2, ClaimVerification) {
   const REFERENT_TYPES = new Set([
     "generic_concept", "organization", "product", "person", "method", "metric", "document_defined_term", "other",
   ]);
@@ -115,7 +119,8 @@
         evidence_id: evidenceId,
         block_id: blockId,
         quote,
-        role: PAGE_ROLES.has(item?.role) ? item.role : PAGE_ROLES.has(candidate.role) ? candidate.role : "sense_disambiguation",
+        // 证据角色由本地检索器判定，模型不能把“同词出现”自行升级成“直接支持”。
+        role: PAGE_ROLES.has(candidate.role) ? candidate.role : PAGE_ROLES.has(item?.role) ? item.role : "sense_disambiguation",
       });
     }
     return normalized;
@@ -224,13 +229,23 @@
       errors.push("UNDECLARED_HIGH_RISK_FACT");
     }
 
+    if (ClaimVerification?.verify) {
+      const verification = ClaimVerification.verify(result, request);
+      if (!verification.ok) errors.push(...verification.errors);
+      result.__claim_verification = verification;
+    } else {
+      errors.push("CLAIM_VERIFIER_UNAVAILABLE");
+    }
+
     if (ContractV2?.validate) {
       const checked = ContractV2.validate(result);
       if (!checked.ok) errors.push(...checked.errors);
     } else {
       errors.push("V2_CONTRACT_UNAVAILABLE");
     }
-    if (errors.length) return { ok: false, errors: [...new Set(errors)], result };
+    const verification = result.__claim_verification || null;
+    delete result.__claim_verification;
+    if (errors.length) return { ok: false, errors: [...new Set(errors)], result, verification };
 
     const { byEvidenceId } = candidateMaps(request.documentContext);
     result.page_evidence = result.page_evidence.map((item) => {
@@ -241,7 +256,65 @@
         relation_to_selection: visibleText(candidate.relation_to_selection, 60),
       };
     });
-    return { ok: true, errors: [], result };
+    return { ok: true, errors: [], result, verification };
+  }
+
+  function genericReferentText(candidate) {
+    const labels = {
+      organization: "某个具体组织",
+      product: "某个具体产品或系统实现",
+      person: "某位具体人物",
+      method: "一类方法",
+      metric: "一类指标或评测标准",
+      document_defined_term: "本文定义的一类概念",
+      generic_concept: "该一般概念",
+      other: "该类对象",
+    };
+    return labels[candidate?.referent_type] || labels.other;
+  }
+
+  function salvageLowRisk(validation, request = {}) {
+    if (!validation?.result || !validation.verification) return null;
+    const result = JSON.parse(JSON.stringify(validation.result));
+    const invalidIds = new Set(validation.verification.invalid_claim_ids || []);
+    const invalidClaims = result.claims.filter((claim) => invalidIds.has(claim.claim_id));
+    if (invalidClaims.some((claim) => claim.claim_type === "contextual_mapping" || claim.claim_type === "lexical_knowledge")) return null;
+
+    const recoverable = validation.errors.every((error) => (
+      error.startsWith("CLAIM_NOT_SEMANTICALLY_SUPPORTED:")
+      || error.startsWith("HIGH_RISK_WITHOUT_VERIFIED_SUPPORT:")
+      || error === "SPECIFIC_IDENTITY_WITHOUT_VERIFIED_SUPPORT"
+      || error === "UNDECLARED_HIGH_RISK_FACT"
+      || error === "AUTHOR_INTENT_WITHOUT_MATCHING_CLAIM"
+    ));
+    if (!recoverable) return null;
+
+    const removeAuthorIntent = invalidClaims.some((claim) => claim.claim_type === "author_intent");
+    const removeHighRisk = invalidClaims.some((claim) => claim.claim_type === "high_risk_fact")
+      || validation.errors.some((error) => error.includes("HIGH_RISK") || error.includes("SPECIFIC_IDENTITY"));
+    result.claims = result.claims.filter((claim) => !invalidIds.has(claim.claim_id)
+      && !(removeHighRisk && claim.claim_type === "high_risk_fact"));
+    if (removeAuthorIntent) result.author_intent = null;
+
+    if (removeHighRisk || validation.errors.includes("UNDECLARED_HIGH_RISK_FACT")) {
+      const selected = result.candidate_senses.find((item) => item.sense_id === result.resolution.selected_sense_id);
+      if (!selected) return null;
+      const generic = selected.referent_type === "generic_concept" && selected.gloss
+        ? selected.gloss
+        : genericReferentText(selected);
+      result.resolution.specificity = "category";
+      result.meaning_here = {
+        text: `“${result.selected_text}”在这里指${generic}。`,
+        chinese_name: selected.referent_type === "generic_concept" ? selected.chinese_name || null : null,
+        english_full_name: null,
+        contextual_role: null,
+      };
+    }
+
+    const retainedClaimIds = new Set(result.claims.map((claim) => claim.claim_id));
+    if (result.author_intent && result.author_intent.claim_ids.some((id) => !retainedClaimIds.has(id))) result.author_intent = null;
+    const rechecked = validateStructured(result, request);
+    return rechecked.ok ? { result: rechecked.result, removed_claim_ids: [...invalidIds] } : null;
   }
 
   function fallbackResult(request = {}) {
@@ -317,11 +390,11 @@
       external_sources: [{ source_id: "只能使用输入ID", title: "输入标题", url: "输入网址", publisher: null, excerpt: null }],
       notice_code: "none|multiple_senses|insufficient_context|term_unrecognized|external_lookup_failed",
     };
-    const system = `你是网页与文档内的语境义消歧器。目标是让用户快速理解选中词在当前位置的含义，而不是做封闭式文档问答。按顺序执行：一、结合模型知识和术语候选池建立真实存在的主要义项；二、执行WSD（词义消歧），只用当前选区与页面候选证据选择本次义项；三、生成简洁的“这里指什么”；四、只有作者确实借该词完成强调、对比、区分、提醒或推进论证，而且这一作用与词义解释不同，才生成“作者想表达什么”（author_intent），否则填null。术语候选知识不得冒充当前页面证据：模型知识可以支持低风险的一般概念释义；页面证据负责支持当前义项映射和作者意图；具体实体、唯一缩写全称、版本、数字和时效事实必须由页面直接证据或已提供的外部来源支持。外部来源标记为candidate_unverified时，必须先判断其与候选义项语义一致才能采用。页面仅出现同词可用于sense_disambiguation，但不能冒充词典定义。quote必须是对应页面段落中的连续原文。正常推断使用inferred且notice_code为none，不得误报信息不足。只输出一个JSON对象，不要Markdown。`;
+    const system = `你是网页与文档内的语境义消歧器。目标是让用户快速理解选中词在当前位置的含义，而不是做封闭式文档问答。按顺序执行：一、结合模型知识和术语候选池建立真实存在的主要义项；二、执行WSD（词义消歧），只用当前选区与页面候选证据选择本次义项；三、生成简洁的“这里指什么”；四、只有作者确实借该词完成强调、对比、区分、提醒或推进论证，而且这一作用与词义解释不同，才生成“作者想表达什么”（author_intent），否则填null。术语候选知识不得冒充当前页面证据：模型知识可以支持低风险的一般概念释义；页面证据负责支持当前义项映射和作者意图；具体实体、唯一缩写全称、版本、数字和时效事实必须由页面直接证据或已提供的外部来源支持。每条claim只写一个可独立核验的事实；supports必须真正支持这条claim，不能因为引文出现了选中词就绑定。输入中的页面role是程序判定的，不得把sense_disambiguation或coreference_support自行升级为direct_support。外部来源标记为candidate_unverified时，必须先判断其与候选义项语义一致，并确认它能支持绑定的具体主张后才能采用。页面仅出现同词可用于sense_disambiguation，但不能冒充词典定义。quote必须是对应页面段落中的连续原文。正常推断使用inferred且notice_code为none，不得误报信息不足。只输出一个JSON对象，不要Markdown。`;
     let user = `【唯一选中词】\n${selection}\n\n【精确选区】\n${JSON.stringify(context.selection || {})}\n\n【页面候选证据】\n${JSON.stringify(pageCandidates)}\n\n【术语候选知识与待核验外部资料】\n${JSON.stringify(termKnowledge)}\n\n【必须遵守的输出结构】\n${JSON.stringify(outputContract)}\n\nmeaning_here第一句必须点名“${selection}”，直接说明当前语境义。candidate_senses应合并重复义项；页面直接定义的文内特殊术语可以新增document_defined_term候选。clear或inferred必须提供contextual_mapping主张并绑定页面证据。作者意图不得重复meaning_here。`;
     if (repair) user += `\n\n【上一次输出未通过程序校验】\n错误码：${repair.errors.join(", ")}\n上一次输出：${String(repair.raw || "").slice(0, 8000)}\n请只修复这些错误，并重新输出完整JSON。`;
     return [{ role: "system", content: system }, { role: "user", content: user }];
   }
 
-  return { extractJson, validateStructured, fallbackResult, buildMessages, specificMarkers };
+  return { extractJson, validateStructured, salvageLowRisk, fallbackResult, buildMessages, specificMarkers };
 });

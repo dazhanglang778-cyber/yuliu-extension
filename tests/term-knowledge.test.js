@@ -134,7 +134,7 @@ test("WSD提示明确区分术语候选知识与页面证据", () => {
 
 test("后台真实链路已加载候选义项路由器并保留失败开放降级", () => {
   const background = fs.readFileSync(path.resolve(__dirname, "..", "background.js"), "utf8");
-  assert.ok(background.includes('importScripts("grounding-contract-v2.js", "grounding.js", "term-knowledge.js")'));
+  assert.ok(background.includes('importScripts("grounding-contract-v2.js", "claim-verification.js", "grounding.js", "term-knowledge.js")'));
   assert.ok(background.includes("prepareTermKnowledge"));
   assert.ok(background.includes("term_knowledge_failed_open"));
 });

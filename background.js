@@ -1,5 +1,5 @@
 try {
-  if (typeof importScripts === "function") importScripts("grounding-contract-v2.js", "grounding.js", "term-knowledge.js");
+  if (typeof importScripts === "function") importScripts("grounding-contract-v2.js", "claim-verification.js", "grounding.js", "term-knowledge.js");
 } catch (_) {}
 const Grounding = globalThis.YuliuGrounding;
 const TermKnowledge = globalThis.YuliuTermKnowledge;
@@ -285,6 +285,17 @@ async function runGroundedInitial(port, request, apiKey) {
       safePost(port, { type: "STATUS", requestId: request.requestId, message: "初稿的证据没有完全对齐，正在自动校正……" });
     }
   }
+  const salvaged = Grounding.salvageLowRisk?.(validation, preparedRequest);
+  if (salvaged?.result) {
+    void recordDiagnosticEvent({
+      ...diagnostics,
+      eventType: "grounding_locally_degraded",
+      data: { errors: validation?.errors || [], removedClaimIds: salvaged.removed_claim_ids || [] },
+    });
+    safePost(port, { type: "GROUNDED_RESULT", requestId: request.requestId, result: salvaged.result });
+    safePost(port, { type: "DONE", requestId: request.requestId, model: "structured-local-degradation" });
+    return;
+  }
   const fallback = Grounding.fallbackResult(preparedRequest);
   void recordDiagnosticEvent({
     ...diagnostics,
@@ -370,14 +381,18 @@ async function runEvaluationCase(message) {
     if (validation.ok) break;
   }
   const valid = validation?.ok === true;
+  const salvaged = valid ? null : Grounding.salvageLowRisk?.(validation, request);
+  const finalResult = valid ? validation.result : salvaged?.result || Grounding.fallbackResult(request);
   return {
     ok: true,
     prediction: {
       case_id: String(message.caseId || ""),
-      result: valid ? validation.result : Grounding.fallbackResult(request),
+      result: finalResult,
       _meta: {
         validation_attempts: Math.min(attempts, 2),
-        valid,
+        valid: valid || !!salvaged,
+        locally_degraded: !!salvaged,
+        removed_claim_ids: salvaged?.removed_claim_ids || [],
         validation_errors: validation?.errors || [],
         elapsed_ms: Date.now() - startedAt,
       },
