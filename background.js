@@ -1,7 +1,8 @@
 try {
-  if (typeof importScripts === "function") importScripts("grounding.js");
+  if (typeof importScripts === "function") importScripts("grounding.js", "term-knowledge.js");
 } catch (_) {}
 const Grounding = globalThis.YuliuGrounding;
+const TermKnowledge = globalThis.YuliuTermKnowledge;
 const API_URL = "https://open.bigmodel.cn/api/paas/v4/chat/completions";
 const SEARCH_URL = "https://open.bigmodel.cn/api/paas/v4/web_search";
 const FREE_MODELS = ["glm-4.7-flash", "glm-4-flash-250414"];
@@ -245,11 +246,29 @@ async function runGroundedInitial(port, request, apiKey) {
     selection: request.selection,
     mode: request.mode,
   };
-  safePost(port, { type: "STATUS", requestId: request.requestId, message: "正在辨别当前义项并核对原文证据……" });
+  let preparedRequest = request;
+  if (TermKnowledge) {
+    try {
+      const termKnowledge = await prepareTermKnowledge({
+        apiKey,
+        request,
+        diagnostics,
+        onStatus(message) { safePost(port, { type: "STATUS", requestId: request.requestId, message }); },
+      });
+      preparedRequest = { ...request, termKnowledge };
+    } catch (error) {
+      void recordDiagnosticEvent({
+        ...diagnostics,
+        eventType: "term_knowledge_failed_open",
+        data: { message: friendlyError(error) },
+      });
+    }
+  }
+  safePost(port, { type: "STATUS", requestId: request.requestId, message: "正在结合候选义项辨别当前所指并核对原文证据……" });
   let raw = "";
   let validation = null;
   for (let attempt = 0; attempt < 2; attempt += 1) {
-    const messages = Grounding.buildMessages(request, attempt ? { errors: validation.errors, raw } : null);
+    const messages = Grounding.buildMessages(preparedRequest, attempt ? { errors: validation.errors, raw } : null);
     raw = await completeModel({ apiKey, messages, maxTokens: 900 });
     validation = Grounding.validateStructured(raw, request);
     void recordDiagnosticEvent({
@@ -276,10 +295,60 @@ async function runGroundedInitial(port, request, apiKey) {
   safePost(port, { type: "DONE", requestId: request.requestId, model: "deterministic-fallback" });
 }
 
+async function prepareTermKnowledge({ apiKey, request, diagnostics = {}, onStatus = () => {} }) {
+  if (!TermKnowledge) return null;
+  if (TermKnowledge.pageHasDirectDefinition(request)) {
+    const bundle = {
+      version: "1.0",
+      strategy: "page_definition_fast_path",
+      routing_reasons: ["页面已有直接定义"],
+      normalized_term: String(request.selection || "").trim(),
+      term_type: "document_defined_term",
+      knowledge_confidence: "high",
+      ambiguity: "low",
+      fact_risk: "ordinary",
+      candidate_senses: [],
+      external_sources: [],
+      lookup_failed: false,
+    };
+    void recordDiagnosticEvent({ ...diagnostics, eventType: "term_knowledge_ready", data: bundle });
+    return bundle;
+  }
+
+  onStatus("原文没有直接定义，正在建立这个词的候选义项……");
+  let plan;
+  try {
+    const raw = await completeModel({ apiKey, messages: TermKnowledge.buildPlanningMessages(request), maxTokens: 850 });
+    plan = TermKnowledge.normalizePlan(raw, request);
+    void recordDiagnosticEvent({ ...diagnostics, eventType: "candidate_senses_ready", data: plan });
+  } catch (error) {
+    plan = TermKnowledge.fallbackPlan(request);
+    void recordDiagnosticEvent({ ...diagnostics, eventType: "candidate_senses_failed", data: { message: friendlyError(error), fallback: plan } });
+  }
+
+  const route = TermKnowledge.decideRetrieval(plan, request);
+  void recordDiagnosticEvent({ ...diagnostics, eventType: "knowledge_route_decided", data: route });
+  let sources = [];
+  let lookupFailed = false;
+  if (route.required) {
+    const query = TermKnowledge.buildSearchQuery(request.selection, plan);
+    onStatus("这个词存在需核对的信息，正在按需查找术语资料……");
+    try {
+      sources = await searchExternalSources({ apiKey, query, diagnostics, searchStage: "语境释义按需检索" });
+    } catch (error) {
+      lookupFailed = true;
+      void recordDiagnosticEvent({ ...diagnostics, eventType: "term_lookup_failed", data: { query, message: friendlyError(error) } });
+    }
+  }
+  const bundle = TermKnowledge.knowledgeBundle(plan, route, sources, { lookupFailed });
+  void recordDiagnosticEvent({ ...diagnostics, eventType: "term_knowledge_ready", data: bundle });
+  return bundle;
+}
+
 async function runEvaluationCase(message) {
   const { bigmodelApiKey = "" } = await chrome.storage.local.get("bigmodelApiKey");
   if (!bigmodelApiKey.trim()) return { ok: false, error: "请先在语流设置中保存智谱 API Key。", code: "NEED_KEY" };
-  const request = {
+  let request = {
     selection: String(message.selection || "").trim(),
     documentContext: message.documentContext || null,
   };
@@ -290,6 +359,10 @@ async function runEvaluationCase(message) {
   let validation = null;
   let attempts = 0;
   const startedAt = Date.now();
+  if (TermKnowledge) {
+    const termKnowledge = await prepareTermKnowledge({ apiKey: bigmodelApiKey.trim(), request });
+    request = { ...request, termKnowledge };
+  }
   for (attempts = 1; attempts <= 2; attempts += 1) {
     const messages = Grounding.buildMessages(request, attempts === 2 ? { errors: validation.errors, raw } : null);
     raw = await completeModel({ apiKey: bigmodelApiKey.trim(), messages, maxTokens: 900 });
@@ -310,6 +383,7 @@ async function runEvaluationCase(message) {
       },
       trace: {
         retrieved_block_ids: (request.documentContext.evidence_candidates || []).map((item) => item.block_id),
+        knowledge_strategy: request.termKnowledge?.strategy || "legacy",
       },
     },
   };
@@ -1257,7 +1331,7 @@ function diagnosticSearchCandidates(results) {
       const content = String(result.content || "").trim();
       let decision = "进入专业性与义项核验";
       if (!/^https?:$/.test(url.protocol)) decision = "淘汰：网址协议不受支持";
-      else if (isUgcDomain(domain)) decision = "淘汰：UGC 来源";
+      else if (isUgcDomain(domain)) decision = "保留为低优先级线索：UGC 来源";
       else if (!title) decision = "淘汰：缺少标题";
       else if (content.length < 50) decision = "淘汰：有效摘要过短";
       return {
@@ -1266,7 +1340,7 @@ function diagnosticSearchCandidates(results) {
         domain,
         link: url.href,
         decision,
-        score: decision.startsWith("进入") ? sourceScore(domain, title, String(result.media || ""), content, url.protocol) : null,
+        score: /^(?:进入|保留)/.test(decision) ? sourceScore(domain, title, String(result.media || ""), content, url.protocol) : null,
         excerpt: sanitizeEvidenceText(content).slice(0, 800),
       };
     } catch (_) {

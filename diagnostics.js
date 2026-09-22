@@ -35,6 +35,12 @@ const eventLabels = {
   grounding_validation_failed: "语境证据校验未通过",
   grounding_safe_fallback: "语境解释安全降级",
   evidence_navigated: "跳转至原文依据",
+  candidate_senses_ready: "候选义项已建立",
+  candidate_senses_failed: "候选义项规划失败并降级",
+  knowledge_route_decided: "已决定是否外部检索",
+  term_lookup_failed: "术语资料检索失败",
+  term_knowledge_ready: "术语知识准备完成",
+  term_knowledge_failed_open: "术语知识异常但继续回答",
 };
 
 boot();

@@ -191,6 +191,9 @@
       heading_path: item.heading_path || [],
       text: item.text,
     }));
+    const termKnowledge = request.termKnowledge && typeof request.termKnowledge === "object"
+      ? request.termKnowledge
+      : null;
     const contract = {
       selected_text: selection,
       resolved_sense: { label: "中性的当前义项标签", referent_type: "generic_concept|organization|product|person|method|metric|document_defined_term|other", specificity: "category|named_entity|exact_variant" },
@@ -201,8 +204,8 @@
       evidence: [{ evidence_id: "e1", block_id: "原候选段落ID", quote: "原文中的连续子串", role: "沿用候选证据角色" }],
       notice_code: "none|multiple_senses|insufficient_context|external_knowledge_needed",
     };
-    const system = `你是网页与文档内的语境义消歧器。先做WSD（词义消歧），再做证据归因，最后才写答案。只能解释用户选中的词，不解释文章主题。任何公司、产品、人物、框架全称、具体变体、数字和因果判断都属于高风险具体化，必须有候选证据中role为direct_support的原文直接支持；同页共现、标题相似、常识或模型记忆都不够。证据quote必须逐字取自对应段落的连续原文，不得改写。作者意图不是必填项，原文不能直接支持时填null。inferred表示有充分间接证据，不需要警告；只有多义、信息不足或确需外部知识时才显示notice。只输出一个JSON对象，不要Markdown。`;
-    let user = `【唯一选中词】\n${selection}\n\n【精确选区】\n${JSON.stringify(context.selection || {})}\n\n【程序召回的候选证据】\n${JSON.stringify(candidates)}\n\n【输出契约】\n${JSON.stringify(contract)}\n\n先选择与选区最匹配的义项。具体程度只能达到证据直接支持的层级；如果只能确定类别，就停在类别，不得猜具体产品或全称。claims要覆盖答案中的可核验事实。`;
+    const system = `你是网页与文档内的语境义消歧器。先做WSD（词义消歧），再做证据归因，最后才写答案。只能解释用户选中的词，不解释文章主题。术语知识中的candidate_senses是候选池，不代表已选中当前义项；external_sources也只是尚待语义核验的候选资料。任何公司、产品、人物、框架全称、具体变体、数字和因果判断都属于高风险具体化，必须有候选证据中role为direct_support的原文直接支持；同页共现、标题相似、常识或模型记忆都不够。证据quote必须逐字取自对应段落的连续原文，不得改写。作者意图不是必填项，原文不能直接支持时填null。inferred表示有充分间接证据，不需要警告；只有多义、信息不足或确需外部知识时才显示notice。只输出一个JSON对象，不要Markdown。`;
+    let user = `【唯一选中词】\n${selection}\n\n【精确选区】\n${JSON.stringify(context.selection || {})}\n\n【程序召回的页面候选证据】\n${JSON.stringify(candidates)}\n\n【术语候选知识——只用于建立和排除义项，不得冒充当前页面证据】\n${JSON.stringify(termKnowledge)}\n\n【输出契约】\n${JSON.stringify(contract)}\n\n先从候选知识和自身可靠知识中形成可能义项，再只用当前选区和页面证据选择这里的义项。具体程度只能达到相应来源直接支持的层级；如果只能确定类别，就停在类别，不得猜具体产品或全称。claims要覆盖答案中的可核验事实。`;
     if (repair) user += `\n\n【上一次输出未通过程序校验】\n错误码：${repair.errors.join(", ")}\n上一次输出：${String(repair.raw || "").slice(0, 6000)}\n请只修复这些错误并重新输出完整JSON。`;
     return [{ role: "system", content: system }, { role: "user", content: user }];
   }
