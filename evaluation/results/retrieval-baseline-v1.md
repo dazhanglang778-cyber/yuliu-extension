@@ -2,7 +2,7 @@
 
 - 模式：retrieval
 - 数据集：yuliu-core-context-v1
-- 生成时间：2026-09-22T08:28:27.229Z
+- 生成时间：2026-09-23T07:55:24.483Z
 
 ## 检索阶段
 
@@ -33,3 +33,11 @@
 - intelligence-explosion：通过
 - mercury-unresolved：通过
 - mercury-chemical：通过
+- web-annotation-body：通过
+- web-annotation-target：通过
+- javascript-closure：通过
+- javascript-lexical-environment：通过
+- kubernetes-pod：通过
+- kubernetes-deployment：通过
+- extension-service-worker：通过
+- extension-content-script：通过

@@ -26,7 +26,7 @@ function goodPrediction(overrides = {}) {
       notice_code: "none",
       ...overrides,
     },
-    _meta: { validation_attempts: 1 },
+    _meta: { validation_attempts: 1, elapsed_ms: 1200 },
     trace: { retrieved_block_ids: ["p-4", "p-5"] },
   };
 }
@@ -38,6 +38,45 @@ test("完全符合金标准的结果通过核心评测", () => {
   assert.equal(scored.passed, true, scored.failures.join(", "));
   assert.equal(scored.metrics.sense_correct, 1);
   assert.equal(scored.metrics.evidence_valid, 1);
+  assert.equal(scored.metrics.useful_answer, 1);
+  assert.equal(scored.metrics.author_intent_appropriate, 1);
+});
+
+test("作者意图不该出现时重复这里指什么会被单独识别", () => {
+  const meaning = "在这里指组织模型、工具与环境交互的一套运行框架。";
+  const scored = Scorer.evaluateCase(harnessGold, goodPrediction({
+    meaning_here: meaning,
+    author_intent: meaning,
+  }), harnessBlocks, { expected_certainty: "clear" });
+  assert.equal(scored.metrics.author_intent_appropriate, 0);
+  assert.equal(scored.metrics.author_intent_distinct, 0);
+  assert.ok(scored.failures.includes("AUTHOR_INTENT_UNNECESSARY"));
+  assert.ok(scored.failures.includes("AUTHOR_INTENT_DUPLICATES_MEANING"));
+});
+
+test("第二版主张必须得到原文证据的语义支持", () => {
+  const result = {
+    schema_version: "2.0",
+    selected_text: "Harness",
+    candidate_senses: [{
+      sense_id: "s1", label: "Agent 运行框架", gloss: "组织模型、工具与环境交互的运行框架",
+      referent_type: "generic_concept", chinese_name: null, english_full_name: null,
+      supports: [{ source_kind: "model_knowledge", source_id: null }],
+    }],
+    resolution: { status: "clear", selected_sense_id: "s1", alternative_sense_ids: [], confidence: "high", specificity: "category" },
+    meaning_here: { text: "在这里指组织模型、工具与环境交互的一套运行框架。", chinese_name: null, english_full_name: null, contextual_role: null },
+    author_intent: null,
+    claims: [{ claim_id: "c1", claim_type: "contextual_mapping", text: "Harness 在这里指 Agent 运行框架。", supports: [{ source_kind: "page_evidence", source_id: "e1" }] }],
+    page_evidence: [{ evidence_id: "e1", block_id: "p-4", quote: "组织这些交互环节的运行框架统称为 Harness", role: "direct_support" }],
+    external_sources: [],
+    notice_code: "none",
+  };
+  const supported = Scorer.evaluateCase(harnessGold, { result, _meta: { validation_attempts: 1 } }, harnessBlocks, { expected_certainty: "clear" });
+  assert.equal(supported.metrics.semantic_support, 1);
+  result.claims[0].supports[0].source_id = "missing";
+  const unsupported = Scorer.evaluateCase(harnessGold, { result, _meta: { validation_attempts: 1 } }, harnessBlocks, { expected_certainty: "clear" });
+  assert.equal(unsupported.metrics.semantic_support, 0);
+  assert.ok(unsupported.failures.includes("CLAIM_SEMANTIC_SUPPORT_FAILURE"));
 });
 
 test("DeepSeek Harness错误具体化会归入可行动失败类型", () => {
@@ -64,6 +103,7 @@ test("伪引文与提示误报分别归因而不混成一个错误", () => {
   });
   assert.ok(scored.failures.includes("EVIDENCE_QUOTE_MISMATCH"));
   assert.ok(scored.failures.includes("NOTICE_FALSE_POSITIVE"));
+  assert.equal(scored.metrics.over_refusal, 1);
 });
 
 test("检索已有正确证据但回答未采用时归因给生成阶段", () => {
@@ -130,14 +170,14 @@ test("把FDE编成实战营运营方法会被金标准明确拦截", () => {
   assert.ok(scored.failures.includes("REFERENT_TYPE_MISMATCH"));
 });
 
-test("批量检索评测覆盖全部20个案例并达到当前基线", () => {
+test("批量检索评测覆盖全部28个案例并达到当前基线", () => {
   const prepared = Runner.prepareCases(dataset, {});
   const traces = prepared.map((entry) => ({
     case_id: entry.gold.case_id,
     retrieved_block_ids: entry.retrieval.candidates.map((item) => item.block_id),
   }));
   const report = Scorer.evaluateRetrieval(dataset, traces);
-  assert.equal(report.summary.total_cases, 20);
+  assert.equal(report.summary.total_cases, 28);
   assert.equal(report.summary.anchor_recall, 100);
   assert.equal(report.summary.support_recall, 100);
   assert.equal(report.summary.retrieval_misses, 0);
@@ -150,6 +190,10 @@ test("汇总报告同时给出正确率、风险率和失败频次", () => {
   assert.equal(summary.total_cases, 2);
   assert.equal(summary.notice_false_positive_rate, 50);
   assert.equal(summary.failure_counts.NOTICE_FALSE_POSITIVE, 1);
+  assert.equal(summary.useful_answer_rate, 50);
+  assert.equal(summary.over_refusal_rate, 50);
+  assert.equal(summary.average_response_time_ms, 1200);
+  assert.equal(summary.p95_response_time_ms, 1200);
   assert.equal(summary.by_difficulty.contextual.total_cases, 2);
   assert.equal(summary.release_gate.passed, false);
 });

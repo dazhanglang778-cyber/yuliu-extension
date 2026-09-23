@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><title>Chrome 扩展中的后台与页面脚本</title></head>
+<body>
+  <article>
+    <h1 data-block-id="p-1">扩展程序的两个运行环境</h1>
+    <p data-block-id="p-2">Manifest V3 扩展通常把后台事件处理放在 extension service worker 中，把需要读取或操作网页的代码放在 content script 中。</p>
+    <h2 data-block-id="p-3">Extension service worker</h2>
+    <p data-block-id="p-4">扩展 Service Worker 是扩展的中央事件处理器。它按需启动，在空闲后可能终止，不能直接访问网页 DOM，因此持久状态不应只保存在全局变量里。</p>
+    <p data-block-id="p-5">它可以响应扩展事件、调用获准的 Chrome API，并与其他扩展上下文交换消息。</p>
+    <h2 data-block-id="p-6">Content script</h2>
+    <p data-block-id="p-7">Content script 是注入网页并在页面环境附近运行的扩展脚本，能够读取或修改页面 DOM，也可以通过消息与扩展的其他部分通信。</p>
+    <p data-block-id="p-8">Content script 与页面自身脚本通常运行在相互隔离的 JavaScript 世界中；它不是从网络下载后任意执行的远程代码。</p>
+  </article>
+</body>
+</html>

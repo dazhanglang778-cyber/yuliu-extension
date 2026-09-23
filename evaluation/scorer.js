@@ -1,8 +1,10 @@
 (function attachYuliuEvaluation(root, factory) {
-  const api = factory();
+  const verifier = root.YuliuClaimVerification
+    || (typeof module !== "undefined" && module.exports ? require("../claim-verification.js") : null);
+  const api = factory(verifier);
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   root.YuliuEvaluation = api;
-})(typeof globalThis !== "undefined" ? globalThis : this, function createYuliuEvaluation() {
+})(typeof globalThis !== "undefined" ? globalThis : this, function createYuliuEvaluation(ClaimVerification) {
   const SPECIFICITY_RANK = { category: 0, named_entity: 1, exact_variant: 2 };
 
   function normalize(value) {
@@ -13,6 +15,35 @@
     const haystack = normalize(text);
     const needle = normalize(term);
     return !!needle && haystack.includes(needle);
+  }
+
+  function characterBigrams(value) {
+    const text = normalize(value);
+    if (text.length < 2) return text ? [text] : [];
+    const grams = [];
+    for (let index = 0; index < text.length - 1; index += 1) grams.push(text.slice(index, index + 2));
+    return [...new Set(grams)];
+  }
+
+  function textSimilarity(left, right) {
+    const leftSet = new Set(characterBigrams(left));
+    const rightSet = new Set(characterBigrams(right));
+    if (!leftSet.size || !rightSet.size) return 0;
+    const shared = [...leftSet].filter((item) => rightSet.has(item)).length;
+    return shared / (leftSet.size + rightSet.size - shared);
+  }
+
+  function semanticVerification(rawResult, blockMap) {
+    if (!rawResult || rawResult.schema_version !== "2.0" || !ClaimVerification?.verify) return null;
+    const evidenceCandidates = (rawResult.page_evidence || []).map((item) => ({
+      evidence_id: item.evidence_id,
+      block_id: item.block_id,
+      role: item.role,
+      quote: item.quote,
+      text: blockMap.get(item.block_id) || item.quote || "",
+      heading_path: [],
+    }));
+    return ClaimVerification.verify(rawResult, { documentContext: { evidence_candidates: evidenceCandidates } });
   }
 
   function caseIndex(dataset) {
@@ -66,7 +97,8 @@
   }
 
   function evaluateCase(gold, prediction, blockMap = new Map(), trace = {}) {
-    const result = resultView(prediction?.result || prediction || null);
+    const rawResult = prediction?.result || prediction || null;
+    const result = resultView(rawResult);
     const failures = [];
     const checks = {};
     checks.output_schema = !!result
@@ -142,13 +174,39 @@
       && checks.referent_type
       && checks.specificity_safe;
     if (!senseCorrect && !failures.includes("MISSING_KEY_INFORMATION")) failures.push("SENSE_MISMATCH");
+    const expectedAuthorIntent = gold.expected.author_intent_required === true;
+    const authorIntentText = String(result.author_intent || "").trim();
+    const authorIntentPresent = authorIntentText.length > 0;
+    checks.author_intent_appropriate = expectedAuthorIntent ? authorIntentPresent : !authorIntentPresent;
+    if (!checks.author_intent_appropriate) failures.push(expectedAuthorIntent ? "AUTHOR_INTENT_MISSING" : "AUTHOR_INTENT_UNNECESSARY");
+    const authorIntentSimilarity = authorIntentPresent ? textSimilarity(result.meaning_here, authorIntentText) : null;
+    checks.author_intent_distinct = authorIntentPresent ? authorIntentSimilarity < 0.72 : true;
+    if (!checks.author_intent_distinct) failures.push("AUTHOR_INTENT_DUPLICATES_MEANING");
+
+    const semantic = semanticVerification(rawResult, blockMap);
+    checks.semantic_support = semantic == null ? null : semantic.ok;
+    if (checks.semantic_support === false) failures.push("CLAIM_SEMANTIC_SUPPORT_FAILURE");
+
+    const refusalStatuses = new Set(["ambiguous", "insufficient", "unrecognized"]);
+    const overRefusal = ["clear", "inferred"].includes(gold.expected.certainty)
+      && (refusalStatuses.has(result.certainty) || ["insufficient_context", "external_knowledge_needed", "multiple_senses"].includes(result.notice_code));
+    const usefulAnswer = checks.selection_match
+      && senseCorrect
+      && checks.certainty
+      && checks.notice
+      && String(result.meaning_here || "").trim().length >= 6;
+    const elapsedValue = prediction?._meta?.elapsed_ms;
+    const responseTime = elapsedValue == null ? Number.NaN : Number(elapsedValue);
     const passed = checks.output_schema
       && checks.selection_match
       && senseCorrect
       && checks.certainty
       && checks.notice
       && checks.evidence_valid
-      && checks.evidence_support;
+      && checks.evidence_support
+      && checks.author_intent_appropriate
+      && checks.author_intent_distinct
+      && checks.semantic_support !== false;
     return {
       case_id: gold.case_id,
       category: gold.category,
@@ -156,7 +214,12 @@
       passed,
       checks,
       failures: [...new Set(failures)],
-      details: { missing_groups: missingGroups, forbidden_hits: forbiddenHits },
+      details: {
+        missing_groups: missingGroups,
+        forbidden_hits: forbiddenHits,
+        author_intent_similarity: authorIntentSimilarity,
+        semantic_verification: semantic,
+      },
       metrics: {
         format_valid: checks.output_schema ? 1 : 0,
         selection_correct: checks.selection_match ? 1 : 0,
@@ -168,6 +231,12 @@
         unsupported_specificity: checks.specificity_safe ? 0 : 1,
         notice_false_positive: failures.includes("NOTICE_FALSE_POSITIVE") ? 1 : 0,
         first_pass_success: prediction?._meta?.validation_attempts === 1 ? 1 : 0,
+        useful_answer: usefulAnswer ? 1 : 0,
+        over_refusal: overRefusal ? 1 : 0,
+        semantic_support: checks.semantic_support == null ? null : (checks.semantic_support ? 1 : 0),
+        author_intent_appropriate: checks.author_intent_appropriate ? 1 : 0,
+        author_intent_distinct: authorIntentPresent ? (checks.author_intent_distinct ? 1 : 0) : null,
+        response_time_ms: Number.isFinite(responseTime) && responseTime >= 0 ? responseTime : null,
       },
       trace,
     };
@@ -178,13 +247,22 @@
       format_valid: 0, selection_correct: 0, sense_correct: 0, certainty_correct: 0,
       evidence_valid: 0, evidence_support: 0, gold_evidence_recall: 0,
       unsupported_specificity: 0, notice_false_positive: 0, first_pass_success: 0,
+      useful_answer: 0, over_refusal: 0, semantic_support: null,
+      author_intent_appropriate: 0, author_intent_distinct: null, response_time_ms: null,
     };
   }
 
   function average(cases, field, filter = () => true) {
-    const eligible = cases.filter(filter);
+    const eligible = cases.filter((item) => filter(item) && Number.isFinite(item.metrics[field]));
     if (!eligible.length) return null;
-    return eligible.reduce((sum, item) => sum + Number(item.metrics[field] || 0), 0) / eligible.length;
+    return eligible.reduce((sum, item) => sum + Number(item.metrics[field]), 0) / eligible.length;
+  }
+
+  function percentile(cases, field, fraction) {
+    const values = cases.map((item) => item.metrics[field]).filter(Number.isFinite).sort((a, b) => a - b);
+    if (!values.length) return null;
+    const index = Math.max(0, Math.ceil(values.length * fraction) - 1);
+    return Math.round(values[index]);
   }
 
   function roundRate(value) {
@@ -211,6 +289,13 @@
       unsupported_specificity_rate: roundRate(average(cases, "unsupported_specificity")),
       notice_false_positive_rate: roundRate(average(cases, "notice_false_positive", (item) => ["clear", "inferred"].includes(item.trace?.expected_certainty))),
       first_pass_success_rate: roundRate(average(cases, "first_pass_success")),
+      useful_answer_rate: roundRate(average(cases, "useful_answer")),
+      over_refusal_rate: roundRate(average(cases, "over_refusal", (item) => ["clear", "inferred"].includes(item.trace?.expected_certainty))),
+      semantic_support_rate: roundRate(average(cases, "semantic_support")),
+      author_intent_appropriateness: roundRate(average(cases, "author_intent_appropriate")),
+      author_intent_distinction: roundRate(average(cases, "author_intent_distinct")),
+      average_response_time_ms: average(cases, "response_time_ms") == null ? null : Math.round(average(cases, "response_time_ms")),
+      p95_response_time_ms: percentile(cases, "response_time_ms", 0.95),
       failure_counts: failureCounts,
     };
     summary.by_difficulty = sliceSummaries(cases, (item) => item.difficulty || "unknown");
@@ -232,6 +317,8 @@
       sense_accuracy: roundRate(average(items, "sense_correct")),
       evidence_validity: roundRate(average(items, "evidence_valid")),
       unsupported_specificity_rate: roundRate(average(items, "unsupported_specificity")),
+      useful_answer_rate: roundRate(average(items, "useful_answer")),
+      over_refusal_rate: roundRate(average(items, "over_refusal", (item) => ["clear", "inferred"].includes(item.trace?.expected_certainty))),
     }]));
   }
 
@@ -242,9 +329,16 @@
       sense_accuracy: { target: 95, actual: summary.sense_accuracy },
       unsupported_specificity_rate: { target: 1, actual: summary.unsupported_specificity_rate, maximum: true },
       first_pass_success_rate: { target: 95, actual: summary.first_pass_success_rate },
+      useful_answer_rate: { target: 90, actual: summary.useful_answer_rate },
+      over_refusal_rate: { target: 5, actual: summary.over_refusal_rate, maximum: true },
+      semantic_support_rate: { target: 95, actual: summary.semantic_support_rate },
+      author_intent_appropriateness: { target: 95, actual: summary.author_intent_appropriateness },
+      author_intent_distinction: { target: 90, actual: summary.author_intent_distinction },
+      p95_response_time_ms: { target: 15000, actual: summary.p95_response_time_ms, maximum: true },
     };
     for (const item of Object.values(checks)) {
-      item.passed = item.actual != null && (item.maximum ? item.actual <= item.target : item.actual >= item.target);
+      item.evaluated = item.actual != null;
+      item.passed = !item.evaluated || (item.maximum ? item.actual <= item.target : item.actual >= item.target);
     }
     return { passed: Object.values(checks).every((item) => item.passed), checks };
   }
@@ -261,6 +355,7 @@
         const trace = {
           ...(prediction?.trace || {}),
           expected_certainty: gold.expected.certainty,
+          expected_author_intent_required: gold.expected.author_intent_required === true,
           document_id: document.document_id,
         };
         cases.push(evaluateCase(gold, prediction, blocks, trace));

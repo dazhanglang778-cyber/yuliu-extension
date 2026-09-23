@@ -102,6 +102,7 @@ async function runLive(prepared, args) {
   if (!apiKey.trim()) throw new Error("实时评测需要先在环境变量 BIGMODEL_API_KEY 中提供密钥；密钥不会写入报告。");
   const predictions = [];
   for (const entry of prepared) {
+    const startedAt = Date.now();
     const request = { selection: entry.gold.selection.exact, documentContext: entry.snapshot };
     let raw = "";
     let validation = null;
@@ -117,11 +118,20 @@ async function runLive(prepared, args) {
     } catch (caught) {
       error = caught?.message || String(caught);
     }
-    const result = validation?.ok ? validation.result : Grounding.fallbackResult(request);
+    const salvaged = validation?.ok ? null : Grounding.salvageLowRisk?.(validation, request);
+    const result = validation?.ok ? validation.result : salvaged?.result || Grounding.fallbackResult(request);
     predictions.push({
       case_id: entry.gold.case_id,
       result,
-      _meta: { validation_attempts: Math.min(attempts, 2), valid: validation?.ok === true, validation_errors: validation?.errors || [], error },
+      _meta: {
+        validation_attempts: Math.min(attempts, 2),
+        valid: validation?.ok === true || !!salvaged,
+        locally_degraded: !!salvaged,
+        removed_claim_ids: salvaged?.removed_claim_ids || [],
+        validation_errors: validation?.errors || [],
+        elapsed_ms: Date.now() - startedAt,
+        error,
+      },
       trace: {
         retrieved_block_ids: entry.retrieval.candidates.map((item) => item.block_id),
         expected_certainty: entry.gold.expected.certainty,
@@ -140,7 +150,22 @@ function markdownReport(payload) {
   if (payload.mode === "retrieval") {
     lines.push("## 检索阶段", "", `- 当前选区召回率：${s.anchor_recall}%`, `- 关键支持证据召回率：${s.support_recall}%`, `- 全部金标准证据召回率：${s.gold_evidence_recall}%`, `- 检索遗漏：${s.retrieval_misses} 条`);
   } else {
-    lines.push("## 核心指标", "", `- 核心通过率：${s.core_pass_rate}%`, `- 义项正确率：${s.sense_accuracy}%`, `- 证据有效率：${s.evidence_validity}%`, `- 关键证据支持率：${s.evidence_support_rate}%`, `- 无依据具体化率：${s.unsupported_specificity_rate}%`, `- 提示误报率：${s.notice_false_positive_rate}%`, `- 首次成功率：${s.first_pass_success_rate}%`);
+    lines.push(
+      "## 核心指标", "",
+      `- 核心通过率：${s.core_pass_rate}%`,
+      `- 有用回答率：${s.useful_answer_rate}%`,
+      `- 过度拒答率：${s.over_refusal_rate}%`,
+      `- 义项正确率：${s.sense_accuracy}%`,
+      `- 证据有效率：${s.evidence_validity}%`,
+      `- 主张语义支持率：${s.semantic_support_rate == null ? "未评估" : `${s.semantic_support_rate}%`}`,
+      `- 作者意图适配率：${s.author_intent_appropriateness}%`,
+      `- 作者意图区分度：${s.author_intent_distinction == null ? "未评估" : `${s.author_intent_distinction}%`}`,
+      `- 无依据具体化率：${s.unsupported_specificity_rate}%`,
+      `- 提示误报率：${s.notice_false_positive_rate}%`,
+      `- 首次成功率：${s.first_pass_success_rate}%`,
+      `- 平均响应时间：${s.average_response_time_ms == null ? "未评估" : `${s.average_response_time_ms} ms`}`,
+      `- P95 响应时间：${s.p95_response_time_ms == null ? "未评估" : `${s.p95_response_time_ms} ms`}`,
+    );
     lines.push("", "## 失败分类", "");
     const failures = Object.entries(s.failure_counts || {}).sort((a, b) => b[1] - a[1]);
     lines.push(...(failures.length ? failures.map(([name, count]) => `- ${name}：${count}`) : ["- 无"]));

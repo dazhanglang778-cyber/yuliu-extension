@@ -1,6 +1,6 @@
 {
   "dataset_id": "yuliu-core-context-v1",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "documents": [
     {
       "document_id": "agent-harness",
@@ -498,6 +498,210 @@
             "author_intent_required": false
           },
           "evidence": [{ "block_id": "p-4", "quote": "Mercury 明确表示化学元素汞，符号为 Hg", "role": "direct_support" }]
+        }
+      ]
+    },
+    {
+      "document_id": "web-annotation-model",
+      "title": "Web Annotation Data Model：Body 与 Target",
+      "file": "documents/web-annotation-model.html",
+      "source_type": "real_public",
+      "source_url": "https://www.w3.org/TR/annotation-model/",
+      "captured_at": "2026-09-23",
+      "adaptation_note": "依据 W3C 官方规范的概念关系人工改写为固定中文评测页，不是网页全文镜像。",
+      "cases": [
+        {
+          "case_id": "web-annotation-body",
+          "category": "standard_term_in_context",
+          "difficulty": "contextual",
+          "selection": { "exact": "Body", "anchor_block_id": "p-5", "occurrence_index": 0 },
+          "expected": {
+            "sense": "网页标注中承载评论、标签或其他描述内容的资源",
+            "referent_type": "generic_concept",
+            "maximum_specificity": "category",
+            "certainty": "clear",
+            "allow_inference": false,
+            "must_include_groups": [["标注"], ["评论", "标签", "描述"], ["内容", "资源"]],
+            "must_not_include": ["人体", "HTML body", "网页主体"],
+            "reference_answer": "Body 在这里指网页标注中承载评论、标签或其他描述内容的资源。",
+            "author_intent_required": false
+          },
+          "evidence": [
+            { "block_id": "p-3", "quote": "Body 是评论、标签或其他描述性内容", "role": "direct_support" },
+            { "block_id": "p-5", "quote": "简单评论、标签和说明文字都可以充当 Body", "role": "coreference_support" }
+          ]
+        },
+        {
+          "case_id": "web-annotation-target",
+          "category": "standard_term_in_context",
+          "difficulty": "contextual",
+          "selection": { "exact": "Target", "anchor_block_id": "p-7", "occurrence_index": 0 },
+          "expected": {
+            "sense": "网页标注的内容所针对、谈论或标记的资源或片段",
+            "referent_type": "generic_concept",
+            "maximum_specificity": "category",
+            "certainty": "clear",
+            "allow_inference": false,
+            "must_include_groups": [["标注"], ["针对", "谈论", "标记"], ["资源", "片段"]],
+            "must_not_include": ["射击目标", "用户群体", "营销对象"],
+            "reference_answer": "Target 在这里指网页标注所针对、谈论或标记的网络资源或资源片段。",
+            "author_intent_required": false
+          },
+          "evidence": [
+            { "block_id": "p-3", "quote": "Target 是这些内容所针对、谈论或标记的资源", "role": "direct_support" },
+            { "block_id": "p-7", "quote": "Target 可以是完整网页、图片，也可以是借助 Selector 指定的某个片段", "role": "coreference_support" }
+          ]
+        }
+      ]
+    },
+    {
+      "document_id": "javascript-closures",
+      "title": "JavaScript 闭包与词法环境",
+      "file": "documents/javascript-closures.html",
+      "source_type": "real_public",
+      "source_url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Closures",
+      "captured_at": "2026-09-23",
+      "adaptation_note": "依据 MDN JavaScript Guide 的定义人工改写为固定中文评测页，不是网页全文镜像。",
+      "cases": [
+        {
+          "case_id": "javascript-closure",
+          "category": "mixed_language_technical_term",
+          "difficulty": "basic",
+          "selection": { "exact": "Closure", "anchor_block_id": "p-3", "occurrence_index": 0 },
+          "expected": {
+            "sense": "闭包，即函数与其声明时周围词法环境的组合",
+            "referent_type": "generic_concept",
+            "maximum_specificity": "category",
+            "certainty": "clear",
+            "allow_inference": false,
+            "must_include_groups": [["闭包"], ["函数"], ["词法环境", "周围状态"]],
+            "must_not_include": ["立即执行函数", "固定常量", "关闭连接"],
+            "reference_answer": "Closure 中文通常称为“闭包”，指函数与其声明时周围词法环境的组合。",
+            "author_intent_required": false
+          },
+          "evidence": [{ "block_id": "p-3", "quote": "Closure（闭包）是函数与其声明时周围状态的组合", "role": "direct_support" }]
+        },
+        {
+          "case_id": "javascript-lexical-environment",
+          "category": "technical_concept_in_context",
+          "difficulty": "contextual",
+          "selection": { "exact": "词法环境", "anchor_block_id": "p-5", "occurrence_index": 0 },
+          "expected": {
+            "sense": "由当前作用域标识符及其值和对外层作用域引用构成的环境",
+            "referent_type": "generic_concept",
+            "maximum_specificity": "category",
+            "certainty": "clear",
+            "allow_inference": false,
+            "must_include_groups": [["作用域"], ["标识符", "变量"], ["外层"]],
+            "must_not_include": ["自然语言", "操作系统环境变量", "固定常量"],
+            "reference_answer": "词法环境在这里指当前作用域中的标识符和值，以及通向外层作用域的引用关系。",
+            "author_intent_required": false
+          },
+          "evidence": [{ "block_id": "p-5", "quote": "词法环境可以理解为当前作用域中的标识符与其值，以及它对外层作用域的引用", "role": "direct_support" }]
+        }
+      ]
+    },
+    {
+      "document_id": "kubernetes-pods",
+      "title": "Kubernetes 中的 Pod",
+      "file": "documents/kubernetes-pods.html",
+      "source_type": "real_public",
+      "source_url": "https://kubernetes.io/docs/concepts/workloads/pods/",
+      "captured_at": "2026-09-23",
+      "adaptation_note": "依据 Kubernetes 官方文档的核心概念人工改写为固定中文评测页，不是网页全文镜像。",
+      "cases": [
+        {
+          "case_id": "kubernetes-pod",
+          "category": "common_word_entity_disambiguation",
+          "difficulty": "basic",
+          "selection": { "exact": "Pod", "anchor_block_id": "p-3", "occurrence_index": 0 },
+          "expected": {
+            "sense": "Kubernetes 中可部署的最小计算单元，由一个或多个共享运行资源的容器组成",
+            "referent_type": "generic_concept",
+            "maximum_specificity": "category",
+            "certainty": "clear",
+            "allow_inference": false,
+            "must_include_groups": [["Kubernetes"], ["最小", "部署单元"], ["容器"], ["共享"]],
+            "must_not_include": ["豆荚", "鲸群", "物理服务器"],
+            "reference_answer": "Pod 在这里指 Kubernetes 中最小的可部署计算单元，可包含一个或多个共享运行资源的容器。",
+            "author_intent_required": false
+          },
+          "evidence": [
+            { "block_id": "p-2", "quote": "Pod 是能够创建和管理的最小部署单元", "role": "direct_support" },
+            { "block_id": "p-3", "quote": "一个 Pod 可以包含一个或多个容器", "role": "coreference_support" }
+          ]
+        },
+        {
+          "case_id": "kubernetes-deployment",
+          "category": "technical_concept_in_context",
+          "difficulty": "contextual",
+          "selection": { "exact": "Deployment", "anchor_block_id": "p-6", "occurrence_index": 0 },
+          "expected": {
+            "sense": "Kubernetes 中用于管理一组 Pod 并维持期望实例状态的更高层工作负载资源",
+            "referent_type": "generic_concept",
+            "maximum_specificity": "category",
+            "certainty": "inferred",
+            "allow_inference": true,
+            "must_include_groups": [["Kubernetes", "更高层"], ["管理"], ["Pod"], ["期望数量", "实例"]],
+            "must_not_include": ["一般部署行为", "发布网站", "物理机器"],
+            "reference_answer": "Deployment 在这里指 Kubernetes 中管理一组 Pod、维持期望实例数量的更高层工作负载资源。",
+            "author_intent_required": false
+          },
+          "evidence": [{ "block_id": "p-6", "quote": "通过 Deployment 等更高层资源管理一组 Pod，使期望数量的实例持续运行", "role": "sense_disambiguation" }]
+        }
+      ]
+    },
+    {
+      "document_id": "chrome-extension-runtime",
+      "title": "Chrome 扩展中的后台与页面脚本",
+      "file": "documents/chrome-extension-runtime.html",
+      "source_type": "real_public",
+      "source_url": "https://developer.chrome.com/docs/extensions/develop/concepts/service-workers",
+      "source_urls": [
+        "https://developer.chrome.com/docs/extensions/develop/concepts/service-workers",
+        "https://developer.chrome.com/docs/extensions/develop/concepts/content-scripts"
+      ],
+      "captured_at": "2026-09-23",
+      "adaptation_note": "依据 Chrome for Developers 的扩展 Service Worker 与 Content Script 文档人工改写为固定中文评测页。",
+      "cases": [
+        {
+          "case_id": "extension-service-worker",
+          "category": "mixed_language_technical_term",
+          "difficulty": "contextual",
+          "selection": { "exact": "Service Worker", "anchor_block_id": "p-4", "occurrence_index": 0 },
+          "expected": {
+            "sense": "Chrome 扩展中按需运行、集中处理扩展事件的后台执行环境",
+            "referent_type": "generic_concept",
+            "maximum_specificity": "category",
+            "certainty": "clear",
+            "allow_inference": false,
+            "must_include_groups": [["扩展"], ["事件"], ["按需", "后台"], ["DOM", "空闲"]],
+            "must_not_include": ["网页缓存代理", "持续常驻", "直接操作 DOM"],
+            "reference_answer": "Service Worker 在这里指 Chrome 扩展中按需运行、集中处理事件的后台执行环境；它可能在空闲后终止且不能直接访问 DOM。",
+            "author_intent_required": true
+          },
+          "evidence": [
+            { "block_id": "p-4", "quote": "扩展 Service Worker 是扩展的中央事件处理器", "role": "direct_support" },
+            { "block_id": "p-4", "quote": "它按需启动，在空闲后可能终止，不能直接访问网页 DOM", "role": "author_intent_support" }
+          ]
+        },
+        {
+          "case_id": "extension-content-script",
+          "category": "mixed_language_technical_term",
+          "difficulty": "contextual",
+          "selection": { "exact": "Content script", "anchor_block_id": "p-7", "occurrence_index": 0 },
+          "expected": {
+            "sense": "注入网页、能读取或修改页面 DOM 并与扩展其他部分通信的脚本",
+            "referent_type": "generic_concept",
+            "maximum_specificity": "category",
+            "certainty": "clear",
+            "allow_inference": false,
+            "must_include_groups": [["注入", "网页"], ["DOM", "页面"], ["通信", "消息"]],
+            "must_not_include": ["网页自身脚本", "远程代码", "后台中央事件处理器"],
+            "reference_answer": "Content script 在这里指注入网页、能够操作页面 DOM 并与扩展其他部分通信的扩展脚本。",
+            "author_intent_required": false
+          },
+          "evidence": [{ "block_id": "p-7", "quote": "Content script 是注入网页并在页面环境附近运行的扩展脚本", "role": "direct_support" }]
         }
       ]
     }

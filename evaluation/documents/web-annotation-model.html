@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><title>Web Annotation Data Model：Body 与 Target</title></head>
+<body>
+  <article>
+    <h1 data-block-id="p-1">Web Annotation 的基本结构</h1>
+    <p data-block-id="p-2">网页标注用于把一段信息与另一个网络资源关联起来。为了让不同系统能够交换标注，模型把一条标注描述为若干相互连接的资源。</p>
+    <p data-block-id="p-3">在这个模型里，Annotation 通常包含 Body 和 Target。Body 是评论、标签或其他描述性内容；Target 是这些内容所针对、谈论或标记的资源。</p>
+    <h2 data-block-id="p-4">Body</h2>
+    <p data-block-id="p-5">Body 可以引用外部资源，也可以把一段文本直接嵌入标注。简单评论、标签和说明文字都可以充当 Body。</p>
+    <h2 data-block-id="p-6">Target</h2>
+    <p data-block-id="p-7">Target 可以是完整网页、图片，也可以是借助 Selector 指定的某个片段。一个 Annotation 至少要有一个 Target。</p>
+    <p data-block-id="p-8">因此这里的 Body 和 Target 是数据模型中的角色名称，不分别指人体和日常语境中的射击目标。</p>
+  </article>
+</body>
+</html>

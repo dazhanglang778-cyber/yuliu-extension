@@ -60,6 +60,7 @@ test("诊断后台包含实时评测入口和所需本地脚本", () => {
   const htmlCode = fs.readFileSync(path.resolve(__dirname, "..", "diagnostics.html"), "utf8");
   const background = fs.readFileSync(path.resolve(__dirname, "..", "background.js"), "utf8");
   assert.ok(htmlCode.includes('id="runEvaluation"'));
+  assert.ok(htmlCode.includes('claim-verification.js'));
   assert.ok(htmlCode.includes('evaluation/browser-runner.js'));
   assert.ok(background.includes('message?.type === "EVALUATION_CASE"'));
   assert.ok(background.includes('chrome.storage.local.get("bigmodelApiKey")'));

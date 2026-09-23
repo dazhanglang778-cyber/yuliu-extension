@@ -92,7 +92,7 @@ test("超长内容不会按开头硬截断并丢失文末选区", () => {
 test("当前完整页面均可生成稳定且带标题路径的正文块", () => {
   const documentsDir = path.resolve(__dirname, "..", "evaluation", "documents");
   const files = fs.readdirSync(documentsDir).filter((name) => name.endsWith(".html"));
-  assert.equal(files.length, 12);
+  assert.equal(files.length, 16);
   for (const file of files) {
     const items = itemsFromFixture(path.join(documentsDir, file));
     const blocks = DocumentContext.createBlockRecords(items);

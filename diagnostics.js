@@ -123,8 +123,15 @@ function renderEvaluation(report) {
   const failuresElement = document.querySelector("#evaluationFailures");
   const cards = [
     ["核心通过率", formatRate(summary.core_pass_rate)],
+    ["有用回答率", formatRate(summary.useful_answer_rate)],
+    ["过度拒答率", formatRate(summary.over_refusal_rate)],
     ["义项正确率", formatRate(summary.sense_accuracy)],
     ["证据有效率", formatRate(summary.evidence_validity)],
+    ["语义支持率", formatRate(summary.semantic_support_rate)],
+    ["作者意图适配", formatRate(summary.author_intent_appropriateness)],
+    ["作者意图区分", formatRate(summary.author_intent_distinction)],
+    ["平均响应", formatDuration(summary.average_response_time_ms)],
+    ["P95 响应", formatDuration(summary.p95_response_time_ms)],
     ["错误具体化率", formatRate(summary.unsupported_specificity_rate)],
     ["发布门槛", summary.release_gate?.passed ? "通过" : "未通过"],
   ];
@@ -194,6 +201,10 @@ function failureLabel(code) {
     CERTAINTY_MISMATCH: "确定性判断错误",
     NOTICE_FALSE_POSITIVE: "提示误报",
     NOTICE_STATE_MISMATCH: "提示状态错误",
+    CLAIM_SEMANTIC_SUPPORT_FAILURE: "主张没有得到证据的语义支持",
+    AUTHOR_INTENT_MISSING: "应该说明作者意图但缺失",
+    AUTHOR_INTENT_UNNECESSARY: "不需要时生成了作者意图",
+    AUTHOR_INTENT_DUPLICATES_MEANING: "作者意图重复这里指什么",
   };
   return `${labels[code] || code}（${code}）`;
 }

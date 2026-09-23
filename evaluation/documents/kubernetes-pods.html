@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><title>Kubernetes 中的 Pod</title></head>
+<body>
+  <article>
+    <h1 data-block-id="p-1">Pods</h1>
+    <p data-block-id="p-2">Kubernetes 用工作负载对象来运行应用，其中 Pod 是能够创建和管理的最小部署单元。</p>
+    <p data-block-id="p-3">一个 Pod 可以包含一个或多个容器。这些容器被共同调度到同一位置，并共享部分网络和存储资源，因而像在同一个逻辑主机中运行。</p>
+    <h2 data-block-id="p-4">生命周期与管理</h2>
+    <p data-block-id="p-5">Pod 有自己的生命周期；当它因节点故障而失效时，通常创建新的 Pod，而不是让原有对象在别处继续存在。</p>
+    <p data-block-id="p-6">实际使用时，人们常通过 Deployment 等更高层资源管理一组 Pod，使期望数量的实例持续运行。</p>
+    <h2 data-block-id="p-7">容器关系</h2>
+    <p data-block-id="p-8">同一 Pod 中的容器适合承担联系紧密、需要共享运行上下文的任务，但 Pod 本身不是一台物理服务器。</p>
+  </article>
+</body>
+</html>

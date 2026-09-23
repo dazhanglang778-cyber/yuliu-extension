@@ -31,7 +31,7 @@ h1 { margin: 7px 0 8px; font-family: SimSun, serif; font-size: 36px; font-weight
 .evaluation-progress span, .evaluation-message { color: #746c60; font-size: 12px; }
 .evaluation-message { margin: 14px 0 0; }
 .evaluation-message.error { color: #a13f36; }
-.evaluation-summary { display: grid; grid-template-columns: repeat(5, 1fr); gap: 9px; margin-top: 16px; }
+.evaluation-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 9px; margin-top: 16px; }
 .evaluation-summary article { padding: 11px 12px; border-radius: 9px; background: #f5efe3; }
 .evaluation-summary span { display: block; color: #777066; font-size: 11px; }
 .evaluation-summary strong { display: block; margin-top: 4px; font-size: 18px; }

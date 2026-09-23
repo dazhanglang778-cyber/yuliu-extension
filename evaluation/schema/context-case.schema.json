@@ -18,12 +18,27 @@
           "title": { "type": "string", "minLength": 1 },
           "file": { "type": "string", "pattern": "^documents/.+\\.html$" },
           "source_type": { "enum": ["synthetic_controlled", "real_public", "adversarial_variant"] },
+          "source_url": { "type": "string", "format": "uri" },
+          "source_urls": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "format": "uri" }
+          },
+          "captured_at": { "type": "string", "format": "date" },
+          "adaptation_note": { "type": "string", "minLength": 1 },
           "cases": {
             "type": "array",
             "minItems": 1,
             "items": { "$ref": "#/$defs/case" }
           }
         },
+        "allOf": [{
+          "if": { "properties": { "source_type": { "const": "real_public" } }, "required": ["source_type"] },
+          "then": {
+            "required": ["captured_at", "adaptation_note"],
+            "anyOf": [{ "required": ["source_url"] }, { "required": ["source_urls"] }]
+          }
+        }],
         "additionalProperties": false
       }
     }
@@ -78,7 +93,7 @@
             "properties": {
               "block_id": { "type": "string", "minLength": 1 },
               "quote": { "type": "string", "minLength": 1 },
-              "role": { "enum": ["direct_support", "coreference_support", "structural_support", "sense_disambiguation"] }
+              "role": { "enum": ["direct_support", "coreference_support", "structural_support", "sense_disambiguation", "author_intent_support"] }
             },
             "additionalProperties": false
           }

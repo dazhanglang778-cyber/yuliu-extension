@@ -39,7 +39,7 @@
       <section class="evaluation" aria-labelledby="evaluation-title">
         <div class="evaluation-heading">
           <div>
-            <p class="eyebrow">Golden Dataset · 20 个固定语境案例</p>
+            <p class="eyebrow">Golden Dataset · 完整网页语境案例</p>
             <h2 id="evaluation-title">核心语义实时评测</h2>
             <p>使用插件已保存的免费模型密钥，逐项执行“检索—辨义—证据校验—评分”。密钥不会进入本页面或评测报告。</p>
           </div>
@@ -49,7 +49,7 @@
           </div>
         </div>
         <div id="evaluationProgress" class="evaluation-progress" hidden>
-          <progress max="20" value="0"></progress>
+          <progress max="1" value="0"></progress>
           <span>准备评测……</span>
         </div>
         <p id="evaluationMessage" class="evaluation-message">尚未运行实时模型评测。检索基线已通过，但这不能替代最终语义评分。</p>
@@ -64,6 +64,7 @@
       <section id="sessions" class="sessions" aria-live="polite"></section>
     </main>
     <script src="document-retrieval.js"></script>
+    <script src="claim-verification.js"></script>
     <script src="evaluation/scorer.js"></script>
     <script src="evaluation/browser-runner.js"></script>
     <script src="diagnostics.js"></script>

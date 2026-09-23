@@ -43,10 +43,22 @@ function occurrenceCount(text, exact) {
   return count;
 }
 
-test("核心测试集包含12份完整内容和20个精确选区", () => {
+test("核心测试集包含16份完整内容和28个精确选区", () => {
   assert.equal(dataset.dataset_id, "yuliu-core-context-v1");
-  assert.equal(dataset.documents.length, 12);
-  assert.equal(dataset.documents.reduce((total, document) => total + document.cases.length, 0), 20);
+  assert.equal(dataset.documents.length, 16);
+  assert.equal(dataset.documents.reduce((total, document) => total + document.cases.length, 0), 28);
+});
+
+test("真实公开网页样本保留可审计来源和改写说明", () => {
+  const realDocuments = dataset.documents.filter((document) => document.source_type === "real_public");
+  assert.equal(realDocuments.length, 4);
+  for (const document of realDocuments) {
+    const urls = document.source_urls || [document.source_url];
+    assert.ok(urls.length > 0);
+    assert.ok(urls.every((url) => /^https:\/\//.test(url)));
+    assert.match(document.captured_at, /^\d{4}-\d{2}-\d{2}$/);
+    assert.ok(document.adaptation_note.includes("改写"));
+  }
 });
 
 test("文档、案例、正文块和选中位置均唯一且真实存在", () => {
@@ -93,7 +105,7 @@ test("每条案例都包含可执行的语义金标准", () => {
   const validReferents = new Set(["generic_concept", "organization", "product", "person", "method", "metric", "document_defined_term", "other"]);
   const validSpecificity = new Set(["category", "named_entity", "exact_variant"]);
   const validCertainty = new Set(["clear", "inferred", "ambiguous", "insufficient"]);
-  const validRoles = new Set(["direct_support", "coreference_support", "structural_support", "sense_disambiguation"]);
+  const validRoles = new Set(["direct_support", "coreference_support", "structural_support", "sense_disambiguation", "author_intent_support"]);
 
   for (const document of dataset.documents) {
     for (const item of document.cases) {
@@ -107,6 +119,7 @@ test("每条案例都包含可执行的语义金标准", () => {
       assert.ok(expected.must_include_groups.every((group) => group.length > 0), `${item.case_id} 的必须信息组为空`);
       assert.ok(Array.isArray(expected.must_not_include), `${item.case_id} 缺少禁止信息数组`);
       assert.ok(expected.reference_answer.length >= 8, `${item.case_id} 缺少参考解释`);
+      assert.equal(typeof expected.author_intent_required, "boolean", `${item.case_id} 未说明是否需要作者意图`);
       assert.ok(item.evidence.every((evidence) => validRoles.has(evidence.role)), `${item.case_id} 存在非法证据角色`);
     }
   }

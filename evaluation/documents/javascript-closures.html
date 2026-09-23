@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><title>JavaScript 闭包与词法环境</title></head>
+<body>
+  <article>
+    <h1 data-block-id="p-1">Closures</h1>
+    <p data-block-id="p-2">JavaScript 使用词法作用域：一个函数能够访问哪些变量，主要由它在源代码中声明的位置决定。</p>
+    <p data-block-id="p-3">Closure（闭包）是函数与其声明时周围状态的组合。即使外层函数已经执行结束，返回的内层函数仍可访问那一词法环境中的变量。</p>
+    <h2 data-block-id="p-4">词法环境</h2>
+    <p data-block-id="p-5">词法环境可以理解为当前作用域中的标识符与其值，以及它对外层作用域的引用。闭包保存的是对相关环境的访问，而不是把变量改写成固定常量。</p>
+    <p data-block-id="p-6">闭包常用于封装状态、制作函数工厂或实现回调。多个函数也可能共享同一个外层词法环境。</p>
+    <p data-block-id="p-7">闭包并不等同于立即执行函数；函数在创建时就会和当时的词法环境建立联系。</p>
+  </article>
+</body>
+</html>
