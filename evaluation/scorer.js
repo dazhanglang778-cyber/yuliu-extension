@@ -97,7 +97,9 @@
   }
 
   function evaluateCase(gold, prediction, blockMap = new Map(), trace = {}) {
-    const rawResult = prediction?.result || prediction || null;
+    const rawResult = prediction && Object.prototype.hasOwnProperty.call(prediction, "result")
+      ? prediction.result
+      : prediction || null;
     const result = resultView(rawResult);
     const failures = [];
     const checks = {};
@@ -108,8 +110,12 @@
       && Array.isArray(result.evidence);
     if (!checks.output_schema) failures.push("OUTPUT_SCHEMA_FAILURE");
     if (!result) {
-      return { case_id: gold.case_id, passed: false, checks, failures: ["NO_OUTPUT"], metrics: emptyCaseMetrics(), trace };
+      const noOutputFailures = ["NO_OUTPUT"];
+      if (prediction?._meta?.pipeline_error) noOutputFailures.push("PIPELINE_REQUEST_FAILED");
+      return { case_id: gold.case_id, passed: false, checks, failures: noOutputFailures, metrics: emptyCaseMetrics(), trace };
     }
+    checks.pipeline_completed = !prediction?._meta?.generation_error;
+    if (!checks.pipeline_completed) failures.push("MODEL_GENERATION_FAILED");
 
     checks.selection_match = normalize(result.selected_text) === normalize(gold.selection.exact);
     if (!checks.selection_match) failures.push("SELECTION_MISMATCH");
@@ -204,6 +210,7 @@
       && checks.notice
       && checks.evidence_valid
       && checks.evidence_support
+      && checks.pipeline_completed
       && checks.author_intent_appropriate
       && checks.author_intent_distinct
       && checks.semantic_support !== false;

@@ -143,6 +143,7 @@ function backgroundContext(responsePlan, searchResults = []) {
   const calls = [];
   const context = {
     YuliuTermKnowledge: TermKnowledge,
+    YuliuGrounding: Grounding,
     chrome: {
       runtime: { onConnect: { addListener() {} } },
       storage: { local: { async get() { return {}; }, async set() {} } },
@@ -199,4 +200,24 @@ test("真实后台中低把握缩写才会追加一次外部搜索", async () =>
   assert.equal(calls[1].body.search_query, "FDE AI engineering role");
   assert.equal(bundle.strategy, "selective_retrieval");
   assert.equal(bundle.external_sources[0].status, "candidate_unverified");
+});
+
+test("实时评测模型连续繁忙时返回安全结果而不是中止整批", async () => {
+  const { context } = backgroundContext(plan());
+  context.chrome.storage.local.get = async () => ({ bigmodelApiKey: "test" });
+  context.delay = async () => {};
+  context.fetch = async () => ({
+    ok: false,
+    status: 429,
+    async text() { return "rate limited"; },
+  });
+  const result = await context.runEvaluationCase({
+    caseId: "rate-limit-case",
+    selection: "Harness",
+    documentContext: request("Harness").documentContext,
+  });
+  assert.equal(result.ok, true);
+  assert.equal(result.prediction.case_id, "rate-limit-case");
+  assert.ok(result.prediction.result);
+  assert.match(result.prediction._meta.generation_error, /忙|重试|失败/);
 });

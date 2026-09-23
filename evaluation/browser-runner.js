@@ -69,16 +69,31 @@
     for (let index = 0; index < suite.prepared.length; index += 1) {
       if (options.isCancelled?.()) break;
       const entry = suite.prepared[index];
+      if (index > 0) await wait(Number.isFinite(options.caseDelayMs) ? options.caseDelayMs : 1800);
       options.onProgress?.({ index, total: suite.prepared.length, caseId: entry.gold.case_id, state: "running" });
       const compactContext = Retrieval.compactSnapshot(entry.snapshot, `evaluation-${entry.gold.case_id}`) || entry.snapshot;
-      const response = await runtime.sendMessage({
-        type: "EVALUATION_CASE",
-        caseId: entry.gold.case_id,
-        selection: entry.gold.selection.exact,
-        documentContext: compactContext,
-      });
-      if (!response?.ok) throw new Error(response?.error || "实时评测请求失败。");
-      const prediction = response.prediction;
+      let prediction;
+      try {
+        const response = await runtime.sendMessage({
+          type: "EVALUATION_CASE",
+          caseId: entry.gold.case_id,
+          selection: entry.gold.selection.exact,
+          documentContext: compactContext,
+        });
+        if (!response?.ok) throw new Error(response?.error || "实时评测请求失败。");
+        prediction = response.prediction;
+      } catch (error) {
+        prediction = {
+          case_id: entry.gold.case_id,
+          result: null,
+          _meta: {
+            validation_attempts: 0,
+            valid: false,
+            pipeline_error: error?.message || String(error),
+          },
+          trace: {},
+        };
+      }
       prediction.trace = {
         ...(prediction.trace || {}),
         retrieved_block_ids: entry.retrieval.candidates.map((item) => item.block_id),
@@ -107,5 +122,9 @@
     };
   }
 
-  return { blocksFromHtml, prepareCase, loadSuite, run };
+  function wait(milliseconds) {
+    return new Promise((resolve) => setTimeout(resolve, Math.max(0, Number(milliseconds) || 0)));
+  }
+
+  return { blocksFromHtml, prepareCase, loadSuite, run, wait };
 });

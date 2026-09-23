@@ -56,6 +56,24 @@ test("开发后台能完成一条端到端语义评测且不读取API Key", asyn
   assert.ok(seenMessages[0].documentContext.blocks.length <= seenMessages[0].documentContext.evidence_candidates.length);
 });
 
+test("单个案例请求失败不会中止后续整批评测", async () => {
+  const twoCaseDataset = { ...fullDataset, documents: [{ ...sourceDocument, cases: sourceDocument.cases }] };
+  let calls = 0;
+  const runtime = {
+    getURL(resource) { return `mock://${resource}`; },
+    async sendMessage() {
+      calls += 1;
+      return { ok: false, error: `模拟第${calls}例失败` };
+    },
+  };
+  const loadText = async (url) => url.endsWith("core-context-v1.json") ? JSON.stringify(twoCaseDataset) : html;
+  const report = await BrowserRunner.run({ runtime, loadText, caseDelayMs: 0 });
+  assert.equal(calls, 2);
+  assert.equal(report.completed_cases, 2);
+  assert.equal(report.cancelled, false);
+  assert.ok(report.cases.every((item) => item.failures.includes("PIPELINE_REQUEST_FAILED")));
+});
+
 test("诊断后台包含实时评测入口和所需本地脚本", () => {
   const htmlCode = fs.readFileSync(path.resolve(__dirname, "..", "diagnostics.html"), "utf8");
   const background = fs.readFileSync(path.resolve(__dirname, "..", "background.js"), "utf8");

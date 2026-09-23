@@ -205,6 +205,8 @@ function failureLabel(code) {
     AUTHOR_INTENT_MISSING: "应该说明作者意图但缺失",
     AUTHOR_INTENT_UNNECESSARY: "不需要时生成了作者意图",
     AUTHOR_INTENT_DUPLICATES_MEANING: "作者意图重复这里指什么",
+    PIPELINE_REQUEST_FAILED: "单个评测请求失败，已隔离并继续",
+    MODEL_GENERATION_FAILED: "模型请求失败，已用安全结果继续",
   };
   return `${labels[code] || code}（${code}）`;
 }

@@ -369,16 +369,26 @@ async function runEvaluationCase(message) {
   let raw = "";
   let validation = null;
   let attempts = 0;
+  let knowledgeError = null;
+  let generationError = null;
   const startedAt = Date.now();
   if (TermKnowledge) {
-    const termKnowledge = await prepareTermKnowledge({ apiKey: bigmodelApiKey.trim(), request });
-    request = { ...request, termKnowledge };
+    try {
+      const termKnowledge = await prepareTermKnowledge({ apiKey: bigmodelApiKey.trim(), request });
+      request = { ...request, termKnowledge };
+    } catch (error) {
+      knowledgeError = error;
+    }
   }
-  for (attempts = 1; attempts <= 2; attempts += 1) {
-    const messages = Grounding.buildMessages(request, attempts === 2 ? { errors: validation.errors, raw } : null);
-    raw = await completeModel({ apiKey: bigmodelApiKey.trim(), messages, maxTokens: 1400 });
-    validation = Grounding.validateStructured(raw, request);
-    if (validation.ok) break;
+  try {
+    for (attempts = 1; attempts <= 2; attempts += 1) {
+      const messages = Grounding.buildMessages(request, attempts === 2 ? { errors: validation.errors, raw } : null);
+      raw = await completeEvaluationModel({ apiKey: bigmodelApiKey.trim(), messages, maxTokens: 1400 });
+      validation = Grounding.validateStructured(raw, request);
+      if (validation.ok) break;
+    }
+  } catch (error) {
+    generationError = error;
   }
   const valid = validation?.ok === true;
   const salvaged = valid ? null : Grounding.salvageLowRisk?.(validation, request);
@@ -394,6 +404,9 @@ async function runEvaluationCase(message) {
         locally_degraded: !!salvaged,
         removed_claim_ids: salvaged?.removed_claim_ids || [],
         validation_errors: validation?.errors || [],
+        knowledge_error: knowledgeError ? friendlyError(knowledgeError) : "",
+        generation_error: generationError ? friendlyError(generationError) : "",
+        pipeline_error_code: generationError?.code || generationError?.status || null,
         elapsed_ms: Date.now() - startedAt,
       },
       trace: {
@@ -402,6 +415,21 @@ async function runEvaluationCase(message) {
       },
     },
   };
+}
+
+async function completeEvaluationModel(options) {
+  const retryDelays = [0, 2500, 6000];
+  let lastError;
+  for (let index = 0; index < retryDelays.length; index += 1) {
+    if (retryDelays[index]) await delay(retryDelays[index]);
+    try {
+      return await completeModel(options);
+    } catch (error) {
+      lastError = error;
+      if (!isTemporary(error) || index === retryDelays.length - 1) break;
+    }
+  }
+  throw lastError || new Error("评测模型暂时没有完成请求");
 }
 
 async function planGeneralDefinition({ apiKey, term, senseMeaning, strict = false, diagnostics = {} }) {
