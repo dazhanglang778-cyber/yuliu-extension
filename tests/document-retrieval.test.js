@@ -60,7 +60,27 @@ test("中英文正向和反向定义句都能被识别", () => {
   assert.ok(Retrieval.definitionSignal("本文把旧反馈可使用的轮数称为回声预算。", "回声预算") > 0);
   assert.ok(Retrieval.definitionSignal("Apple 在这里指美国科技公司苹果公司。", "Apple") > 0);
   assert.ok(Retrieval.definitionSignal("Benchmark refers to a fixed evaluation suite.", "Benchmark") > 0);
+  assert.ok(Retrieval.definitionSignal("MCP 是模型上下文协议（Model Context Protocol）的简称。", "MCP") > 0);
+  assert.ok(Retrieval.definitionSignal("MaaS（Model As A Service，模型即服务）是将模型能力以服务形式提供的技术模式。", "MaaS") > 0);
+  assert.ok(Retrieval.definitionSignal("RAG 即检索增强生成。", "RAG") > 0);
+  assert.ok(Retrieval.definitionSignal("优雅降级：如果多次压缩尝试都失败，回退到保守的消息阶段策略。", "优雅降级") > 0);
   assert.equal(Retrieval.definitionSignal("Harness 和 Atlas 都出现在项目清单中。", "Harness"), 0);
+});
+
+test("远处的缩写定义会被召回并标记为直接支持", () => {
+  const snapshot = {
+    selection: { raw_text: "MCP", normalized_text: "MCP", anchor_block_id: "p-auth" },
+    blocks: [
+      { block_id: "p-definition", type: "paragraph", heading_path: ["AI应用研发基础设施", "MCP"], text: "MCP 是模型上下文协议（Model Context Protocol）的简称，是连接外部数据源和工具的开放协议。", order: 0 },
+      { block_id: "p-filler", type: "paragraph", heading_path: ["AI应用安全"], text: "这里讨论身份认证、授权和鉴权。", order: 1 },
+      { block_id: "p-auth", type: "paragraph", heading_path: ["AI应用安全", "身份与授权"], text: "AI 场景下的认证和授权根据交互方的不同（如 Agent、MCP 等），与传统 RPC/HTTP 存在差异。", order: 2 },
+    ],
+  };
+  const result = Retrieval.retrieve(snapshot);
+  const definition = result.candidates.find((item) => item.block_id === "p-definition");
+  assert.ok(definition);
+  assert.equal(definition.role, "direct_support");
+  assert.ok(definition.reasons.includes("定义句"));
 });
 
 test("当前选区永远进入候选证据且排名第一", () => {

@@ -269,7 +269,16 @@ async function runGroundedInitial(port, request, apiKey) {
   let validation = null;
   for (let attempt = 0; attempt < 2; attempt += 1) {
     const messages = Grounding.buildMessages(preparedRequest, attempt ? { errors: validation.errors, raw } : null);
-    raw = await completeModel({ apiKey, messages, maxTokens: 1400 });
+    try {
+      raw = await completeModel({ apiKey, messages, maxTokens: 1400 });
+    } catch (error) {
+      void recordDiagnosticEvent({
+        ...diagnostics,
+        eventType: "grounding_generation_failed",
+        data: { attempt: attempt + 1, message: friendlyError(error) },
+      });
+      break;
+    }
     validation = Grounding.validateStructured(raw, preparedRequest);
     void recordDiagnosticEvent({
       ...diagnostics,
@@ -279,6 +288,19 @@ async function runGroundedInitial(port, request, apiKey) {
     if (validation.ok) {
       safePost(port, { type: "GROUNDED_RESULT", requestId: request.requestId, result: validation.result });
       safePost(port, { type: "DONE", requestId: request.requestId, model: "structured-grounded" });
+      return;
+    }
+    // 可选作者意图或无依据具体化出错时，优先局部删除坏字段，保留已经
+    // 通过核验的核心语境义；不要让整份答案再次生成并污染正确内容。
+    const localSalvage = Grounding.salvageLowRisk?.(validation, preparedRequest);
+    if (localSalvage?.result) {
+      void recordDiagnosticEvent({
+        ...diagnostics,
+        eventType: "grounding_locally_degraded",
+        data: { attempt: attempt + 1, errors: validation.errors, removedClaimIds: localSalvage.removed_claim_ids || [] },
+      });
+      safePost(port, { type: "GROUNDED_RESULT", requestId: request.requestId, result: localSalvage.result });
+      safePost(port, { type: "DONE", requestId: request.requestId, model: "structured-local-degradation" });
       return;
     }
     if (attempt === 0) {
@@ -294,6 +316,17 @@ async function runGroundedInitial(port, request, apiKey) {
     });
     safePost(port, { type: "GROUNDED_RESULT", requestId: request.requestId, result: salvaged.result });
     safePost(port, { type: "DONE", requestId: request.requestId, model: "structured-local-degradation" });
+    return;
+  }
+  const knowledgeFallback = Grounding.knowledgeFallbackResult?.(preparedRequest);
+  if (knowledgeFallback) {
+    void recordDiagnosticEvent({
+      ...diagnostics,
+      eventType: "grounding_knowledge_fallback",
+      data: { errors: validation?.errors || ["MODEL_GENERATION_FAILED"] },
+    });
+    safePost(port, { type: "GROUNDED_RESULT", requestId: request.requestId, result: knowledgeFallback });
+    safePost(port, { type: "DONE", requestId: request.requestId, model: "structured-knowledge-fallback" });
     return;
   }
   const fallback = Grounding.fallbackResult(preparedRequest);
@@ -836,8 +869,8 @@ async function completeModel({ apiKey, messages, maxTokens = 360 }) {
       clearTimeout(timeoutId);
     }
   }
-  const error = lastError || new Error("义项比对暂时失败");
-  error.platformMessage = "专业资料的义项比对暂时失败，可稍后单独重试。";
+  const error = lastError || new Error("模型暂时没有完成请求");
+  error.platformMessage = "模型暂时没有完成这一步，已尝试使用现有信息继续处理。";
   throw error;
 }
 

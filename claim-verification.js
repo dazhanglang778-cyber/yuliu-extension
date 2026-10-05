@@ -89,17 +89,80 @@
     return { page, external };
   }
 
-  function contextualSupport(_claim, source, result) {
+  function selectedSense(result) {
+    return (result?.candidate_senses || []).find((item) => item.sense_id === result?.resolution?.selected_sense_id);
+  }
+
+  function explicitIdentityMatch(sourceText, candidate) {
+    const source = normalize(sourceText);
+    return [candidate?.label, candidate?.chinese_name, candidate?.english_full_name]
+      .map(normalize)
+      .filter((item) => item.length >= 2)
+      .some((item) => source.includes(item));
+  }
+
+  function acronymIdentityVerified(result, maps) {
+    return (result?.claims || [])
+      .filter((claim) => claim.claim_type === "lexical_knowledge")
+      .some((claim) => (claim.supports || []).some((support) => (
+        support.source_kind === "external_source"
+        && externalSupport(claim, maps.external.get(support.source_id), result)
+      )));
+  }
+
+  function sourceMentionsSelection(source, result) {
+    return normalize(source?.semantic_text || source?.quote || "")
+      .includes(normalize(result?.selected_text || ""));
+  }
+
+  function selectedSenseIsLowRisk(result) {
+    return ["generic_concept", "method", "metric", "document_defined_term", "other"]
+      .includes(selectedSense(result)?.referent_type);
+  }
+
+  function candidateHasModelKnowledge(result) {
+    return (selectedSense(result)?.supports || []).some((item) => item.source_kind === "model_knowledge");
+  }
+
+  function contextualSupport(claim, source, result, maps, request) {
     if (!source) return false;
-    if (source.role === "direct_support") return true;
     const sense = candidateText(result);
-    if (!sense) return false;
-    const shared = overlap(source.semantic_text, sense, result.selected_text).count;
+    if (!sense) {
+      // 真正多义时尚无 selected_sense_id；这时只能让页面直接定义去支持
+      // 主张本身，不能用普通同词出现偷选某个义项。
+      return source.role === "direct_support"
+        && overlap(source.semantic_text, claim?.text || "", result.selected_text).count > 0;
+    }
+    const senseOverlap = overlap(source.semantic_text, sense, result.selected_text);
+    const claimOverlap = overlap(source.semantic_text, claim?.text || "", result.selected_text);
+    const shared = senseOverlap.count;
+    const selected = selectedSense(result);
+    const identityMatched = explicitIdentityMatch(source.semantic_text, selected);
+    if (source.role === "direct_support") {
+      // 页面声称在“直接定义”时，不能再用一个碰巧重合的词放行。
+      // 至少需要两个有效语义片段并达到基本覆盖，或完整身份与正文语义同时对齐。
+      const coverage = shared / Math.max(1, senseOverlap.targetCount);
+      return (shared >= 2 && coverage >= 0.12)
+        || (identityMatched && (shared > 0 || claimOverlap.count >= 2));
+    }
     const acronym = /^[A-Z][A-Z0-9-]{1,9}$/.test(String(result.selected_text || "").trim());
-    if (!acronym) return shared > 0;
-    const selected = (result.candidate_senses || []).find((item) => item.sense_id === result.resolution?.selected_sense_id);
-    const externallyIdentified = (selected?.supports || []).some((item) => item.source_kind === "external_source");
-    return externallyIdentified && shared > 0;
+    if (!acronym) {
+      if (shared > 0 || claimOverlap.count > 0) return true;
+      // 对普通低风险词，若候选池只给出一个低歧义义项，页面中的同词出现
+      // 足以完成“当前语境映射”；不再要求正文重新写一遍词典定义。
+      const candidates = result?.candidate_senses || [];
+      const lowAmbiguity = candidates.length === 1 || request?.termKnowledge?.ambiguity === "low";
+      return sourceMentionsSelection(source, result) && lowAmbiguity
+        && selectedSenseIsLowRisk(result) && candidateHasModelKnowledge(result);
+    }
+    const trustedAcronym = ["high", "medium"].includes(request?.termKnowledge?.knowledge_confidence)
+      && request?.termKnowledge?.term_type === "acronym"
+      && candidateHasModelKnowledge(result);
+    // 缩写可由外部资料核验，也可由高置信术语候选池确认；页面证据仍须
+    // 证明当前出现位置与该义项在语义上对齐。
+    return (acronymIdentityVerified(result, maps) || trustedAcronym)
+      && sourceMentionsSelection(source, result)
+      && (shared > 0 || claimOverlap.count > 0 || identityMatched);
   }
 
   function authorIntentSupport(claim, source, result) {
@@ -135,14 +198,14 @@
     return source?.role === "direct_support" && overlap(source.semantic_text, claim.text, result.selected_text).count > 0;
   }
 
-  function verifyClaim(claim, maps, result) {
+  function verifyClaim(claim, maps, result, request) {
     const supports = Array.isArray(claim.supports) ? claim.supports : [];
     if (claim.claim_type === "lexical_knowledge") {
       return supports.some((item) => lexicalSupport(claim, item, maps, result));
     }
     if (claim.claim_type === "contextual_mapping") {
       return supports.some((item) => item.source_kind === "page_evidence"
-        && contextualSupport(claim, maps.page.get(item.source_id), result));
+        && contextualSupport(claim, maps.page.get(item.source_id), result, maps, request));
     }
     if (claim.claim_type === "author_intent") {
       return supports.some((item) => item.source_kind === "page_evidence"
@@ -162,7 +225,7 @@
     const errors = [];
     const invalidClaimIds = [];
     for (const claim of result.claims || []) {
-      const supported = verifyClaim(claim, maps, result);
+      const supported = verifyClaim(claim, maps, result, request);
       details.push({ claim_id: claim.claim_id, claim_type: claim.claim_type, supported });
       if (!supported) {
         invalidClaimIds.push(claim.claim_id);

@@ -100,38 +100,44 @@
     };
   }
 
-  function normalizePageEvidence(items, request, errors) {
+  function referencedSourceIds(claims, sourceKind) {
+    return [...new Set((Array.isArray(claims) ? claims : [])
+      .flatMap((claim) => Array.isArray(claim?.supports) ? claim.supports : [])
+      .filter((item) => item?.source_kind === sourceKind)
+      .map((item) => visibleText(item?.source_id, 60))
+      .filter(Boolean))];
+  }
+
+  function normalizePageEvidence(referencedIds, request, errors) {
     const { byEvidenceId, byBlockId } = candidateMaps(request.documentContext);
     const normalized = [];
     const seen = new Set();
-    for (const item of Array.isArray(items) ? items : []) {
-      const evidenceId = visibleText(item?.evidence_id, 60);
+    for (const rawId of Array.isArray(referencedIds) ? referencedIds : []) {
+      const evidenceId = visibleText(rawId, 60);
       const candidate = byEvidenceId.get(evidenceId);
       if (!candidate) { errors.push(`UNKNOWN_PAGE_EVIDENCE:${evidenceId || "empty"}`); continue; }
-      const blockId = visibleText(item?.block_id, 100) || String(candidate.block_id || "");
-      if (blockId !== String(candidate.block_id || "")) errors.push(`EVIDENCE_BLOCK_MISMATCH:${evidenceId}`);
-      const blockText = normalize(byBlockId.get(blockId)?.text || candidate.text || "");
-      const quote = visibleText(item?.quote, 420);
-      if (!quote || !blockText.includes(normalize(quote))) errors.push(`QUOTE_NOT_IN_BLOCK:${evidenceId}`);
       if (seen.has(evidenceId)) continue;
       seen.add(evidenceId);
+      const blockId = visibleText(candidate.block_id, 100);
+      // 模型只负责选择证据 ID。块 ID、引文和证据角色全部从本地 RAG
+      // 候选池回填，避免“意思对了，却因模型改写引文而整段作废”。
+      const quote = visibleText(candidate.quote || byBlockId.get(blockId)?.text || candidate.text, 420);
       normalized.push({
         evidence_id: evidenceId,
         block_id: blockId,
         quote,
-        // 证据角色由本地检索器判定，模型不能把“同词出现”自行升级成“直接支持”。
-        role: PAGE_ROLES.has(candidate.role) ? candidate.role : PAGE_ROLES.has(item?.role) ? item.role : "sense_disambiguation",
+        role: PAGE_ROLES.has(candidate.role) ? candidate.role : "sense_disambiguation",
       });
     }
     return normalized;
   }
 
-  function normalizeExternalSources(items, request, errors) {
+  function normalizeExternalSources(referencedIds, request, errors) {
     const known = externalSourceMap(request);
     const normalized = [];
     const seen = new Set();
-    for (const item of Array.isArray(items) ? items : []) {
-      const sourceId = visibleText(item?.source_id, 60);
+    for (const rawId of Array.isArray(referencedIds) ? referencedIds : []) {
+      const sourceId = visibleText(rawId, 60);
       const source = known.get(sourceId);
       if (!source) { errors.push(`UNKNOWN_EXTERNAL_SOURCE:${sourceId || "empty"}`); continue; }
       if (seen.has(sourceId)) continue;
@@ -148,12 +154,22 @@
   }
 
   function normalizeStructuredValue(value, request, errors) {
+    const knownCandidates = new Map((Array.isArray(request.termKnowledge?.candidate_senses)
+      ? request.termKnowledge.candidate_senses : [])
+      .map((item, index) => normalizeCandidate(item, index))
+      .filter(Boolean)
+      .map((item) => [item.sense_id, item]));
     const candidates = (Array.isArray(value.candidate_senses) ? value.candidate_senses : [])
-      .map(normalizeCandidate)
+      .map((item, index) => {
+        const normalized = normalizeCandidate(item, index);
+        const known = normalized && knownCandidates.get(normalized.sense_id);
+        if (!normalized || !known || !/^(?:中性)?义项名$|^待填写/i.test(normalized.label)) return normalized;
+        // 模型偶尔会照抄输出结构里的占位词。候选池已有同一 sense_id 时，
+        // 直接恢复规划阶段的真实义项，不让占位文本进入校验和界面。
+        return known;
+      })
       .filter(Boolean)
       .slice(0, 8);
-    const pageEvidence = normalizePageEvidence(value.page_evidence, request, errors);
-    const externalSources = normalizeExternalSources(value.external_sources, request, errors);
     const resolutionValue = value.resolution && typeof value.resolution === "object" ? value.resolution : {};
     const meaningValue = value.meaning_here && typeof value.meaning_here === "object" ? value.meaning_here : {};
     const authorValue = value.author_intent && typeof value.author_intent === "object" ? value.author_intent : null;
@@ -163,6 +179,9 @@
       text: visibleText(item?.text, 420),
       supports: (Array.isArray(item?.supports) ? item.supports : []).map(support).filter(Boolean),
     }));
+    const pageEvidence = normalizePageEvidence(referencedSourceIds(claims, "page_evidence"), request, errors);
+    const externalSources = normalizeExternalSources(referencedSourceIds(claims, "external_source"), request, errors);
+    const authorText = visibleText(authorValue?.text, 420);
     return {
       schema_version: "2.0",
       selected_text: visibleText(value.selected_text, 160),
@@ -180,8 +199,8 @@
         english_full_name: meaningValue.english_full_name == null ? null : visibleText(meaningValue.english_full_name, 180) || null,
         contextual_role: meaningValue.contextual_role == null ? null : visibleText(meaningValue.contextual_role, 260) || null,
       },
-      author_intent: authorValue ? {
-        text: visibleText(authorValue.text, 420),
+      author_intent: authorText ? {
+        text: authorText,
         claim_ids: (Array.isArray(authorValue.claim_ids) ? authorValue.claim_ids : []).map((id) => visibleText(id, 50)).filter(Boolean),
       } : null,
       claims,
@@ -215,16 +234,34 @@
       const hasDirectPage = claim.supports.some((item) => item.source_kind === "page_evidence" && pageRoles.get(item.source_id) === "direct_support");
       if (!hasExternal && !hasDirectPage) errors.push(`HIGH_RISK_WITHOUT_VERIFIED_SUPPORT:${claim.claim_id}`);
     }
-    if (["named_entity", "exact_variant"].includes(result.resolution.specificity)) {
+    const selectedSense = result.candidate_senses.find((item) => item.sense_id === result.resolution.selected_sense_id);
+    const canonicalSourceText = normalize([
+      ...result.page_evidence.map((item) => item.quote),
+      ...result.external_sources.map((item) => `${item.title || ""} ${item.publisher || ""} ${item.excerpt || ""}`),
+    ].join(" "));
+    const trustedKnowledgeText = ["high", "medium"].includes(request.termKnowledge?.knowledge_confidence)
+      ? normalize((request.termKnowledge?.candidate_senses || [])
+        .map((item) => `${item.label || ""} ${item.gloss || ""} ${item.chinese_name || ""} ${item.english_full_name || ""}`)
+        .join(" "))
+      : "";
+    const trustedText = `${canonicalSourceText} ${trustedKnowledgeText}`;
+    const highRiskText = `${result.meaning_here.text} ${result.claims.map((item) => item.text).join(" ")}`;
+    const unsupportedMarkers = specificMarkers(highRiskText, expectedSelection)
+      .filter((marker) => !trustedText.includes(normalize(marker)));
+    const unsupportedNumbers = (highRiskText.match(/\d+(?:\.\d+)?%|\b\d{3,}\b/g) || [])
+      .filter((number) => !trustedText.includes(normalize(number)));
+    const identityNeedsVerification = result.resolution.specificity === "named_entity"
+      || (result.resolution.specificity === "exact_variant"
+        && ["organization", "product", "person"].includes(selectedSense?.referent_type))
+      || unsupportedMarkers.length > 0;
+    if (identityNeedsVerification) {
       const hasVerifiedIdentity = result.claims.some((claim) => claim.claim_type === "high_risk_fact"
         && claim.supports.some((item) => item.source_kind === "external_source"
           || item.source_kind === "page_evidence" && pageRoles.get(item.source_id) === "direct_support"));
       if (!hasVerifiedIdentity) errors.push("SPECIFIC_IDENTITY_WITHOUT_VERIFIED_SUPPORT");
     }
 
-    const highRiskText = `${result.meaning_here.text} ${result.claims.map((item) => item.text).join(" ")}`;
-    const hasSpecificMarkers = specificMarkers(highRiskText, expectedSelection).length > 0
-      || /\d+(?:\.\d+)?%|\b\d{3,}\b/.test(highRiskText);
+    const hasSpecificMarkers = unsupportedMarkers.length > 0 || unsupportedNumbers.length > 0;
     if (hasSpecificMarkers && !result.claims.some((claim) => claim.claim_type === "high_risk_fact")) {
       errors.push("UNDECLARED_HIGH_RISK_FACT");
     }
@@ -285,11 +322,16 @@
       || error.startsWith("HIGH_RISK_WITHOUT_VERIFIED_SUPPORT:")
       || error === "SPECIFIC_IDENTITY_WITHOUT_VERIFIED_SUPPORT"
       || error === "UNDECLARED_HIGH_RISK_FACT"
+      || error === "INVALID_AUTHOR_INTENT"
       || error === "AUTHOR_INTENT_WITHOUT_MATCHING_CLAIM"
+      || error === "AUTHOR_INTENT_DUPLICATES_MEANING"
     ));
     if (!recoverable) return null;
 
-    const removeAuthorIntent = invalidClaims.some((claim) => claim.claim_type === "author_intent");
+    const removeAuthorIntent = invalidClaims.some((claim) => claim.claim_type === "author_intent")
+      || validation.errors.some((error) => error === "INVALID_AUTHOR_INTENT"
+        || error === "AUTHOR_INTENT_WITHOUT_MATCHING_CLAIM"
+        || error === "AUTHOR_INTENT_DUPLICATES_MEANING");
     const removeHighRisk = invalidClaims.some((claim) => claim.claim_type === "high_risk_fact")
       || validation.errors.some((error) => error.includes("HIGH_RISK") || error.includes("SPECIFIC_IDENTITY"));
     result.claims = result.claims.filter((claim) => !invalidIds.has(claim.claim_id)
@@ -355,6 +397,65 @@
     };
   }
 
+  function knowledgeFallbackResult(request = {}) {
+    const selected = visibleText(request.selection, 160);
+    const candidates = (Array.isArray(request.termKnowledge?.candidate_senses) ? request.termKnowledge.candidate_senses : [])
+      .map(normalizeCandidate)
+      .filter(Boolean)
+      .slice(0, 8);
+    const confidence = request.termKnowledge?.knowledge_confidence;
+    const ambiguity = request.termKnowledge?.ambiguity;
+    const safeTypes = new Set(["generic_concept", "method", "metric", "document_defined_term", "other"]);
+    if (!candidates.length || !["high", "medium"].includes(confidence) || ambiguity === "high") return null;
+    const candidate = candidates.length === 1 ? candidates[0] : null;
+    if (!candidate || !safeTypes.has(candidate.referent_type)) return null;
+    const evidenceCandidates = Array.isArray(request.documentContext?.evidence_candidates)
+      ? request.documentContext.evidence_candidates : [];
+    const selectedIdentity = normalizeIdentity(selected);
+    const evidence = evidenceCandidates.find((item) => normalizeIdentity(item.text).includes(selectedIdentity))
+      || evidenceCandidates[0];
+    if (!evidence?.evidence_id) return null;
+    const gloss = candidate.gloss.replace(/^[“\"']?[^：:]{0,30}[”\"']?\s*(?:是指|指的是|指|意为|意味着)\s*/i, "").replace(/[。；;]+$/, "");
+    const raw = {
+      schema_version: "2.0",
+      selected_text: selected,
+      candidate_senses: candidates,
+      resolution: {
+        status: "inferred",
+        selected_sense_id: candidate.sense_id,
+        alternative_sense_ids: [],
+        confidence: confidence === "high" ? "medium" : "low",
+        specificity: "category",
+      },
+      meaning_here: {
+        text: `“${selected}”在这里指${gloss || candidate.label}。`,
+        chinese_name: candidate.chinese_name,
+        english_full_name: candidate.english_full_name,
+        contextual_role: null,
+      },
+      author_intent: null,
+      claims: [
+        {
+          claim_id: "c1",
+          claim_type: "lexical_knowledge",
+          text: `${candidate.label}：${candidate.gloss}`,
+          supports: [{ source_kind: "model_knowledge" }],
+        },
+        {
+          claim_id: "c2",
+          claim_type: "contextual_mapping",
+          text: `当前页面中的“${selected}”对应“${candidate.label}”这一义项。`,
+          supports: [{ source_kind: "page_evidence", source_id: String(evidence.evidence_id) }],
+        },
+      ],
+      page_evidence: [{ evidence_id: String(evidence.evidence_id) }],
+      external_sources: [],
+      notice_code: "none",
+    };
+    const checked = validateStructured(raw, request);
+    return checked.ok ? checked.result : null;
+  }
+
   function buildMessages(request = {}, repair = null) {
     const selection = visibleText(request.selection, 160);
     const context = request.documentContext || {};
@@ -386,15 +487,15 @@
       meaning_here: { text: `“${selection}”在这里指……`, chinese_name: null, english_full_name: null, contextual_role: null },
       author_intent: { text: "仅在具有独立论证作用且原文支持时填写，否则整个字段为null", claim_ids: ["c3"] },
       claims: [{ claim_id: "c1", claim_type: "lexical_knowledge|contextual_mapping|author_intent|high_risk_fact", text: "单项主张", supports: [{ source_kind: "model_knowledge|page_evidence|external_source", source_id: "按来源填写" }] }],
-      page_evidence: [{ evidence_id: "只能使用输入ID", block_id: "对应块ID", quote: "对应段落中的连续原文", role: "direct_support|coreference_support|structural_support|sense_disambiguation|author_intent_support" }],
+      page_evidence: [{ evidence_id: "只填写输入中的证据ID；块ID、引文和角色由程序回填" }],
       external_sources: [{ source_id: "只能使用输入ID", title: "输入标题", url: "输入网址", publisher: null, excerpt: null }],
       notice_code: "none|multiple_senses|insufficient_context|term_unrecognized|external_lookup_failed",
     };
-    const system = `你是网页与文档内的语境义消歧器。目标是让用户快速理解选中词在当前位置的含义，而不是做封闭式文档问答。按顺序执行：一、结合模型知识和术语候选池建立真实存在的主要义项；二、执行WSD（词义消歧），只用当前选区与页面候选证据选择本次义项；三、生成简洁的“这里指什么”；四、只有作者确实借该词完成强调、对比、区分、提醒或推进论证，而且这一作用与词义解释不同，才生成“作者想表达什么”（author_intent），否则填null。术语候选知识不得冒充当前页面证据：模型知识可以支持低风险的一般概念释义；页面证据负责支持当前义项映射和作者意图；具体实体、唯一缩写全称、版本、数字和时效事实必须由页面直接证据或已提供的外部来源支持。每条claim只写一个可独立核验的事实；supports必须真正支持这条claim，不能因为引文出现了选中词就绑定。输入中的页面role是程序判定的，不得把sense_disambiguation或coreference_support自行升级为direct_support。外部来源标记为candidate_unverified时，必须先判断其与候选义项语义一致，并确认它能支持绑定的具体主张后才能采用。页面仅出现同词可用于sense_disambiguation，但不能冒充词典定义。quote必须是对应页面段落中的连续原文。正常推断使用inferred且notice_code为none，不得误报信息不足。只输出一个JSON对象，不要Markdown。`;
-    let user = `【唯一选中词】\n${selection}\n\n【精确选区】\n${JSON.stringify(context.selection || {})}\n\n【页面候选证据】\n${JSON.stringify(pageCandidates)}\n\n【术语候选知识与待核验外部资料】\n${JSON.stringify(termKnowledge)}\n\n【必须遵守的输出结构】\n${JSON.stringify(outputContract)}\n\nmeaning_here第一句必须点名“${selection}”，直接说明当前语境义。candidate_senses应合并重复义项；页面直接定义的文内特殊术语可以新增document_defined_term候选。clear或inferred必须提供contextual_mapping主张并绑定页面证据。作者意图不得重复meaning_here。`;
+    const system = `你是网页与文档内的语境义消歧器。目标是让用户快速理解选中词在当前位置的含义，而不是做封闭式文档问答。按顺序执行：一、结合模型知识和术语候选池建立真实存在的主要义项；二、执行WSD（词义消歧），只用当前选区与页面候选证据选择本次义项；三、生成简洁的“这里指什么”；四、只有作者确实借该词完成强调、对比、区分、提醒或推进论证，而且这一作用与词义解释不同，才生成“作者想表达什么”（author_intent），否则填null。术语候选知识不得冒充当前页面证据：模型知识可以支持低风险的一般概念释义；页面证据负责支持当前义项映射和作者意图；具体实体、版本、数字和时效事实必须由页面直接证据或已提供的外部来源支持。高置信候选池可以支持常见缩写全称，但不得自行补出未经候选池确认的唯一身份。每条claim只写一个可独立核验的事实；supports必须真正支持这条claim，不能因为引文出现了选中词就绑定。输入中的页面role是程序判定的，不得把sense_disambiguation或coreference_support自行升级为direct_support。外部来源标记为candidate_unverified时，必须先判断其与候选义项语义一致，并确认它能支持绑定的具体主张后才能采用。页面仅出现同词可用于sense_disambiguation，但不能冒充词典定义。page_evidence只需返回所采用的evidence_id，块ID、原文引文和角色由程序从本地RAG候选池回填；不要自行改写引文。正常推断使用inferred且notice_code为none，不得误报信息不足。只输出一个JSON对象，不要Markdown。`;
+    let user = `【唯一选中词】\n${selection}\n\n【精确选区】\n${JSON.stringify(context.selection || {})}\n\n【页面候选证据】\n${JSON.stringify(pageCandidates)}\n\n【术语候选知识与待核验外部资料】\n${JSON.stringify(termKnowledge)}\n\n【必须遵守的输出结构】\n${JSON.stringify(outputContract)}\n\nmeaning_here第一句必须点名“${selection}”，直接说明当前语境义。candidate_senses应优先沿用候选池的sense_id、真实名称和释义，并合并重复义项；严禁把“中性义项名”等结构示例原样当成答案。页面直接定义的文内特殊术语可以新增document_defined_term候选。clear或inferred必须提供contextual_mapping主张并绑定页面证据。作者意图不得重复meaning_here。`;
     if (repair) user += `\n\n【上一次输出未通过程序校验】\n错误码：${repair.errors.join(", ")}\n上一次输出：${String(repair.raw || "").slice(0, 8000)}\n请只修复这些错误，并重新输出完整JSON。`;
     return [{ role: "system", content: system }, { role: "user", content: user }];
   }
 
-  return { extractJson, validateStructured, salvageLowRisk, fallbackResult, buildMessages, specificMarkers };
+  return { extractJson, validateStructured, salvageLowRisk, knowledgeFallbackResult, fallbackResult, buildMessages, specificMarkers };
 });

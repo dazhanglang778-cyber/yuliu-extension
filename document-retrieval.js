@@ -63,11 +63,21 @@
     }
     let strength = 0;
     const cues = /(?:是指|指的是|(?:在这里|这里|此处)指|(?:^|[，,：:\s])指(?!标|数|针|令)|意为|意味着|定义为|定义成|称为|叫作|叫做|统称为|所谓|可理解为|refers?\s+to|means?|is\s+defined\s+as|is\s+called|denotes?)/i;
+    // 中文技术文章最常见的定义形式还包括“X 是 Y”“X 即 Y”，以及
+    // “MaaS（Model as a Service，模型即服务）是……”这类括号展开。
+    // 这里只在术语后紧邻的位置识别，避免把远处普通的“是”误当成定义。
+    const directAfterCue = /^\s*(?:[（(][^（）()]{1,180}[）)])?\s*(?:是(?:指|一种|一个|一类)?|即|全称(?:为|是)?|英文全称(?:为|是)?|简称(?:为|是)?)/i;
+    const colonDefinition = /^\s*[：:]\s*\S.{2,220}/;
+    const abbreviationCue = /^\s*是[^。！？；;]{1,160}(?:的简称|的缩写)/i;
+    const parentheticalExpansion = /^\s*[（(](?=[^）)]*[A-Za-z])(?=[^）)]*(?:[，,][^）)]*|\b(?:Protocol|Service|Generation|Authentication|Authorization)\b))[^）)]{2,180}[）)]/i;
     for (const position of positions) {
       const before = source.slice(Math.max(0, position - 45), position);
-      const after = source.slice(position + normalizedTerm.length, position + normalizedTerm.length + 70);
+      const after = source.slice(position + normalizedTerm.length, position + normalizedTerm.length + 220);
       if (cues.test(after)) strength = Math.max(strength, 2);
       if (cues.test(before)) strength = Math.max(strength, 2);
+      if (directAfterCue.test(after) || abbreviationCue.test(after) || parentheticalExpansion.test(after) || colonDefinition.test(after)) {
+        strength = Math.max(strength, 2);
+      }
       if (/(?:^|[。；;])[^。；;]{0,18}(?:所谓|本文把|这里把)/.test(before + normalizedTerm)) strength = Math.max(strength, 3);
     }
     return strength;

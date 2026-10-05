@@ -68,6 +68,59 @@ test("孤立缩写只有同词出现时不能被强行展开为具体义项", ()
   assert.ok(checked.invalid_claim_ids.includes("c2"));
 });
 
+test("页面直接给出MCP全称时可支持缩写义项映射", () => {
+  const current = request("MCP");
+  current.documentContext.evidence_candidates[0] = {
+    evidence_id: "e1", block_id: "p1", role: "direct_support",
+    text: "MCP 是模型上下文协议（Model Context Protocol）的简称，是连接外部数据源和工具的开放协议。",
+  };
+  current.documentContext.blocks[0] = { block_id: "p1", text: current.documentContext.evidence_candidates[0].text };
+  const result = baseResult();
+  result.selected_text = "MCP";
+  result.candidate_senses = [{
+    sense_id: "s1", label: "模型上下文协议", gloss: "让大模型以标准化方式连接外部数据源和工具的开放协议",
+    referent_type: "generic_concept", chinese_name: "模型上下文协议", english_full_name: "Model Context Protocol",
+    supports: [{ source_kind: "model_knowledge" }],
+  }];
+  result.meaning_here = { text: "MCP 在这里指模型上下文协议。", chinese_name: "模型上下文协议", english_full_name: "Model Context Protocol", contextual_role: null };
+  result.claims = [
+    { claim_id: "c1", claim_type: "lexical_knowledge", text: "MCP 是模型上下文协议", supports: [{ source_kind: "model_knowledge" }] },
+    { claim_id: "c2", claim_type: "contextual_mapping", text: "本文采用模型上下文协议义项", supports: [{ source_kind: "page_evidence", source_id: "e1" }] },
+  ];
+  result.page_evidence = [{ evidence_id: "e1", block_id: "p1", quote: current.documentContext.evidence_candidates[0].text, role: "direct_support" }];
+  const checked = ClaimVerification.verify(result, current);
+  assert.equal(checked.ok, true, JSON.stringify(checked));
+});
+
+test("外部资料核验缩写身份后，页面领域线索可完成WSD", () => {
+  const current = request("MCP");
+  current.documentContext.evidence_candidates[0] = {
+    evidence_id: "e1", block_id: "p1", role: "coreference_support",
+    text: "Agent、MCP 与传统 RPC/HTTP 在交互协议和授权流程上存在差异。",
+  };
+  current.documentContext.blocks[0] = { block_id: "p1", text: current.documentContext.evidence_candidates[0].text };
+  current.termKnowledge.external_sources = [{
+    source_id: "x1", title: "Model Context Protocol", url: "https://example.org/mcp",
+    publisher: "Protocol documentation", excerpt: "Model Context Protocol is an open protocol for connecting AI applications to external tools and data.",
+  }];
+  const result = baseResult();
+  result.selected_text = "MCP";
+  result.candidate_senses = [{
+    sense_id: "s1", label: "模型上下文协议", gloss: "连接AI应用、外部工具和数据的开放协议",
+    referent_type: "generic_concept", chinese_name: "模型上下文协议", english_full_name: "Model Context Protocol",
+    supports: [{ source_kind: "external_source", source_id: "x1" }],
+  }];
+  result.meaning_here = { text: "MCP 在这里指模型上下文协议。", chinese_name: "模型上下文协议", english_full_name: "Model Context Protocol", contextual_role: null };
+  result.claims = [
+    { claim_id: "c1", claim_type: "lexical_knowledge", text: "MCP 是 Model Context Protocol，即模型上下文协议", supports: [{ source_kind: "external_source", source_id: "x1" }] },
+    { claim_id: "c2", claim_type: "contextual_mapping", text: "本文采用模型上下文协议义项", supports: [{ source_kind: "page_evidence", source_id: "e1" }] },
+  ];
+  result.page_evidence = [{ evidence_id: "e1", block_id: "p1", quote: current.documentContext.evidence_candidates[0].text, role: "coreference_support" }];
+  result.external_sources = [current.termKnowledge.external_sources[0]];
+  const checked = ClaimVerification.verify(result, current);
+  assert.equal(checked.ok, true, JSON.stringify(checked));
+});
+
 test("只提到术语不能支持额外生成作者意图", () => {
   const result = baseResult();
   result.claims.push({
@@ -120,4 +173,83 @@ test("无依据具体化只删除高风险内容并保留低风险核心解释",
   assert.equal(salvaged.result.resolution.specificity, "category");
   assert.ok(!salvaged.result.meaning_here.text.includes("DeepSeek"));
   assert.ok(salvaged.result.claims.every((claim) => claim.claim_type !== "high_risk_fact"));
+});
+
+test("普通词在候选义项低歧义且正文明确使用时，不要求原文重复词典定义", () => {
+  const current = request("故障");
+  current.termKnowledge = { knowledge_confidence: "high", ambiguity: "low", candidate_senses: [], external_sources: [] };
+  current.documentContext.evidence_candidates[0] = {
+    evidence_id: "e1", block_id: "p1", role: "coreference_support",
+    text: "智能复盘Agent的核心使命，是将每一次故障都转化为可预测、可预防的洞察。",
+  };
+  const result = baseResult();
+  result.selected_text = "故障";
+  result.candidate_senses = [{
+    sense_id: "s1", label: "系统异常", gloss: "系统或服务未能按预期正常运行的状态",
+    referent_type: "generic_concept", supports: [{ source_kind: "model_knowledge" }],
+  }];
+  result.meaning_here.text = "“故障”在这里指系统或服务出现异常、未能正常运行的情况。";
+  result.claims = [
+    { claim_id: "c1", claim_type: "lexical_knowledge", text: "故障是系统或服务未能正常运行的状态", supports: [{ source_kind: "model_knowledge" }] },
+    { claim_id: "c2", claim_type: "contextual_mapping", text: "本文在系统异常的意义上使用故障", supports: [{ source_kind: "page_evidence", source_id: "e1" }] },
+  ];
+  result.page_evidence = [{ evidence_id: "e1", block_id: "p1", quote: current.documentContext.evidence_candidates[0].text, role: "coreference_support" }];
+  const checked = ClaimVerification.verify(result, current);
+  assert.equal(checked.ok, true, JSON.stringify(checked));
+});
+
+test("高置信常见缩写可由模型候选池定身份，再由页面语境完成映射", () => {
+  const current = request("API");
+  current.termKnowledge = {
+    term_type: "acronym", knowledge_confidence: "high", ambiguity: "low", external_sources: [],
+    candidate_senses: [{ sense_id: "s1", label: "应用程序编程接口", gloss: "软件之间交互和交换数据的接口", supports: [{ source_kind: "model_knowledge" }] }],
+  };
+  current.documentContext.evidence_candidates[0] = {
+    evidence_id: "e1", block_id: "p1", role: "coreference_support",
+    text: "Task Expert 会调用外部 API 获取实时数据，并查询 RAG 知识库。",
+  };
+  const result = baseResult();
+  result.selected_text = "API";
+  result.candidate_senses = [{
+    sense_id: "s1", label: "应用程序编程接口", gloss: "软件之间交互和交换数据的接口",
+    referent_type: "generic_concept", english_full_name: "Application Programming Interface",
+    supports: [{ source_kind: "model_knowledge" }],
+  }];
+  result.meaning_here = { text: "“API”在这里指供系统调用外部服务并获取数据的应用程序编程接口。", chinese_name: "应用程序编程接口", english_full_name: "Application Programming Interface", contextual_role: null };
+  result.claims = [
+    { claim_id: "c1", claim_type: "lexical_knowledge", text: "API 是应用程序编程接口", supports: [{ source_kind: "model_knowledge" }] },
+    { claim_id: "c2", claim_type: "contextual_mapping", text: "这里的 API 用于调用外部服务并获取数据", supports: [{ source_kind: "page_evidence", source_id: "e1" }] },
+  ];
+  result.page_evidence = [{ evidence_id: "e1", block_id: "p1", quote: current.documentContext.evidence_candidates[0].text, role: "coreference_support" }];
+  const checked = ClaimVerification.verify(result, current);
+  assert.equal(checked.ok, true, JSON.stringify(checked));
+});
+
+test("冒充语境解释的泛化优雅降级会被拒绝，而压缩失败回退义项会通过", () => {
+  const current = request("优雅降级");
+  current.documentContext.evidence_candidates[0] = {
+    evidence_id: "e1", block_id: "p1", role: "direct_support",
+    text: "优雅降级：如果多次压缩尝试都失败，回退到保守的消息截断策略，保留最近的30%对话历史，确保上下文连续性。",
+  };
+  const result = baseResult();
+  result.selected_text = "优雅降级";
+  result.candidate_senses = [{
+    sense_id: "s1", label: "系统降级策略", gloss: "资源不足时减少服务复杂度以维持基本功能",
+    referent_type: "method", supports: [{ source_kind: "model_knowledge" }],
+  }];
+  result.meaning_here.text = "“优雅降级”在这里指资源不足时减少服务范围以维持基本功能。";
+  result.claims = [
+    { claim_id: "c1", claim_type: "lexical_knowledge", text: "优雅降级是一种系统降级策略", supports: [{ source_kind: "model_knowledge" }] },
+    { claim_id: "c2", claim_type: "contextual_mapping", text: "这里通过减少服务范围维持基本功能", supports: [{ source_kind: "page_evidence", source_id: "e1" }] },
+  ];
+  result.page_evidence = [{ evidence_id: "e1", block_id: "p1", quote: current.documentContext.evidence_candidates[0].text, role: "direct_support" }];
+  const generic = ClaimVerification.verify(result, current);
+  assert.equal(generic.ok, false);
+  assert.ok(generic.invalid_claim_ids.includes("c2"));
+
+  result.candidate_senses[0].gloss = "多次对话压缩失败后回退到保守截断，并保留最近一部分历史以维持上下文连续性";
+  result.meaning_here.text = "“优雅降级”在这里指多次压缩失败后改用保守截断，并保留最近30%的对话历史。";
+  result.claims[1].text = "这里在多次压缩失败后回退到保守截断并保留最近对话历史";
+  const contextual = ClaimVerification.verify(result, current);
+  assert.equal(contextual.ok, true, JSON.stringify(contextual));
 });
