@@ -83,6 +83,22 @@ test("远处的缩写定义会被召回并标记为直接支持", () => {
   assert.ok(definition.reasons.includes("定义句"));
 });
 
+test("复合选词会召回只出现核心词干的远处说明段落", () => {
+  const snapshot = {
+    selection: { raw_text: "保鲜策略", normalized_text: "保鲜策略", anchor_block_id: "p-anchor" },
+    blocks: [
+      { block_id: "p-anchor", type: "heading", heading_path: ["Memory保鲜策略"], text: "3. Memory保鲜策略", order: 0 },
+      { block_id: "p-noise", type: "paragraph", heading_path: ["Memory保鲜策略"], text: "这里还有若干普通实现细节。", order: 1 },
+      { block_id: "p-support", type: "paragraph", heading_path: ["Memory管理"], text: "因此，我们对上下文进行减噪、提要、保鲜，确保留下的信息具有高价值、长期性和强推理作用。", order: 18 },
+    ],
+  };
+  const result = Retrieval.retrieve(snapshot);
+  const support = result.candidates.find((item) => item.block_id === "p-support");
+  assert.ok(support);
+  assert.ok(support.reasons.some((reason) => reason.startsWith("词干出现")));
+  assert.equal(support.role, "coreference_support");
+});
+
 test("当前选区永远进入候选证据且排名第一", () => {
   for (const document of dataset.documents) {
     for (const item of document.cases) {

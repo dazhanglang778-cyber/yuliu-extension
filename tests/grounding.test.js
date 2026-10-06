@@ -255,6 +255,69 @@ test("模型生成暂时失败时，高置信单义普通术语可由候选知�
   assert.equal(fallback.page_evidence[0].quote, "调用外部API获取实时数据。");
 });
 
+test("只引用选区标题时，程序会补入远处的说明性原文依据", () => {
+  const current = request("保鲜策略");
+  current.termKnowledge = {
+    term_type: "common_term", knowledge_confidence: "high", ambiguity: "low", external_sources: [],
+    candidate_senses: [{
+      sense_id: "s1", label: "内存保鲜策略", gloss: "管理内存信息并维持其有效性和相关性的策略",
+      referent_type: "method", supports: [{ source_kind: "model_knowledge" }],
+    }],
+  };
+  current.documentContext.selection = { raw_text: "保鲜策略", anchor_block_id: "p-anchor" };
+  current.documentContext.blocks = [
+    { block_id: "p-anchor", text: "3. Memory保鲜策略" },
+    { block_id: "p-support", text: "因此，我们对上下文进行减噪、提要、保鲜，确保留下的信息具有高价值、长期性和强推理作用。" },
+  ];
+  current.documentContext.evidence_candidates = [
+    { evidence_id: "e1", block_id: "p-anchor", role: "coreference_support", text: "3. Memory保鲜策略", signals: { anchor: true, variantOccurrences: 0 } },
+    { evidence_id: "e2", block_id: "p-support", role: "coreference_support", text: "因此，我们对上下文进行减噪、提要、保鲜，确保留下的信息具有高价值、长期性和强推理作用。", signals: { anchor: false, variantOccurrences: 1 } },
+  ];
+  const value = {
+    schema_version: "2.0",
+    selected_text: "保鲜策略",
+    candidate_senses: current.termKnowledge.candidate_senses,
+    resolution: { status: "inferred", selected_sense_id: "s1", alternative_sense_ids: [], confidence: "medium", specificity: "category" },
+    meaning_here: { text: "“保鲜策略”在这里指维护Memory中关键信息有效性和相关性的策略。", chinese_name: "内存保鲜策略", english_full_name: null, contextual_role: null },
+    author_intent: null,
+    claims: [
+      { claim_id: "c1", claim_type: "lexical_knowledge", text: "保鲜策略用于维持内存信息的有效性和相关性", supports: [{ source_kind: "model_knowledge" }] },
+      { claim_id: "c2", claim_type: "contextual_mapping", text: "这里的保鲜策略用于维护上下文中的重要信息", supports: [{ source_kind: "page_evidence", source_id: "e1" }] },
+    ],
+    page_evidence: [{ evidence_id: "e1" }],
+    external_sources: [],
+    notice_code: "none",
+  };
+  const checked = Grounding.validateStructured(value, current);
+  assert.equal(checked.ok, true, checked.errors.join(", "));
+  assert.deepEqual(checked.result.page_evidence.map((item) => item.evidence_id), ["e1", "e2"]);
+  assert.ok(checked.result.page_evidence[1].quote.includes("减噪、提要、保鲜"));
+});
+
+test("知识兜底也优先展示说明性段落，并保留当前选区用于定位", () => {
+  const current = request("保鲜策略");
+  current.termKnowledge = {
+    term_type: "common_term", knowledge_confidence: "high", ambiguity: "low", external_sources: [],
+    candidate_senses: [{
+      sense_id: "s1", label: "内存保鲜策略", gloss: "管理内存信息并维持其有效性和相关性的策略",
+      referent_type: "method", chinese_name: "内存保鲜策略", english_full_name: null,
+      supports: [{ source_kind: "model_knowledge" }],
+    }],
+  };
+  current.documentContext.selection = { raw_text: "保鲜策略", anchor_block_id: "p-anchor" };
+  current.documentContext.blocks = [
+    { block_id: "p-anchor", text: "3. Memory保鲜策略" },
+    { block_id: "p-support", text: "因此，我们对上下文进行减噪、提要、保鲜，确保留下的信息具有高价值、长期性和强推理作用。" },
+  ];
+  current.documentContext.evidence_candidates = [
+    { evidence_id: "e1", block_id: "p-anchor", role: "coreference_support", text: "3. Memory保鲜策略", signals: { anchor: true } },
+    { evidence_id: "e2", block_id: "p-support", role: "coreference_support", text: "因此，我们对上下文进行减噪、提要、保鲜，确保留下的信息具有高价值、长期性和强推理作用。", signals: { variantOccurrences: 1 } },
+  ];
+  const fallback = Grounding.knowledgeFallbackResult(current);
+  assert.ok(fallback);
+  assert.deepEqual(fallback.page_evidence.map((item) => item.evidence_id), ["e2", "e1"]);
+});
+
 test("生成提示明确拆分WSD、两种可见内容和三类来源", () => {
   const messages = Grounding.buildMessages(request());
   const prompt = JSON.stringify(messages);

@@ -153,6 +153,72 @@
     return normalized;
   }
 
+  function selectionRoots(value) {
+    const selected = normalize(value);
+    const roots = new Set();
+    const suffixes = ["策略", "机制", "方法", "系统", "任务", "分析", "流程", "管理", "方案", "工程", "模型", "能力", "技术"];
+    for (const suffix of suffixes) {
+      if (!selected.endsWith(suffix)) continue;
+      const root = selected.slice(0, -suffix.length).trim();
+      if (/^[A-Za-z][A-Za-z0-9._/-]{1,}$/.test(root) || /[\u3400-\u9fff]{2,}/.test(root)) roots.add(root);
+    }
+    return [...roots];
+  }
+
+  function supportingEvidenceCandidates(request, candidate, meaningText = "", limit = 2) {
+    const evidenceCandidates = Array.isArray(request.documentContext?.evidence_candidates)
+      ? request.documentContext.evidence_candidates : [];
+    const selected = visibleText(request.selection, 160);
+    const anchorId = String(request.documentContext?.selection?.anchor_block_id || "");
+    const roots = selectionRoots(selected);
+    const targetText = `${candidate?.label || ""} ${candidate?.gloss || ""} ${candidate?.chinese_name || ""} ${candidate?.english_full_name || ""} ${meaningText}`;
+    return evidenceCandidates
+      .filter((item) => String(item?.block_id || "") !== anchorId)
+      .map((item) => {
+        const sourceText = visibleText(item?.text || item?.quote, 1600);
+        const withoutExactSelection = normalize(sourceText).replaceAll(normalize(selected), " ");
+        const semantic = ClaimVerification?.overlap
+          ? ClaimVerification.overlap(withoutExactSelection, targetText, selected)
+          : { count: 0, targetCount: 0 };
+        const rootHits = roots.reduce((sum, root) => sum + (normalizeIdentity(sourceText).includes(normalizeIdentity(root)) ? 1 : 0), 0);
+        let score = semantic.count * 4 + rootHits * 12;
+        if (item.role === "direct_support") score += 8;
+        if (Number(item?.signals?.variantOccurrences || 0) > 0) score += 6;
+        if (Number(item?.signals?.definition || 0) > 0) score += 6;
+        if (sourceText.length >= 35 && /[，。；：,:;]/.test(sourceText)) score += 3;
+        if (sourceText.length < Math.max(12, selected.length + 6)) score -= 5;
+        return { item, score };
+      })
+      .filter(({ score }) => score >= 8)
+      .sort((left, right) => right.score - left.score
+        || Number(right.item?.score || 0) - Number(left.item?.score || 0))
+      .slice(0, Math.max(0, limit))
+      .map(({ item }) => item);
+  }
+
+  function enrichContextualClaimSupports(claims, candidates, resolutionValue, meaningValue, request) {
+    const anchorId = String(request.documentContext?.selection?.anchor_block_id || "");
+    const byEvidenceId = candidateMaps(request.documentContext).byEvidenceId;
+    const contextualClaims = claims.filter((claim) => claim.claim_type === "contextual_mapping");
+    if (!contextualClaims.length) return;
+    const currentPageIds = referencedSourceIds(contextualClaims, "page_evidence");
+    if (!currentPageIds.length) return;
+    const alreadyHasExplanatoryEvidence = currentPageIds.some((id) => String(byEvidenceId.get(id)?.block_id || "") !== anchorId);
+    if (alreadyHasExplanatoryEvidence) return;
+    const selected = candidates.find((item) => item.sense_id === visibleText(resolutionValue?.selected_sense_id, 50));
+    if (!selected) return;
+    const additions = supportingEvidenceCandidates(request, selected, meaningValue?.text, 2);
+    if (!additions.length) return;
+    const claim = contextualClaims[0];
+    const seen = new Set((claim.supports || []).filter((item) => item.source_kind === "page_evidence").map((item) => item.source_id));
+    for (const evidence of additions) {
+      const evidenceId = visibleText(evidence.evidence_id, 60);
+      if (!evidenceId || seen.has(evidenceId)) continue;
+      claim.supports.push({ source_kind: "page_evidence", source_id: evidenceId });
+      seen.add(evidenceId);
+    }
+  }
+
   function normalizeStructuredValue(value, request, errors) {
     const knownCandidates = new Map((Array.isArray(request.termKnowledge?.candidate_senses)
       ? request.termKnowledge.candidate_senses : [])
@@ -179,6 +245,7 @@
       text: visibleText(item?.text, 420),
       supports: (Array.isArray(item?.supports) ? item.supports : []).map(support).filter(Boolean),
     }));
+    enrichContextualClaimSupports(claims, candidates, resolutionValue, meaningValue, request);
     const pageEvidence = normalizePageEvidence(referencedSourceIds(claims, "page_evidence"), request, errors);
     const externalSources = normalizeExternalSources(referencedSourceIds(claims, "external_source"), request, errors);
     const authorText = visibleText(authorValue?.text, 420);
@@ -412,9 +479,19 @@
     const evidenceCandidates = Array.isArray(request.documentContext?.evidence_candidates)
       ? request.documentContext.evidence_candidates : [];
     const selectedIdentity = normalizeIdentity(selected);
-    const evidence = evidenceCandidates.find((item) => normalizeIdentity(item.text).includes(selectedIdentity))
+    const anchorEvidence = evidenceCandidates.find((item) => String(item.block_id || "") === String(request.documentContext?.selection?.anchor_block_id || ""))
+      || evidenceCandidates.find((item) => normalizeIdentity(item.text).includes(selectedIdentity))
       || evidenceCandidates[0];
-    if (!evidence?.evidence_id) return null;
+    if (!anchorEvidence?.evidence_id) return null;
+    const explanatoryEvidence = supportingEvidenceCandidates(request, candidate, candidate.gloss, 2);
+    const adoptedEvidence = [...explanatoryEvidence, anchorEvidence]
+      .filter((item, index, all) => item?.evidence_id
+        && all.findIndex((other) => String(other?.evidence_id) === String(item.evidence_id)) === index)
+      .slice(0, 3);
+    const evidenceSupports = adoptedEvidence.map((item) => ({
+      source_kind: "page_evidence",
+      source_id: String(item.evidence_id),
+    }));
     const gloss = candidate.gloss.replace(/^[“\"']?[^：:]{0,30}[”\"']?\s*(?:是指|指的是|指|意为|意味着)\s*/i, "").replace(/[。；;]+$/, "");
     const raw = {
       schema_version: "2.0",
@@ -445,10 +522,10 @@
           claim_id: "c2",
           claim_type: "contextual_mapping",
           text: `当前页面中的“${selected}”对应“${candidate.label}”这一义项。`,
-          supports: [{ source_kind: "page_evidence", source_id: String(evidence.evidence_id) }],
+          supports: evidenceSupports,
         },
       ],
-      page_evidence: [{ evidence_id: String(evidence.evidence_id) }],
+      page_evidence: adoptedEvidence.map((item) => ({ evidence_id: String(item.evidence_id) })),
       external_sources: [],
       notice_code: "none",
     };
@@ -491,7 +568,7 @@
       external_sources: [{ source_id: "只能使用输入ID", title: "输入标题", url: "输入网址", publisher: null, excerpt: null }],
       notice_code: "none|multiple_senses|insufficient_context|term_unrecognized|external_lookup_failed",
     };
-    const system = `你是网页与文档内的语境义消歧器。目标是让用户快速理解选中词在当前位置的含义，而不是做封闭式文档问答。按顺序执行：一、结合模型知识和术语候选池建立真实存在的主要义项；二、执行WSD（词义消歧），只用当前选区与页面候选证据选择本次义项；三、生成简洁的“这里指什么”；四、只有作者确实借该词完成强调、对比、区分、提醒或推进论证，而且这一作用与词义解释不同，才生成“作者想表达什么”（author_intent），否则填null。术语候选知识不得冒充当前页面证据：模型知识可以支持低风险的一般概念释义；页面证据负责支持当前义项映射和作者意图；具体实体、版本、数字和时效事实必须由页面直接证据或已提供的外部来源支持。高置信候选池可以支持常见缩写全称，但不得自行补出未经候选池确认的唯一身份。每条claim只写一个可独立核验的事实；supports必须真正支持这条claim，不能因为引文出现了选中词就绑定。输入中的页面role是程序判定的，不得把sense_disambiguation或coreference_support自行升级为direct_support。外部来源标记为candidate_unverified时，必须先判断其与候选义项语义一致，并确认它能支持绑定的具体主张后才能采用。页面仅出现同词可用于sense_disambiguation，但不能冒充词典定义。page_evidence只需返回所采用的evidence_id，块ID、原文引文和角色由程序从本地RAG候选池回填；不要自行改写引文。正常推断使用inferred且notice_code为none，不得误报信息不足。只输出一个JSON对象，不要Markdown。`;
+    const system = `你是网页与文档内的语境义消歧器。目标是让用户快速理解选中词在当前位置的含义，而不是做封闭式文档问答。按顺序执行：一、结合模型知识和术语候选池建立真实存在的主要义项；二、执行WSD（词义消歧），只用当前选区与页面候选证据选择本次义项；三、生成简洁的“这里指什么”；四、只有作者确实借该词完成强调、对比、区分、提醒或推进论证，而且这一作用与词义解释不同，才生成“作者想表达什么”（author_intent），否则填null。术语候选知识不得冒充当前页面证据：模型知识可以支持低风险的一般概念释义；页面证据负责支持当前义项映射和作者意图；具体实体、版本、数字和时效事实必须由页面直接证据或已提供的外部来源支持。高置信候选池可以支持常见缩写全称，但不得自行补出未经候选池确认的唯一身份。每条claim只写一个可独立核验的事实；supports必须真正支持这条claim，不能因为引文出现了选中词就绑定。当前选区只证明“词出现在这里”：若候选池中还有解释其含义、作用、流程或上下位关系的非锚点段落，contextual_mapping必须同时采用至少一条这种说明性证据，不能只引用选中词所在短句或标题。输入中的页面role是程序判定的，不得把sense_disambiguation或coreference_support自行升级为direct_support。外部来源标记为candidate_unverified时，必须先判断其与候选义项语义一致，并确认它能支持绑定的具体主张后才能采用。页面仅出现同词可用于sense_disambiguation，但不能冒充词典定义。page_evidence只需返回所采用的evidence_id，块ID、原文引文和角色由程序从本地RAG候选池回填；不要自行改写引文。正常推断使用inferred且notice_code为none，不得误报信息不足。只输出一个JSON对象，不要Markdown。`;
     let user = `【唯一选中词】\n${selection}\n\n【精确选区】\n${JSON.stringify(context.selection || {})}\n\n【页面候选证据】\n${JSON.stringify(pageCandidates)}\n\n【术语候选知识与待核验外部资料】\n${JSON.stringify(termKnowledge)}\n\n【必须遵守的输出结构】\n${JSON.stringify(outputContract)}\n\nmeaning_here第一句必须点名“${selection}”，直接说明当前语境义。candidate_senses应优先沿用候选池的sense_id、真实名称和释义，并合并重复义项；严禁把“中性义项名”等结构示例原样当成答案。页面直接定义的文内特殊术语可以新增document_defined_term候选。clear或inferred必须提供contextual_mapping主张并绑定页面证据。作者意图不得重复meaning_here。`;
     if (repair) user += `\n\n【上一次输出未通过程序校验】\n错误码：${repair.errors.join(", ")}\n上一次输出：${String(repair.raw || "").slice(0, 8000)}\n请只修复这些错误，并重新输出完整JSON。`;
     return [{ role: "system", content: system }, { role: "user", content: user }];

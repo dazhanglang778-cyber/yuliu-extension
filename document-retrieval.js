@@ -48,6 +48,27 @@
     return (String(text || "").match(pattern) || []).length;
   }
 
+  function termVariants(term) {
+    const source = normalizeText(term);
+    const variants = new Set();
+    const suffixes = ["策略", "机制", "方法", "系统", "任务", "分析", "流程", "管理", "方案", "工程", "模型", "能力", "技术"];
+    for (const suffix of suffixes) {
+      if (!source.endsWith(suffix)) continue;
+      const root = source.slice(0, -suffix.length).trim();
+      if (/^[A-Za-z][A-Za-z0-9._/-]{1,}$/.test(root) || /[\u3400-\u9fff]{2,}/.test(root)) variants.add(root);
+    }
+    const mixedParts = source.match(/[A-Za-z][A-Za-z0-9._/-]{1,}|[\u3400-\u9fff]{2,}/g) || [];
+    for (const part of mixedParts) {
+      if (normalizeForMatch(part) !== normalizeForMatch(source)) variants.add(part);
+    }
+    return [...variants];
+  }
+
+  function countVariantOccurrences(text, term, preparedVariants = null) {
+    const variants = Array.isArray(preparedVariants) ? preparedVariants : termVariants(term);
+    return variants.reduce((sum, variant) => sum + countTermOccurrences(text, variant), 0);
+  }
+
   function definitionSignal(text, term) {
     const source = normalizeText(text);
     const normalizedSource = source.toLocaleLowerCase();
@@ -138,6 +159,7 @@
     if (signals.definition > 0) return "direct_support";
     if (signals.anchor) return "coreference_support";
     if (signals.exactOccurrences > 0) return "coreference_support";
+    if (signals.variantOccurrences > 0) return "coreference_support";
     if (signals.headingOverlap > 0.15) return "structural_support";
     return "sense_disambiguation";
   }
@@ -160,11 +182,13 @@
     const lexicalScores = bm25Scores(blocks, queryText);
     const maxLexical = Math.max(0, ...lexicalScores);
     const anchorHeading = (anchor.heading_path || []).join(" ");
+    const variants = termVariants(term);
     let totalOccurrences = 0;
     let definitionMatches = 0;
 
     const scored = blocks.map((block, index) => {
       const exactOccurrences = countTermOccurrences(block.text, term);
+      const variantOccurrences = exactOccurrences ? 0 : countVariantOccurrences(block.text, term, variants);
       const definition = definitionSignal(block.text, term);
       const distance = Math.abs((block.order ?? index) - (anchor.order ?? blocks.indexOf(anchor)));
       const sameSection = anchorHeading && (block.heading_path || []).join("\n") === (anchor.heading_path || []).join("\n");
@@ -177,6 +201,7 @@
       let score = lexical * 70;
       if (isAnchor) score += 1000;
       if (exactOccurrences) score += 180 + Math.min(3, exactOccurrences) * 15;
+      if (variantOccurrences) score += 105 + Math.min(3, variantOccurrences) * 10;
       if (definition) score += 260 + definition * 40;
       if (distance === 1) score += 75;
       else if (distance === 2) score += 35;
@@ -188,6 +213,7 @@
       if (isAnchor) reasons.push("当前选区");
       if (definition) reasons.push("定义句");
       if (exactOccurrences) reasons.push(`同词出现×${exactOccurrences}`);
+      if (variantOccurrences) reasons.push(`词干出现×${variantOccurrences}`);
       if (distance > 0 && distance <= 2) reasons.push("相邻段落");
       if (sameSection && !isAnchor) reasons.push("同一章节");
       if (lexical >= 0.2 && !isAnchor) reasons.push("关键词相关");
@@ -196,6 +222,7 @@
       const signals = {
         anchor: isAnchor,
         exactOccurrences,
+        variantOccurrences,
         definition,
         distance,
         sameSection,
@@ -274,6 +301,7 @@
   return {
     tokenize,
     countTermOccurrences,
+    termVariants,
     definitionSignal,
     bm25Scores,
     bestQuote,
