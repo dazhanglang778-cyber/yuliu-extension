@@ -132,7 +132,7 @@
     return normalized;
   }
 
-  function annotateAndRankPageEvidence(pageEvidence, claims, request) {
+  function annotateAndRankPageEvidence(pageEvidence, claims, request, candidates = []) {
     const anchorId = String(request.documentContext?.selection?.anchor_block_id || "");
     const { byEvidenceId } = candidateMaps(request.documentContext);
     const claimTypesByEvidence = new Map();
@@ -141,6 +141,15 @@
         if (item?.source_kind !== "page_evidence" || !item.source_id) continue;
         if (!claimTypesByEvidence.has(item.source_id)) claimTypesByEvidence.set(item.source_id, new Set());
         claimTypesByEvidence.get(item.source_id).add(claim.claim_type);
+      }
+    }
+    // 页面可以直接建立文档内特殊义项。候选义项自己的页面依据同样属于
+    // “核心释义依据”，不能因为它没有被某条 claim 重复引用而丢失。
+    for (const candidate of Array.isArray(candidates) ? candidates : []) {
+      for (const item of Array.isArray(candidate?.supports) ? candidate.supports : []) {
+        if (item?.source_kind !== "page_evidence" || !item.source_id) continue;
+        if (!claimTypesByEvidence.has(item.source_id)) claimTypesByEvidence.set(item.source_id, new Set());
+        claimTypesByEvidence.get(item.source_id).add("lexical_knowledge");
       }
     }
     return pageEvidence.map((item, index) => {
@@ -319,12 +328,14 @@
       supports: (Array.isArray(item?.supports) ? item.supports : []).map(support).filter(Boolean),
     }));
     enrichContextualClaimSupports(claims, candidates, resolutionValue, meaningValue, request);
+    const supportOwners = [...claims, ...candidates];
     const pageEvidence = annotateAndRankPageEvidence(
-      normalizePageEvidence(referencedSourceIds(claims, "page_evidence"), request, errors),
+      normalizePageEvidence(referencedSourceIds(supportOwners, "page_evidence"), request, errors),
       claims,
       request,
+      candidates,
     );
-    const externalSources = normalizeExternalSources(referencedSourceIds(claims, "external_source"), request, errors);
+    const externalSources = normalizeExternalSources(referencedSourceIds(supportOwners, "external_source"), request, errors);
     const authorText = visibleText(authorValue?.text, 420);
     const composedMeaning = composeMeaningHere(meaningValue, visibleText(value.selected_text, 160));
     return {

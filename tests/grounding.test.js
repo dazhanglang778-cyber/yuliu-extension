@@ -399,6 +399,58 @@ test("稳定语义内核与当前位置侧重会被合成为自然的两句解�
   assert.deepEqual(checked.result.page_evidence.map((item) => item.display_purpose), ["current_location", "meaning_support"]);
 });
 
+test("页面快速通道允许模型用原文建立Memory管理这一文档内义项", () => {
+  const current = request("Memory管理");
+  current.termKnowledge = {
+    term_type: "document_defined_term", knowledge_confidence: "high", ambiguity: "low",
+    candidate_senses: [], external_sources: [], strategy: "page_definition_fast_path",
+  };
+  current.documentContext.selection = { raw_text: "Memory管理", anchor_block_id: "p-heading" };
+  current.documentContext.blocks = [
+    { block_id: "p-heading", text: "4.2.2. Memory管理：降噪→提要→保鲜" },
+    { block_id: "p-process", text: "目前，智能复盘Agent的Memory管理采用三步法，在Agent运行时动态管理上下文。" },
+    { block_id: "p-definition", text: "我们构建了智能Memory管理机制，通过减噪、提要、保鲜三步，实现上下文的精炼化、结构化和价值化。" },
+  ];
+  current.documentContext.evidence_candidates = [
+    { evidence_id: "e1", block_id: "p-heading", role: "direct_support", text: current.documentContext.blocks[0].text, signals: { anchor: true, definition: 2 } },
+    { evidence_id: "e2", block_id: "p-process", role: "coreference_support", text: current.documentContext.blocks[1].text, signals: { exactOccurrences: 1 } },
+    { evidence_id: "e4", block_id: "p-definition", role: "direct_support", text: current.documentContext.blocks[2].text, signals: { definition: 2 } },
+  ];
+  const value = {
+    schema_version: "2.0", selected_text: "Memory管理",
+    candidate_senses: [{
+      sense_id: "s1", label: "智能复盘Agent的上下文管理机制",
+      gloss: "通过降噪、提要、保鲜动态管理Agent运行时的上下文信息",
+      referent_type: "document_defined_term", chinese_name: null, english_full_name: null,
+      supports: [
+        { source_kind: "page_evidence", source_id: "e1" },
+        { source_kind: "page_evidence", source_id: "e2" },
+        { source_kind: "page_evidence", source_id: "e4" },
+      ],
+    }],
+    resolution: { status: "clear", selected_sense_id: "s1", alternative_sense_ids: [], confidence: "high", specificity: "category" },
+    meaning_here: {
+      text: "“Memory管理”在这里指智能复盘Agent的上下文管理机制。",
+      semantic_core: "智能复盘Agent的上下文与记忆管理机制，用来持续整理任务中的关键信息",
+      local_focus: "当前章节把它具体分为降噪、提要、保鲜三步",
+      chinese_name: null, english_full_name: null, contextual_role: null,
+    },
+    author_intent: null,
+    claims: [{
+      claim_id: "c1", claim_type: "contextual_mapping",
+      text: "Memory管理采用三步法动态管理Agent上下文",
+      supports: [{ source_kind: "page_evidence", source_id: "e2" }],
+    }],
+    page_evidence: [{ evidence_id: "e1" }, { evidence_id: "e2" }, { evidence_id: "e4" }],
+    external_sources: [], notice_code: "none",
+  };
+  const checked = Grounding.validateStructured(value, current);
+  assert.equal(checked.ok, true, checked.errors.join(", "));
+  assert.match(checked.result.meaning_here.text, /上下文与记忆管理机制/);
+  assert.deepEqual(checked.result.page_evidence.map((item) => item.evidence_id), ["e1", "e4", "e2"]);
+  assert.equal(checked.result.page_evidence[1].display_purpose, "meaning_support");
+});
+
 test("生成提示明确拆分WSD、两种可见内容和三类来源", () => {
   const messages = Grounding.buildMessages(request());
   const prompt = JSON.stringify(messages);
