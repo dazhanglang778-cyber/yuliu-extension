@@ -87,7 +87,7 @@
     // 中文技术文章最常见的定义形式还包括“X 是 Y”“X 即 Y”，以及
     // “MaaS（Model as a Service，模型即服务）是……”这类括号展开。
     // 这里只在术语后紧邻的位置识别，避免把远处普通的“是”误当成定义。
-    const directAfterCue = /^\s*(?:[（(][^（）()]{1,180}[）)])?\s*(?:是(?:指|一种|一个|一类)?|即|全称(?:为|是)?|英文全称(?:为|是)?|简称(?:为|是)?)/i;
+    const directAfterCue = /^\s*(?:[（(][^（）()]{1,180}[）)])?\s*(?:是(?:指|一种|一个|一类)?|为(?:一种|一个|一类)?|即|全称(?:为|是)?|英文全称(?:为|是)?|简称(?:为|是)?)/i;
     const colonDefinition = /^\s*[：:]\s*\S.{2,220}/;
     const abbreviationCue = /^\s*是[^。！？；;]{1,160}(?:的简称|的缩写)/i;
     const parentheticalExpansion = /^\s*[（(](?=[^）)]*[A-Za-z])(?=[^）)]*(?:[，,][^）)]*|\b(?:Protocol|Service|Generation|Authentication|Authorization)\b))[^）)]{2,180}[）)]/i;

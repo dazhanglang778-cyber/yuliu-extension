@@ -4,6 +4,12 @@ const fs = require("node:fs");
 const path = require("node:path");
 const vm = require("node:vm");
 const TermKnowledge = require("../term-knowledge.js");
+
+test("候选义项提示会区分Agent Memory与硬件内存", () => {
+  const prompt = JSON.stringify(TermKnowledge.buildPlanningMessages({ selection: "Memory", documentContext: { evidence_candidates: [] } }));
+  assert.ok(prompt.includes("Agent语境中的Memory"));
+  assert.ok(prompt.includes("硬件RAM"));
+});
 const Grounding = require("../grounding.js");
 
 function request(selection = "Harness", role = "sense_disambiguation") {

@@ -294,6 +294,42 @@ test("只引用选区标题时，程序会补入远处的说明性原文依据",
   assert.ok(checked.result.page_evidence[1].quote.includes("减噪、提要、保鲜"));
 });
 
+test("已有第二个同词位置但不够说明含义时，仍补入真正的说明性依据", () => {
+  const current = request("Memory");
+  current.termKnowledge = {
+    term_type: "common_term", knowledge_confidence: "high", ambiguity: "low", external_sources: [],
+    candidate_senses: [{
+      sense_id: "s1", label: "Agent记忆机制", gloss: "Agent用于保存和管理任务上下文的信息机制",
+      referent_type: "generic_concept", supports: [{ source_kind: "model_knowledge" }],
+    }],
+  };
+  current.documentContext.selection = { raw_text: "Memory", anchor_block_id: "p-anchor" };
+  current.documentContext.blocks = [
+    { block_id: "p-anchor", text: "4.2 Memory管理机制" },
+    { block_id: "p-mention", text: "下面继续介绍Memory。" },
+    { block_id: "p-support", text: "Memory为智能体的工作台，用于管理多轮任务中持续积累的上下文。" },
+  ];
+  current.documentContext.evidence_candidates = [
+    { evidence_id: "e1", block_id: "p-anchor", role: "coreference_support", text: current.documentContext.blocks[0].text, signals: { anchor: true } },
+    { evidence_id: "e2", block_id: "p-mention", role: "coreference_support", text: current.documentContext.blocks[1].text, signals: { exactOccurrences: 1 } },
+    { evidence_id: "e3", block_id: "p-support", role: "direct_support", text: current.documentContext.blocks[2].text, signals: { definition: 2 } },
+  ];
+  const value = {
+    schema_version: "2.0", selected_text: "Memory", candidate_senses: current.termKnowledge.candidate_senses,
+    resolution: { status: "inferred", selected_sense_id: "s1", alternative_sense_ids: [], confidence: "high", specificity: "category" },
+    meaning_here: { text: "“Memory”在这里指Agent的上下文与记忆管理机制。", chinese_name: "Agent记忆机制", english_full_name: null, contextual_role: null },
+    author_intent: null,
+    claims: [
+      { claim_id: "c1", claim_type: "lexical_knowledge", text: "Memory是Agent的上下文与记忆管理机制", supports: [{ source_kind: "model_knowledge" }] },
+      { claim_id: "c2", claim_type: "contextual_mapping", text: "这里采用Agent记忆机制义项", supports: [{ source_kind: "page_evidence", source_id: "e1" }, { source_kind: "page_evidence", source_id: "e2" }] },
+    ],
+    page_evidence: [{ evidence_id: "e1" }, { evidence_id: "e2" }], external_sources: [], notice_code: "none",
+  };
+  const checked = Grounding.validateStructured(value, current);
+  assert.equal(checked.ok, true, checked.errors.join(", "));
+  assert.ok(checked.result.page_evidence.some((item) => item.evidence_id === "e3"));
+});
+
 test("知识兜底也优先展示说明性段落，并保留当前选区用于定位", () => {
   const current = request("保鲜策略");
   current.termKnowledge = {
@@ -315,13 +351,60 @@ test("知识兜底也优先展示说明性段落，并保留当前选区用于�
   ];
   const fallback = Grounding.knowledgeFallbackResult(current);
   assert.ok(fallback);
-  assert.deepEqual(fallback.page_evidence.map((item) => item.evidence_id), ["e2", "e1"]);
+  assert.deepEqual(fallback.page_evidence.map((item) => item.evidence_id), ["e1", "e2"]);
+  assert.equal(fallback.page_evidence[0].display_purpose, "current_location");
+  assert.equal(fallback.page_evidence[1].display_purpose, "meaning_support");
+});
+
+test("稳定语义内核与当前位置侧重会被合成为自然的两句解释", () => {
+  const current = request("Memory");
+  current.termKnowledge = {
+    term_type: "common_term", knowledge_confidence: "high", ambiguity: "low", external_sources: [],
+    candidate_senses: [{
+      sense_id: "s1", label: "Agent记忆机制", gloss: "Agent用于保存和管理任务上下文的信息机制",
+      referent_type: "generic_concept", supports: [{ source_kind: "model_knowledge" }],
+    }],
+  };
+  current.documentContext.selection = { raw_text: "Memory", anchor_block_id: "p-anchor" };
+  current.documentContext.blocks = [
+    { block_id: "p-anchor", text: "在智能复盘Agent中，Memory为智能体的工作台。" },
+    { block_id: "p-definition", text: "Agent的上下文会迅速膨胀，因此需要通过减噪、提要、保鲜管理Memory。" },
+  ];
+  current.documentContext.evidence_candidates = [
+    { evidence_id: "e1", block_id: "p-anchor", role: "direct_support", text: current.documentContext.blocks[0].text, signals: { anchor: true, definition: 2 } },
+    { evidence_id: "e2", block_id: "p-definition", role: "coreference_support", text: current.documentContext.blocks[1].text, signals: { anchor: false } },
+  ];
+  const value = {
+    schema_version: "2.0",
+    selected_text: "Memory",
+    candidate_senses: current.termKnowledge.candidate_senses,
+    resolution: { status: "inferred", selected_sense_id: "s1", alternative_sense_ids: [], confidence: "high", specificity: "category" },
+    meaning_here: {
+      text: "备用文本",
+      semantic_core: "Agent 的上下文与记忆管理机制，用来保存、组织和更新多轮任务中需要持续使用的信息",
+      local_focus: "作者在此把它称为智能体的“工作台”",
+      chinese_name: "Agent记忆机制", english_full_name: null, contextual_role: null,
+    },
+    author_intent: null,
+    claims: [
+      { claim_id: "c1", claim_type: "lexical_knowledge", text: "Memory是Agent的上下文与记忆管理机制", supports: [{ source_kind: "model_knowledge" }] },
+      { claim_id: "c2", claim_type: "contextual_mapping", text: "此处把Memory称为智能体的工作台", supports: [{ source_kind: "page_evidence", source_id: "e1" }, { source_kind: "page_evidence", source_id: "e2" }] },
+    ],
+    page_evidence: [{ evidence_id: "e1" }, { evidence_id: "e2" }],
+    external_sources: [], notice_code: "none",
+  };
+  const checked = Grounding.validateStructured(value, current);
+  assert.equal(checked.ok, true, checked.errors.join(", "));
+  assert.equal(checked.result.meaning_here.text, "“Memory”在这里指Agent 的上下文与记忆管理机制，用来保存、组织和更新多轮任务中需要持续使用的信息。作者在此把它称为智能体的“工作台”。");
+  assert.deepEqual(checked.result.page_evidence.map((item) => item.display_purpose), ["current_location", "meaning_support"]);
 });
 
 test("生成提示明确拆分WSD、两种可见内容和三类来源", () => {
   const messages = Grounding.buildMessages(request());
   const prompt = JSON.stringify(messages);
   assert.ok(prompt.includes("WSD"));
+  assert.ok(prompt.includes("稳定语义内核"));
+  assert.ok(prompt.includes("当前位置侧重"));
   assert.ok(prompt.includes("这里指什么"));
   assert.ok(prompt.includes("作者想表达什么"));
   assert.ok(prompt.includes("model_knowledge"));

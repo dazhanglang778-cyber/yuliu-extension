@@ -64,6 +64,7 @@ test("中英文正向和反向定义句都能被识别", () => {
   assert.ok(Retrieval.definitionSignal("MaaS（Model As A Service，模型即服务）是将模型能力以服务形式提供的技术模式。", "MaaS") > 0);
   assert.ok(Retrieval.definitionSignal("RAG 即检索增强生成。", "RAG") > 0);
   assert.ok(Retrieval.definitionSignal("优雅降级：如果多次压缩尝试都失败，回退到保守的消息阶段策略。", "优雅降级") > 0);
+  assert.ok(Retrieval.definitionSignal("Memory为智能体的工作台。", "Memory") > 0);
   assert.equal(Retrieval.definitionSignal("Harness 和 Atlas 都出现在项目清单中。", "Harness"), 0);
 });
 

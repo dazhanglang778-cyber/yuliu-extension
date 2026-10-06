@@ -530,7 +530,10 @@
   function evidencePositionLabel(evidence, item, index) {
     const anchorId = item?.documentContext?.selection?.anchor_block_id;
     let relation = "文内依据";
-    if (evidence.block_id === anchorId) relation = "当前段";
+    if (evidence.display_purpose === "current_location" || evidence.block_id === anchorId) relation = "当前位置";
+    else if (evidence.display_purpose === "meaning_support") relation = "核心释义依据";
+    else if (evidence.display_purpose === "author_intent_support") relation = "作者意图依据";
+    else if (evidence.display_purpose === "context_support") relation = "语境补充";
     else if (evidence.role === "direct_support") relation = "原文定义";
     else if (evidence.relation_to_selection === "neighbor") relation = "相邻段落";
     else if (evidence.relation_to_selection === "same_section") relation = "同一章节";

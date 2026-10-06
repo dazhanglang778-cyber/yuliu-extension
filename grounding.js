@@ -132,6 +132,71 @@
     return normalized;
   }
 
+  function annotateAndRankPageEvidence(pageEvidence, claims, request) {
+    const anchorId = String(request.documentContext?.selection?.anchor_block_id || "");
+    const { byEvidenceId } = candidateMaps(request.documentContext);
+    const claimTypesByEvidence = new Map();
+    for (const claim of Array.isArray(claims) ? claims : []) {
+      for (const item of Array.isArray(claim?.supports) ? claim.supports : []) {
+        if (item?.source_kind !== "page_evidence" || !item.source_id) continue;
+        if (!claimTypesByEvidence.has(item.source_id)) claimTypesByEvidence.set(item.source_id, new Set());
+        claimTypesByEvidence.get(item.source_id).add(claim.claim_type);
+      }
+    }
+    return pageEvidence.map((item, index) => {
+      const candidate = byEvidenceId.get(item.evidence_id) || {};
+      const claimTypes = claimTypesByEvidence.get(item.evidence_id) || new Set();
+      const isAnchor = String(item.block_id || "") === anchorId;
+      const purposes = [];
+      if (isAnchor) purposes.push("current_location");
+      if ((claimTypes.has("contextual_mapping") || claimTypes.has("lexical_knowledge"))
+        && (!isAnchor || item.role === "direct_support" || Number(candidate?.signals?.definition || 0) > 0)) {
+        purposes.push("meaning_support");
+      }
+      if (claimTypes.has("author_intent")) purposes.push("author_intent_support");
+      if (!purposes.length) purposes.push("context_support");
+      const displayPurpose = isAnchor
+        ? "current_location"
+        : purposes.includes("meaning_support")
+          ? "meaning_support"
+          : purposes.includes("author_intent_support") ? "author_intent_support" : "context_support";
+      const rank = displayPurpose === "current_location" ? 0
+        : displayPurpose === "meaning_support" && item.role === "direct_support" ? 1
+          : displayPurpose === "meaning_support" ? 2
+            : displayPurpose === "author_intent_support" ? 3 : 4;
+      return { ...item, purposes, display_purpose: displayPurpose, __rank: rank, __index: index };
+    }).sort((left, right) => left.__rank - right.__rank || left.__index - right.__index)
+      .map(({ __rank, __index, ...item }) => item);
+  }
+
+  function trimMeaningPrefix(value, selected) {
+    const source = visibleText(value, 360)
+      .replace(new RegExp(`^[“\"']?${String(selected || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}[”\"']?(?:在这里|此处|这里)?(?:是指|指的是|指|意为)`, "i"), "")
+      .replace(/^[：:，,\s]+/, "")
+      .replace(/[。；;]+$/, "")
+      .trim();
+    return source;
+  }
+
+  function composeMeaningHere(meaningValue, selected) {
+    const semanticCore = trimMeaningPrefix(meaningValue?.semantic_core, selected);
+    const localFocus = visibleText(meaningValue?.local_focus || meaningValue?.contextual_role, 260)
+      .replace(/[。；;]+$/, "")
+      .trim();
+    const fallback = visibleText(meaningValue?.text, 520);
+    if (!semanticCore) {
+      return { text: fallback, semantic_core: null, local_focus: localFocus || null };
+    }
+    const first = `“${selected}”在这里指${semanticCore}。`;
+    const second = localFocus && !normalizeIdentity(first).includes(normalizeIdentity(localFocus))
+      ? `${localFocus}。` : "";
+    return {
+      text: visibleText(`${first}${second}`, 520),
+      semantic_core: semanticCore,
+      local_focus: localFocus || null,
+    };
+  }
+
   function normalizeExternalSources(referencedIds, request, errors) {
     const known = externalSourceMap(request);
     const normalized = [];
@@ -181,15 +246,18 @@
           ? ClaimVerification.overlap(withoutExactSelection, targetText, selected)
           : { count: 0, targetCount: 0 };
         const rootHits = roots.reduce((sum, root) => sum + (normalizeIdentity(sourceText).includes(normalizeIdentity(root)) ? 1 : 0), 0);
+        const exactSelected = normalizeIdentity(sourceText).includes(normalizeIdentity(selected));
+        const hasRetrievalSignal = Number(item?.signals?.variantOccurrences || 0) > 0
+          || Number(item?.signals?.definition || 0) > 0;
         let score = semantic.count * 4 + rootHits * 12;
         if (item.role === "direct_support") score += 8;
         if (Number(item?.signals?.variantOccurrences || 0) > 0) score += 6;
         if (Number(item?.signals?.definition || 0) > 0) score += 6;
         if (sourceText.length >= 35 && /[，。；：,:;]/.test(sourceText)) score += 3;
         if (sourceText.length < Math.max(12, selected.length + 6)) score -= 5;
-        return { item, score };
+        return { item, score, relevant: semantic.count >= 2 || rootHits > 0 || exactSelected || hasRetrievalSignal };
       })
-      .filter(({ score }) => score >= 8)
+      .filter(({ score, relevant }) => relevant && score >= 8)
       .sort((left, right) => right.score - left.score
         || Number(right.item?.score || 0) - Number(left.item?.score || 0))
       .slice(0, Math.max(0, limit))
@@ -203,12 +271,17 @@
     if (!contextualClaims.length) return;
     const currentPageIds = referencedSourceIds(contextualClaims, "page_evidence");
     if (!currentPageIds.length) return;
-    const alreadyHasExplanatoryEvidence = currentPageIds.some((id) => String(byEvidenceId.get(id)?.block_id || "") !== anchorId);
-    if (alreadyHasExplanatoryEvidence) return;
     const selected = candidates.find((item) => item.sense_id === visibleText(resolutionValue?.selected_sense_id, 50));
     if (!selected) return;
     const additions = supportingEvidenceCandidates(request, selected, meaningValue?.text, 2);
     if (!additions.length) return;
+    const explanatoryIds = new Set(additions.map((item) => visibleText(item?.evidence_id, 60)).filter(Boolean));
+    const alreadyHasExplanatoryEvidence = currentPageIds.some((id) => {
+      const item = byEvidenceId.get(id);
+      if (!item || String(item.block_id || "") === anchorId) return false;
+      return item.role === "direct_support" || explanatoryIds.has(id);
+    });
+    if (alreadyHasExplanatoryEvidence) return;
     const claim = contextualClaims[0];
     const seen = new Set((claim.supports || []).filter((item) => item.source_kind === "page_evidence").map((item) => item.source_id));
     for (const evidence of additions) {
@@ -246,9 +319,14 @@
       supports: (Array.isArray(item?.supports) ? item.supports : []).map(support).filter(Boolean),
     }));
     enrichContextualClaimSupports(claims, candidates, resolutionValue, meaningValue, request);
-    const pageEvidence = normalizePageEvidence(referencedSourceIds(claims, "page_evidence"), request, errors);
+    const pageEvidence = annotateAndRankPageEvidence(
+      normalizePageEvidence(referencedSourceIds(claims, "page_evidence"), request, errors),
+      claims,
+      request,
+    );
     const externalSources = normalizeExternalSources(referencedSourceIds(claims, "external_source"), request, errors);
     const authorText = visibleText(authorValue?.text, 420);
+    const composedMeaning = composeMeaningHere(meaningValue, visibleText(value.selected_text, 160));
     return {
       schema_version: "2.0",
       selected_text: visibleText(value.selected_text, 160),
@@ -261,7 +339,9 @@
         specificity: SPECIFICITIES.has(resolutionValue.specificity) ? resolutionValue.specificity : "category",
       },
       meaning_here: {
-        text: visibleText(meaningValue.text, 520),
+        text: composedMeaning.text,
+        semantic_core: composedMeaning.semantic_core,
+        local_focus: composedMeaning.local_focus,
         chinese_name: meaningValue.chinese_name == null ? null : visibleText(meaningValue.chinese_name, 120) || null,
         english_full_name: meaningValue.english_full_name == null ? null : visibleText(meaningValue.english_full_name, 180) || null,
         contextual_role: meaningValue.contextual_role == null ? null : visibleText(meaningValue.contextual_role, 260) || null,
@@ -561,15 +641,20 @@
         selected_sense_id: "s1或null", alternative_sense_ids: [], confidence: "high|medium|low",
         specificity: "category|named_entity|exact_variant",
       },
-      meaning_here: { text: `“${selection}”在这里指……`, chinese_name: null, english_full_name: null, contextual_role: null },
+      meaning_here: {
+        text: `“${selection}”在这里指……`,
+        semantic_core: "同一义项在全文保持稳定的类别、核心功能与边界",
+        local_focus: "可选；当前句或当前章节特别强调的作用，不得重复语义内核",
+        chinese_name: null, english_full_name: null, contextual_role: null,
+      },
       author_intent: { text: "仅在具有独立论证作用且原文支持时填写，否则整个字段为null", claim_ids: ["c3"] },
       claims: [{ claim_id: "c1", claim_type: "lexical_knowledge|contextual_mapping|author_intent|high_risk_fact", text: "单项主张", supports: [{ source_kind: "model_knowledge|page_evidence|external_source", source_id: "按来源填写" }] }],
       page_evidence: [{ evidence_id: "只填写输入中的证据ID；块ID、引文和角色由程序回填" }],
       external_sources: [{ source_id: "只能使用输入ID", title: "输入标题", url: "输入网址", publisher: null, excerpt: null }],
       notice_code: "none|multiple_senses|insufficient_context|term_unrecognized|external_lookup_failed",
     };
-    const system = `你是网页与文档内的语境义消歧器。目标是让用户快速理解选中词在当前位置的含义，而不是做封闭式文档问答。按顺序执行：一、结合模型知识和术语候选池建立真实存在的主要义项；二、执行WSD（词义消歧），只用当前选区与页面候选证据选择本次义项；三、生成简洁的“这里指什么”；四、只有作者确实借该词完成强调、对比、区分、提醒或推进论证，而且这一作用与词义解释不同，才生成“作者想表达什么”（author_intent），否则填null。术语候选知识不得冒充当前页面证据：模型知识可以支持低风险的一般概念释义；页面证据负责支持当前义项映射和作者意图；具体实体、版本、数字和时效事实必须由页面直接证据或已提供的外部来源支持。高置信候选池可以支持常见缩写全称，但不得自行补出未经候选池确认的唯一身份。每条claim只写一个可独立核验的事实；supports必须真正支持这条claim，不能因为引文出现了选中词就绑定。当前选区只证明“词出现在这里”：若候选池中还有解释其含义、作用、流程或上下位关系的非锚点段落，contextual_mapping必须同时采用至少一条这种说明性证据，不能只引用选中词所在短句或标题。输入中的页面role是程序判定的，不得把sense_disambiguation或coreference_support自行升级为direct_support。外部来源标记为candidate_unverified时，必须先判断其与候选义项语义一致，并确认它能支持绑定的具体主张后才能采用。页面仅出现同词可用于sense_disambiguation，但不能冒充词典定义。page_evidence只需返回所采用的evidence_id，块ID、原文引文和角色由程序从本地RAG候选池回填；不要自行改写引文。正常推断使用inferred且notice_code为none，不得误报信息不足。只输出一个JSON对象，不要Markdown。`;
-    let user = `【唯一选中词】\n${selection}\n\n【精确选区】\n${JSON.stringify(context.selection || {})}\n\n【页面候选证据】\n${JSON.stringify(pageCandidates)}\n\n【术语候选知识与待核验外部资料】\n${JSON.stringify(termKnowledge)}\n\n【必须遵守的输出结构】\n${JSON.stringify(outputContract)}\n\nmeaning_here第一句必须点名“${selection}”，直接说明当前语境义。candidate_senses应优先沿用候选池的sense_id、真实名称和释义，并合并重复义项；严禁把“中性义项名”等结构示例原样当成答案。页面直接定义的文内特殊术语可以新增document_defined_term候选。clear或inferred必须提供contextual_mapping主张并绑定页面证据。作者意图不得重复meaning_here。`;
+    const system = `你是网页与文档内的语境义消歧器。目标是让用户快速理解选中词在当前位置的含义，而不是做封闭式文档问答。按顺序执行：一、结合模型知识和术语候选池建立真实存在的主要义项；二、执行WSD（词义消歧），只用当前选区与页面候选证据选择本次义项；三、把“这里指什么”拆成稳定语义内核semantic_core与当前位置侧重local_focus；四、只有作者确实借该词完成强调、对比、区分、提醒或推进论证，而且这一作用与词义解释不同，才生成“作者想表达什么”（author_intent），否则填null。同一个词选择同一义项时，semantic_core应保持相同的类别、核心功能和边界；local_focus才随所在句子或章节变化。semantic_core不是词典抄写，应结合可靠模型知识与全文最强说明性证据，用普通中文回答“它是什么、主要做什么”；local_focus只写当前段特别强调的角色、问题或流程，没有新增信息则填null。不要把软件Agent的Memory写成硬件RAM或物理内存，除非原文明确讨论硬件。术语候选知识不得冒充当前页面证据：模型知识可以支持低风险的一般概念释义；页面证据负责支持当前义项映射和作者意图；具体实体、版本、数字和时效事实必须由页面直接证据或已提供的外部来源支持。高置信候选池可以支持常见缩写全称，但不得自行补出未经候选池确认的唯一身份。每条claim只写一个可独立核验的事实；supports必须真正支持这条claim，不能因为引文出现了选中词就绑定。当前选区负责定位并限定此处侧重；若候选池中还有直接定义或解释其含义、作用、流程、上下位关系的非锚点段落，contextual_mapping必须优先采用最强的一至两条说明性证据，不能只引用选中词所在短句或标题，也不要罗列所有同词位置。输入中的页面role是程序判定的，不得把sense_disambiguation或coreference_support自行升级为direct_support。外部来源标记为candidate_unverified时，必须先判断其与候选义项语义一致，并确认它能支持绑定的具体主张后才能采用。页面仅出现同词可用于sense_disambiguation，但不能冒充词典定义。page_evidence只需返回所采用的evidence_id，块ID、原文引文和角色由程序从本地RAG候选池回填；不要自行改写引文。正常推断使用inferred且notice_code为none，不得误报信息不足。只输出一个JSON对象，不要Markdown。`;
+    let user = `【唯一选中词】\n${selection}\n\n【精确选区】\n${JSON.stringify(context.selection || {})}\n\n【页面候选证据】\n${JSON.stringify(pageCandidates)}\n\n【术语候选知识与待核验外部资料】\n${JSON.stringify(termKnowledge)}\n\n【必须遵守的输出结构】\n${JSON.stringify(outputContract)}\n\nmeaning_here.semantic_core必须给出可独立理解的稳定核心义；meaning_here.local_focus只在当前位置确有额外侧重时填写。程序会将两者合成为““${selection}”在这里指……。此处……”式自然回答，因此不要在这两个字段重复词头。candidate_senses应优先沿用候选池的sense_id、真实名称和释义，并合并重复义项；严禁把“中性义项名”等结构示例原样当成答案。页面直接定义的文内特殊术语可以新增document_defined_term候选。clear或inferred必须提供contextual_mapping主张并绑定页面证据。作者意图不得重复meaning_here。`;
     if (repair) user += `\n\n【上一次输出未通过程序校验】\n错误码：${repair.errors.join(", ")}\n上一次输出：${String(repair.raw || "").slice(0, 8000)}\n请只修复这些错误，并重新输出完整JSON。`;
     return [{ role: "system", content: system }, { role: "user", content: user }];
   }
