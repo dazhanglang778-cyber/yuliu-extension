@@ -26,7 +26,7 @@ h1 { margin: 7px 0 8px; font-family: SimSun, serif; font-size: 36px; font-weight
 .evaluation-heading p:not(.eyebrow) { max-width: 720px; margin: 0; color: #697077; font-size: 13px; line-height: 1.65; }
 .evaluation-actions { display: flex; flex: 0 0 auto; gap: 8px; }
 .evaluation-progress { display: grid; grid-template-columns: minmax(160px, 1fr) auto; align-items: center; gap: 14px; margin-top: 16px; }
-.evaluation-progress[hidden], .evaluation-summary[hidden], .evaluation-failures[hidden] { display: none; }
+.evaluation-progress[hidden], .evaluation-summary[hidden], .evaluation-failures[hidden], .evaluation-cases[hidden] { display: none; }
 .evaluation-progress progress { width: 100%; accent-color: #bd842b; }
 .evaluation-progress span, .evaluation-message { color: #746c60; font-size: 12px; }
 .evaluation-message { margin: 14px 0 0; }
@@ -40,6 +40,30 @@ h1 { margin: 7px 0 8px; font-family: SimSun, serif; font-size: 36px; font-weight
 .evaluation-failures { margin-top: 13px; padding-top: 13px; border-top: 1px solid #e8ddc9; }
 .evaluation-failures strong { display: block; margin-bottom: 7px; color: #795b26; }
 .evaluation-failures ul { margin: 0; padding-left: 20px; color: #5a6065; font-size: 12px; line-height: 1.7; }
+.evaluation-cases { margin-top: 16px; padding-top: 15px; border-top: 1px solid #e8ddc9; }
+.evaluation-cases-heading { display: flex; justify-content: space-between; align-items: baseline; gap: 14px; margin-bottom: 10px; }
+.evaluation-cases-heading strong { color: #795b26; }
+.evaluation-cases-heading span, .evaluation-legacy-note { color: #777066; font-size: 12px; }
+.evaluation-case { margin-top: 9px; border: 1px solid #dfd7ca; border-radius: 10px; background: #fff; overflow: hidden; }
+.evaluation-case > summary { display: flex; justify-content: space-between; gap: 18px; align-items: center; padding: 12px 14px; cursor: pointer; }
+.evaluation-case > summary > span:first-child { min-width: 0; }
+.evaluation-case summary b, .evaluation-case summary small { display: block; }
+.evaluation-case summary small { margin-top: 3px; color: #7a7e80; font-size: 11px; font-weight: 400; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.case-status { flex: 0 0 auto; padding: 4px 8px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+.case-status.pass { color: #347044; background: #edf6ed; }
+.case-status.fail { color: #a23f35; background: #fff0ed; }
+.evaluation-case-body { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 13px; border-top: 1px solid #ece8df; background: #fdfbf7; }
+.case-section { min-width: 0; padding: 11px 12px; border-radius: 8px; background: #f5f2eb; }
+.case-section.muted { background: #f1f1ef; color: #747a7e; }
+.case-section h4 { margin: 0 0 6px; color: #85601f; font-size: 12px; }
+.case-section p, .case-section ol { margin: 0; color: #485057; font-size: 12px; line-height: 1.65; white-space: pre-wrap; overflow-wrap: anywhere; }
+.case-section ol { padding-left: 20px; }
+.case-section li + li { margin-top: 5px; }
+.case-checks { display: flex; flex-wrap: wrap; gap: 6px; }
+.case-checks span { padding: 4px 7px; border-radius: 20px; font-size: 11px; }
+.check-pass { color: #347044; background: #e5f3e7; }
+.check-fail { color: #a23f35; background: #ffe8e3; }
+.check-skip { color: #717579; background: #e8e9e7; }
 button { padding: 10px 14px; border: 1px solid #bd852d; border-radius: 10px; background: #fffaf0; color: #8b641f; font: inherit; font-weight: 700; cursor: pointer; }
 button:hover { background: #f9edda; }
 button.danger { border-color: #d2aaa6; color: #a13f36; background: #fff9f8; }
@@ -67,6 +91,9 @@ button.danger { border-color: #d2aaa6; color: #a13f36; background: #fff9f8; }
   .toolbar { flex-wrap: wrap; }
   .evaluation-heading { flex-direction: column; }
   .evaluation-summary { grid-template-columns: 1fr 1fr; }
+  .evaluation-actions { flex-wrap: wrap; }
+  .evaluation-cases-heading { align-items: flex-start; flex-direction: column; }
+  .evaluation-case-body { grid-template-columns: 1fr; }
   .session > summary { grid-template-columns: 1fr 90px; }
   .session > summary .meta { display: none; }
   .event { grid-template-columns: 75px 1fr; }

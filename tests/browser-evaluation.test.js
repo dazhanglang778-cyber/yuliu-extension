@@ -50,6 +50,12 @@ test("开发后台能完成一条端到端语义评测且不读取API Key", asyn
   const report = await BrowserRunner.run({ runtime, loadText });
   assert.equal(report.summary.core_pass_rate, 100);
   assert.equal(report.summary.release_gate.passed, true);
+  assert.equal(report.cases[0].review.evaluation_scope, "end_to_end");
+  assert.equal(report.cases[0].review.selection.text, "Harness");
+  assert.ok(report.cases[0].review.selection.anchor_context.includes("运行框架"));
+  assert.ok(report.cases[0].review.actual.meaning.includes("运行框架"));
+  assert.equal(report.cases[0].review.actual.adopted_evidence[0].block_id, "p-4");
+  assert.ok(report.cases[0].review.retrieval.retrieved_evidence.length > 0);
   assert.equal(seenMessages.length, 1);
   assert.equal(seenMessages[0].type, "EVALUATION_CASE");
   assert.equal("apiKey" in seenMessages[0], false);

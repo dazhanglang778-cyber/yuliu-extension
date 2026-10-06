@@ -1,7 +1,7 @@
 {
   "mode": "retrieval",
   "dataset_id": "yuliu-core-context-v1",
-  "generated_at": "2026-09-23T07:55:24.483Z",
+  "generated_at": "2026-10-06T12:42:24.014Z",
   "summary": {
     "total_cases": 28,
     "anchor_recall": 100,
@@ -13,6 +13,9 @@
     {
       "case_id": "harness-definition",
       "document_id": "agent-harness",
+      "category": "document_defined_term",
+      "difficulty": "contextual",
+      "passed": true,
       "anchor_recalled": true,
       "support_recalled": true,
       "gold_evidence_recall": 1,
@@ -26,11 +29,187 @@
         "p-1",
         "h-1",
         "h-2"
-      ]
+      ],
+      "review": {
+        "evaluation_scope": "retrieval_only",
+        "scope_note": "本案例只验证RAG证据召回，没有生成实际释义，不能据此判断最终回答是否正确。",
+        "document": {
+          "document_id": "agent-harness",
+          "title": "Agent 如何在环境中持续运行"
+        },
+        "selection": {
+          "text": "Harness",
+          "anchor_block_id": "p-4",
+          "anchor_context": "这里把组织这些交互环节的运行框架统称为 Harness。它连接模型、工具和环境，但不是某一家公司的专有产品。"
+        },
+        "expected": {
+          "meaning": "在这里指组织模型、工具与环境交互的一套运行框架。",
+          "sense": "组织模型、工具与环境交互的运行框架",
+          "certainty": "clear",
+          "author_intent_required": false,
+          "evidence": [
+            {
+              "rank": 1,
+              "evidence_id": null,
+              "block_id": "p-4",
+              "role": "direct_support",
+              "quote": "组织这些交互环节的运行框架统称为 Harness",
+              "heading_path": [],
+              "reasons": []
+            }
+          ],
+          "must_include_groups": [
+            [
+              "运行框架"
+            ],
+            [
+              "交互",
+              "连接"
+            ]
+          ],
+          "must_not_include": [
+            "DeepSeek Harness",
+            "DSH",
+            "插件开发",
+            "版本切换"
+          ]
+        },
+        "actual": null,
+        "retrieval": {
+          "retrieved_evidence": [
+            {
+              "rank": 1,
+              "evidence_id": "e1",
+              "block_id": "p-4",
+              "role": "direct_support",
+              "quote": "这里把组织这些交互环节的运行框架统称为 Harness。它连接模型、工具和环境，但不是某一家公司的专有产品。",
+              "heading_path": [
+                "Agent 如何在环境中持续运行"
+              ],
+              "reasons": [
+                "当前选区",
+                "定义句",
+                "同词出现×1"
+              ]
+            },
+            {
+              "rank": 2,
+              "evidence_id": "e2",
+              "block_id": "p-5",
+              "role": "coreference_support",
+              "quote": "随着模型能力提升，Harness 的设计会直接影响任务能否可靠执行以及经验能否被下一轮利用。",
+              "heading_path": [
+                "Agent 如何在环境中持续运行"
+              ],
+              "reasons": [
+                "同词出现×1",
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 3,
+              "evidence_id": "e3",
+              "block_id": "p-6",
+              "role": "coreference_support",
+              "quote": "文末列举近期项目名称，其中包括 DeepSeek Harness 和 Atlas Runner；这些名称只是行业消息，不是上文术语的定义。",
+              "heading_path": [
+                "Agent 如何在环境中持续运行",
+                "另一个不相关的行业消息"
+              ],
+              "reasons": [
+                "同词出现×1",
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 4,
+              "evidence_id": "e4",
+              "block_id": "p-3",
+              "role": "structural_support",
+              "quote": "为了让这一过程稳定重复，系统需要保存会话状态、调度工具调用并记录每次执行结果。",
+              "heading_path": [
+                "Agent 如何在环境中持续运行"
+              ],
+              "reasons": [
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 5,
+              "evidence_id": "e5",
+              "block_id": "p-2",
+              "role": "structural_support",
+              "quote": "环境负责提供任务条件与反馈，模型则根据反馈决定下一步行动。",
+              "heading_path": [
+                "Agent 如何在环境中持续运行"
+              ],
+              "reasons": [
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 6,
+              "evidence_id": "e6",
+              "block_id": "p-1",
+              "role": "structural_support",
+              "quote": "一个 Agent 不只需要模型，还需要任务、工具、状态和可以观察结果的环境。",
+              "heading_path": [
+                "Agent 如何在环境中持续运行"
+              ],
+              "reasons": [
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 7,
+              "evidence_id": "e7",
+              "block_id": "h-1",
+              "role": "structural_support",
+              "quote": "Agent 如何在环境中持续运行",
+              "heading_path": [
+                "Agent 如何在环境中持续运行"
+              ],
+              "reasons": [
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 8,
+              "evidence_id": "e8",
+              "block_id": "h-2",
+              "role": "structural_support",
+              "quote": "另一个不相关的行业消息",
+              "heading_path": [
+                "Agent 如何在环境中持续运行",
+                "另一个不相关的行业消息"
+              ],
+              "reasons": [
+                "相邻段落",
+                "标题相关"
+              ]
+            }
+          ],
+          "expected_support_recalled": true
+        },
+        "execution": {
+          "validation_attempts": null,
+          "locally_degraded": false,
+          "removed_claim_ids": [],
+          "validation_errors": [],
+          "elapsed_ms": null,
+          "pipeline_error": ""
+        }
+      }
     },
     {
       "case_id": "harness-later-use",
       "document_id": "agent-harness",
+      "category": "unjustified_specificity",
+      "difficulty": "adversarial",
+      "passed": true,
       "anchor_recalled": true,
       "support_recalled": true,
       "gold_evidence_recall": 1,
@@ -44,11 +223,200 @@
         "p-2",
         "p-1",
         "h-1"
-      ]
+      ],
+      "review": {
+        "evaluation_scope": "retrieval_only",
+        "scope_note": "本案例只验证RAG证据召回，没有生成实际释义，不能据此判断最终回答是否正确。",
+        "document": {
+          "document_id": "agent-harness",
+          "title": "Agent 如何在环境中持续运行"
+        },
+        "selection": {
+          "text": "Harness",
+          "anchor_block_id": "p-5",
+          "anchor_context": "随着模型能力提升，Harness 的设计会直接影响任务能否可靠执行以及经验能否被下一轮利用。"
+        },
+        "expected": {
+          "meaning": "在这里沿用前文定义，指连接模型、工具与环境的 Agent 运行框架。",
+          "sense": "前文定义的 Agent 运行框架",
+          "certainty": "clear",
+          "author_intent_required": false,
+          "evidence": [
+            {
+              "rank": 1,
+              "evidence_id": null,
+              "block_id": "p-4",
+              "role": "direct_support",
+              "quote": "组织这些交互环节的运行框架统称为 Harness",
+              "heading_path": [],
+              "reasons": []
+            },
+            {
+              "rank": 2,
+              "evidence_id": null,
+              "block_id": "p-5",
+              "role": "coreference_support",
+              "quote": "Harness 的设计会直接影响任务能否可靠执行",
+              "heading_path": [],
+              "reasons": []
+            }
+          ],
+          "must_include_groups": [
+            [
+              "运行框架",
+              "交互框架"
+            ],
+            [
+              "模型",
+              "Agent"
+            ],
+            [
+              "环境",
+              "工具"
+            ]
+          ],
+          "must_not_include": [
+            "DeepSeek Harness",
+            "DSH",
+            "Atlas Runner"
+          ]
+        },
+        "actual": null,
+        "retrieval": {
+          "retrieved_evidence": [
+            {
+              "rank": 1,
+              "evidence_id": "e1",
+              "block_id": "p-5",
+              "role": "coreference_support",
+              "quote": "随着模型能力提升，Harness 的设计会直接影响任务能否可靠执行以及经验能否被下一轮利用。",
+              "heading_path": [
+                "Agent 如何在环境中持续运行"
+              ],
+              "reasons": [
+                "当前选区",
+                "同词出现×1"
+              ]
+            },
+            {
+              "rank": 2,
+              "evidence_id": "e2",
+              "block_id": "p-4",
+              "role": "direct_support",
+              "quote": "这里把组织这些交互环节的运行框架统称为 Harness。它连接模型、工具和环境，但不是某一家公司的专有产品。",
+              "heading_path": [
+                "Agent 如何在环境中持续运行"
+              ],
+              "reasons": [
+                "定义句",
+                "同词出现×1",
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 3,
+              "evidence_id": "e3",
+              "block_id": "p-6",
+              "role": "coreference_support",
+              "quote": "文末列举近期项目名称，其中包括 DeepSeek Harness 和 Atlas Runner；这些名称只是行业消息，不是上文术语的定义。",
+              "heading_path": [
+                "Agent 如何在环境中持续运行",
+                "另一个不相关的行业消息"
+              ],
+              "reasons": [
+                "同词出现×1",
+                "相邻段落",
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 4,
+              "evidence_id": "e4",
+              "block_id": "p-3",
+              "role": "structural_support",
+              "quote": "为了让这一过程稳定重复，系统需要保存会话状态、调度工具调用并记录每次执行结果。",
+              "heading_path": [
+                "Agent 如何在环境中持续运行"
+              ],
+              "reasons": [
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 5,
+              "evidence_id": "e5",
+              "block_id": "h-2",
+              "role": "structural_support",
+              "quote": "另一个不相关的行业消息",
+              "heading_path": [
+                "Agent 如何在环境中持续运行",
+                "另一个不相关的行业消息"
+              ],
+              "reasons": [
+                "相邻段落",
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 6,
+              "evidence_id": "e6",
+              "block_id": "p-2",
+              "role": "structural_support",
+              "quote": "环境负责提供任务条件与反馈，模型则根据反馈决定下一步行动。",
+              "heading_path": [
+                "Agent 如何在环境中持续运行"
+              ],
+              "reasons": [
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 7,
+              "evidence_id": "e7",
+              "block_id": "p-1",
+              "role": "structural_support",
+              "quote": "一个 Agent 不只需要模型，还需要任务、工具、状态和可以观察结果的环境。",
+              "heading_path": [
+                "Agent 如何在环境中持续运行"
+              ],
+              "reasons": [
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 8,
+              "evidence_id": "e8",
+              "block_id": "h-1",
+              "role": "structural_support",
+              "quote": "Agent 如何在环境中持续运行",
+              "heading_path": [
+                "Agent 如何在环境中持续运行"
+              ],
+              "reasons": [
+                "同一章节"
+              ]
+            }
+          ],
+          "expected_support_recalled": true
+        },
+        "execution": {
+          "validation_attempts": null,
+          "locally_degraded": false,
+          "removed_claim_ids": [],
+          "validation_errors": [],
+          "elapsed_ms": null,
+          "pipeline_error": ""
+        }
+      }
     },
     {
       "case_id": "harness-context-without-definition",
       "document_id": "harness-contextual-engineering",
+      "category": "knowledge_assisted_contextual_inference",
+      "difficulty": "contextual",
+      "passed": true,
       "anchor_recalled": true,
       "support_recalled": true,
       "gold_evidence_recall": 1,
@@ -60,11 +428,184 @@
         "p-3",
         "p-1",
         "p-5"
-      ]
+      ],
+      "review": {
+        "evaluation_scope": "retrieval_only",
+        "scope_note": "本案例只验证RAG证据召回，没有生成实际释义，不能据此判断最终回答是否正确。",
+        "document": {
+          "document_id": "harness-contextual-engineering",
+          "title": "Harness Engineering 为什么影响 Agent 表现"
+        },
+        "selection": {
+          "text": "Harness",
+          "anchor_block_id": "p-2",
+          "anchor_context": "一组实验只改变 Harness 的工具格式和编辑接口，没有修改模型权重，代码任务得分仍然显著提高。"
+        },
+        "expected": {
+          "meaning": "Harness 在这里指围绕 AI Agent 组织工具接口、任务执行与反馈的一套外围工程系统。",
+          "sense": "围绕 AI Agent 组织工具接口、任务执行和反馈的外围工程系统",
+          "certainty": "inferred",
+          "author_intent_required": true,
+          "evidence": [
+            {
+              "rank": 1,
+              "evidence_id": null,
+              "block_id": "p-2",
+              "role": "sense_disambiguation",
+              "quote": "只改变 Harness 的工具格式和编辑接口",
+              "heading_path": [],
+              "reasons": []
+            },
+            {
+              "rank": 2,
+              "evidence_id": null,
+              "block_id": "p-3",
+              "role": "sense_disambiguation",
+              "quote": "调整了终端调用、测试反馈和失败恢复流程",
+              "heading_path": [],
+              "reasons": []
+            },
+            {
+              "rank": 3,
+              "evidence_id": null,
+              "block_id": "p-5",
+              "role": "sense_disambiguation",
+              "quote": "真正限制 Agent 的不一定是写代码的能力，也可能是围绕它的结构、工具和反馈机制没有跟上",
+              "heading_path": [],
+              "reasons": []
+            }
+          ],
+          "must_include_groups": [
+            [
+              "Agent",
+              "模型"
+            ],
+            [
+              "工具",
+              "接口"
+            ],
+            [
+              "运行",
+              "执行",
+              "反馈",
+              "环境"
+            ]
+          ],
+          "must_not_include": [
+            "马具",
+            "线束",
+            "DeepSeek Harness",
+            "无法确定",
+            "不能确定"
+          ]
+        },
+        "actual": null,
+        "retrieval": {
+          "retrieved_evidence": [
+            {
+              "rank": 1,
+              "evidence_id": "e1",
+              "block_id": "p-2",
+              "role": "coreference_support",
+              "quote": "一组实验只改变 Harness 的工具格式和编辑接口，没有修改模型权重，代码任务得分仍然显著提高。",
+              "heading_path": [
+                "Harness Engineering 为什么影响 Agent 表现"
+              ],
+              "reasons": [
+                "当前选区",
+                "同词出现×1"
+              ]
+            },
+            {
+              "rank": 2,
+              "evidence_id": "e2",
+              "block_id": "p-4",
+              "role": "coreference_support",
+              "quote": "这些结果表明，在纠结模型选择之前，先审视 Harness 设计往往能获得更直接的工程收益。",
+              "heading_path": [
+                "Harness Engineering 为什么影响 Agent 表现"
+              ],
+              "reasons": [
+                "同词出现×1",
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 3,
+              "evidence_id": "e3",
+              "block_id": "h-1",
+              "role": "coreference_support",
+              "quote": "Harness Engineering 为什么影响 Agent 表现",
+              "heading_path": [
+                "Harness Engineering 为什么影响 Agent 表现"
+              ],
+              "reasons": [
+                "同词出现×1",
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 4,
+              "evidence_id": "e4",
+              "block_id": "p-3",
+              "role": "structural_support",
+              "quote": "另一组实验调整了终端调用、测试反馈和失败恢复流程，同一模型完成长任务的稳定性随之提升。",
+              "heading_path": [
+                "Harness Engineering 为什么影响 Agent 表现"
+              ],
+              "reasons": [
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 5,
+              "evidence_id": "e5",
+              "block_id": "p-1",
+              "role": "structural_support",
+              "quote": "同一个基础模型接入不同的任务环境后，最终完成率可能出现明显差异。",
+              "heading_path": [
+                "Harness Engineering 为什么影响 Agent 表现"
+              ],
+              "reasons": [
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 6,
+              "evidence_id": "e6",
+              "block_id": "p-5",
+              "role": "structural_support",
+              "quote": "真正限制 Agent 的不一定是写代码的能力，也可能是围绕它的结构、工具和反馈机制没有跟上。",
+              "heading_path": [
+                "Harness Engineering 为什么影响 Agent 表现"
+              ],
+              "reasons": [
+                "同一章节"
+              ]
+            }
+          ],
+          "expected_support_recalled": true
+        },
+        "execution": {
+          "validation_attempts": null,
+          "locally_degraded": false,
+          "removed_claim_ids": [],
+          "validation_errors": [],
+          "elapsed_ms": null,
+          "pipeline_error": ""
+        }
+      }
     },
     {
       "case_id": "harness-two-domains-unresolved",
       "document_id": "harness-unresolved-mention",
+      "category": "genuine_ambiguity",
+      "difficulty": "adversarial",
+      "passed": true,
       "anchor_recalled": true,
       "support_recalled": true,
       "gold_evidence_recall": 1,
@@ -76,11 +617,180 @@
         "p-1",
         "p-5",
         "h-1"
-      ]
+      ],
+      "review": {
+        "evaluation_scope": "retrieval_only",
+        "scope_note": "本案例只验证RAG证据召回，没有生成实际释义，不能据此判断最终回答是否正确。",
+        "document": {
+          "document_id": "harness-unresolved-mention",
+          "title": "机器人实验室联席会议"
+        },
+        "selection": {
+          "text": "Harness",
+          "anchor_block_id": "p-3",
+          "anchor_context": "会议纪要只写道“Harness 下周必须更换”，没有注明这句话来自硬件组还是软件组。"
+        },
+        "expected": {
+          "meaning": "这里无法唯一确定：Harness 可能指机器人的电气线束，也可能指软件组的任务运行框架。",
+          "sense": "可能指机器人线束，也可能指软件任务运行框架",
+          "certainty": "ambiguous",
+          "author_intent_required": false,
+          "evidence": [
+            {
+              "rank": 1,
+              "evidence_id": null,
+              "block_id": "p-1",
+              "role": "sense_disambiguation",
+              "quote": "硬件组正在检查机器人内部的线束、连接器和绝缘材料",
+              "heading_path": [],
+              "reasons": []
+            },
+            {
+              "rank": 2,
+              "evidence_id": null,
+              "block_id": "p-2",
+              "role": "sense_disambiguation",
+              "quote": "软件组同时在维护一套用于组织任务运行、工具调用和测试反馈的开发框架",
+              "heading_path": [],
+              "reasons": []
+            },
+            {
+              "rank": 3,
+              "evidence_id": null,
+              "block_id": "p-3",
+              "role": "direct_support",
+              "quote": "没有注明这句话来自硬件组还是软件组",
+              "heading_path": [],
+              "reasons": []
+            }
+          ],
+          "must_include_groups": [
+            [
+              "可能",
+              "无法确定",
+              "不能确定"
+            ],
+            [
+              "线束",
+              "电线"
+            ],
+            [
+              "软件",
+              "运行框架",
+              "开发框架"
+            ]
+          ],
+          "must_not_include": [
+            "就是线束",
+            "就是软件框架",
+            "DeepSeek Harness"
+          ]
+        },
+        "actual": null,
+        "retrieval": {
+          "retrieved_evidence": [
+            {
+              "rank": 1,
+              "evidence_id": "e1",
+              "block_id": "p-3",
+              "role": "coreference_support",
+              "quote": "会议纪要只写道“Harness 下周必须更换”，没有注明这句话来自硬件组还是软件组。",
+              "heading_path": [
+                "机器人实验室联席会议"
+              ],
+              "reasons": [
+                "当前选区",
+                "同词出现×1"
+              ]
+            },
+            {
+              "rank": 2,
+              "evidence_id": "e2",
+              "block_id": "p-4",
+              "role": "structural_support",
+              "quote": "如果来自硬件组，它可能涉及电线和连接组件；如果来自软件组，它可能涉及任务运行框架。",
+              "heading_path": [
+                "机器人实验室联席会议"
+              ],
+              "reasons": [
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 3,
+              "evidence_id": "e3",
+              "block_id": "p-2",
+              "role": "structural_support",
+              "quote": "软件组同时在维护一套用于组织任务运行、工具调用和测试反馈的开发框架。",
+              "heading_path": [
+                "机器人实验室联席会议"
+              ],
+              "reasons": [
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 4,
+              "evidence_id": "e4",
+              "block_id": "p-1",
+              "role": "structural_support",
+              "quote": "硬件组正在检查机器人内部的线束、连接器和绝缘材料。",
+              "heading_path": [
+                "机器人实验室联席会议"
+              ],
+              "reasons": [
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 5,
+              "evidence_id": "e5",
+              "block_id": "p-5",
+              "role": "structural_support",
+              "quote": "记录者没有保留发言人和议题标签，因此现有信息不足以在两种含义之间作出选择。",
+              "heading_path": [
+                "机器人实验室联席会议"
+              ],
+              "reasons": [
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 6,
+              "evidence_id": "e6",
+              "block_id": "h-1",
+              "role": "structural_support",
+              "quote": "机器人实验室联席会议",
+              "heading_path": [
+                "机器人实验室联席会议"
+              ],
+              "reasons": [
+                "同一章节"
+              ]
+            }
+          ],
+          "expected_support_recalled": true
+        },
+        "execution": {
+          "validation_attempts": null,
+          "locally_degraded": false,
+          "removed_claim_ids": [],
+          "validation_errors": [],
+          "elapsed_ms": null,
+          "pipeline_error": ""
+        }
+      }
     },
     {
       "case_id": "fde-ai-context-without-expansion",
       "document_id": "fde-ai-camp",
+      "category": "acronym_contextual_inference",
+      "difficulty": "contextual",
+      "passed": true,
       "anchor_recalled": true,
       "support_recalled": true,
       "gold_evidence_recall": 1,
@@ -92,11 +802,183 @@
         "p-1",
         "h-1",
         "p-4"
-      ]
+      ],
+      "review": {
+        "evaluation_scope": "retrieval_only",
+        "scope_note": "本案例只验证RAG证据召回，没有生成实际释义，不能据此判断最终回答是否正确。",
+        "document": {
+          "document_id": "fde-ai-camp",
+          "title": "两天 AI 工程实战营发布清单"
+        },
+        "selection": {
+          "text": "FDE",
+          "anchor_block_id": "p-2",
+          "anchor_context": "小红书标题暂定为“北京两天 FDE 实战营”，正文强调学员要直接处理真实业务约束。"
+        },
+        "expected": {
+          "meaning": "FDE 在这里指 AI 领域中直接面向实际业务问题、兼顾工程实现与部署落地的一类工程角色；本文没有展开其英文全称。",
+          "sense": "AI 领域中面向实际业务问题并负责工程实现与部署落地的一类工程角色",
+          "certainty": "inferred",
+          "author_intent_required": false,
+          "evidence": [
+            {
+              "rank": 1,
+              "evidence_id": null,
+              "block_id": "p-2",
+              "role": "sense_disambiguation",
+              "quote": "学员要直接处理真实业务约束",
+              "heading_path": [],
+              "reasons": []
+            },
+            {
+              "rank": 2,
+              "evidence_id": null,
+              "block_id": "p-3",
+              "role": "sense_disambiguation",
+              "quote": "FDE、Codex、Agent 和 AI 工程",
+              "heading_path": [],
+              "reasons": []
+            },
+            {
+              "rank": 3,
+              "evidence_id": null,
+              "block_id": "p-4",
+              "role": "sense_disambiguation",
+              "quote": "既需要理解客户需求、又要亲手完成技术落地的工程实践者",
+              "heading_path": [],
+              "reasons": []
+            }
+          ],
+          "must_include_groups": [
+            [
+              "AI",
+              "Agent"
+            ],
+            [
+              "工程",
+              "工程师"
+            ],
+            [
+              "部署",
+              "落地",
+              "业务"
+            ]
+          ],
+          "must_not_include": [
+            "实战营的运营方法",
+            "活动运营方法",
+            "前端开发工程师",
+            "无法确定"
+          ]
+        },
+        "actual": null,
+        "retrieval": {
+          "retrieved_evidence": [
+            {
+              "rank": 1,
+              "evidence_id": "e1",
+              "block_id": "p-2",
+              "role": "coreference_support",
+              "quote": "小红书标题暂定为“北京两天 FDE 实战营”，正文强调学员要直接处理真实业务约束。",
+              "heading_path": [
+                "两天 AI 工程实战营发布清单"
+              ],
+              "reasons": [
+                "当前选区",
+                "同词出现×1"
+              ]
+            },
+            {
+              "rank": 2,
+              "evidence_id": "e2",
+              "block_id": "p-5",
+              "role": "direct_support",
+              "quote": "这份运营清单没有展开 FDE 的英文全称，也没有把它定义为某一种活动运营方法。",
+              "heading_path": [
+                "两天 AI 工程实战营发布清单"
+              ],
+              "reasons": [
+                "定义句",
+                "同词出现×1",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 3,
+              "evidence_id": "e3",
+              "block_id": "p-3",
+              "role": "coreference_support",
+              "quote": "短视频标签使用 FDE、Codex、Agent 和 AI 工程，内容包含编写代码、连接业务数据并验证部署结果。",
+              "heading_path": [
+                "两天 AI 工程实战营发布清单"
+              ],
+              "reasons": [
+                "同词出现×1",
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 4,
+              "evidence_id": "e4",
+              "block_id": "p-1",
+              "role": "structural_support",
+              "quote": "团队计划用两天完成从客户问题梳理、原型实现到现场验证的完整练习。",
+              "heading_path": [
+                "两天 AI 工程实战营发布清单"
+              ],
+              "reasons": [
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 5,
+              "evidence_id": "e5",
+              "block_id": "h-1",
+              "role": "structural_support",
+              "quote": "两天 AI 工程实战营发布清单",
+              "heading_path": [
+                "两天 AI 工程实战营发布清单"
+              ],
+              "reasons": [
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 6,
+              "evidence_id": "e6",
+              "block_id": "p-4",
+              "role": "structural_support",
+              "quote": "课程面向既需要理解客户需求、又要亲手完成技术落地的工程实践者。",
+              "heading_path": [
+                "两天 AI 工程实战营发布清单"
+              ],
+              "reasons": [
+                "相邻段落",
+                "同一章节"
+              ]
+            }
+          ],
+          "expected_support_recalled": true
+        },
+        "execution": {
+          "validation_attempts": null,
+          "locally_degraded": false,
+          "removed_claim_ids": [],
+          "validation_errors": [],
+          "elapsed_ms": null,
+          "pipeline_error": ""
+        }
+      }
     },
     {
       "case_id": "fde-bare-acronym-insufficient",
       "document_id": "fde-unresolved-mention",
+      "category": "genuine_insufficient_context",
+      "difficulty": "adversarial",
+      "passed": true,
       "anchor_recalled": true,
       "support_recalled": true,
       "gold_evidence_recall": 1,
@@ -108,11 +990,169 @@
         "p-2",
         "p-1",
         "h-1"
-      ]
+      ],
+      "review": {
+        "evaluation_scope": "retrieval_only",
+        "scope_note": "本案例只验证RAG证据召回，没有生成实际释义，不能据此判断最终回答是否正确。",
+        "document": {
+          "document_id": "fde-unresolved-mention",
+          "title": "跨部门周会议程摘录"
+        },
+        "selection": {
+          "text": "FDE",
+          "anchor_block_id": "p-3",
+          "anchor_context": "第三项只写着“确认 FDE 的负责人和截止时间”，没有补充任何领域、任务或对象信息。"
+        },
+        "expected": {
+          "meaning": "FDE 是未展开的缩写，当前摘录没有提供所属领域或任务线索，因此无法确定这里的含义和英文全称。",
+          "sense": "缺少领域线索，无法确定 FDE 的当前含义或唯一英文全称",
+          "certainty": "insufficient",
+          "author_intent_required": false,
+          "evidence": [
+            {
+              "rank": 1,
+              "evidence_id": null,
+              "block_id": "p-3",
+              "role": "direct_support",
+              "quote": "没有补充任何领域、任务或对象信息",
+              "heading_path": [],
+              "reasons": []
+            },
+            {
+              "rank": 2,
+              "evidence_id": null,
+              "block_id": "p-5",
+              "role": "direct_support",
+              "quote": "仅凭这份摘录无法判断 FDE 对应哪一个英文全称",
+              "heading_path": [],
+              "reasons": []
+            }
+          ],
+          "must_include_groups": [
+            [
+              "无法确定",
+              "不能确定",
+              "不能判断"
+            ],
+            [
+              "缩写",
+              "英文全称"
+            ]
+          ],
+          "must_not_include": [
+            "工程师",
+            "前端开发",
+            "流程工程",
+            "运营方法",
+            "Forward Deployed"
+          ]
+        },
+        "actual": null,
+        "retrieval": {
+          "retrieved_evidence": [
+            {
+              "rank": 1,
+              "evidence_id": "e1",
+              "block_id": "p-3",
+              "role": "coreference_support",
+              "quote": "第三项只写着“确认 FDE 的负责人和截止时间”，没有补充任何领域、任务或对象信息。",
+              "heading_path": [
+                "跨部门周会议程摘录"
+              ],
+              "reasons": [
+                "当前选区",
+                "同词出现×1"
+              ]
+            },
+            {
+              "rank": 2,
+              "evidence_id": "e2",
+              "block_id": "p-5",
+              "role": "coreference_support",
+              "quote": "仅凭这份摘录无法判断 FDE 对应哪一个英文全称，也无法确定它指岗位、流程、设备还是其他对象。",
+              "heading_path": [
+                "跨部门周会议程摘录"
+              ],
+              "reasons": [
+                "同词出现×1",
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 3,
+              "evidence_id": "e3",
+              "block_id": "p-4",
+              "role": "structural_support",
+              "quote": "后续条目转而讨论会议室安排和报销材料，与第三项没有可确认的语义联系。",
+              "heading_path": [
+                "跨部门周会议程摘录"
+              ],
+              "reasons": [
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 4,
+              "evidence_id": "e4",
+              "block_id": "p-2",
+              "role": "structural_support",
+              "quote": "记录者使用了多个部门内部缩写，但没有附上缩写表或参会人员所属团队。",
+              "heading_path": [
+                "跨部门周会议程摘录"
+              ],
+              "reasons": [
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 5,
+              "evidence_id": "e5",
+              "block_id": "p-1",
+              "role": "structural_support",
+              "quote": "本周议程同时包含财务流程、设备采购、设计评审和数据接口四个互不相关的主题。",
+              "heading_path": [
+                "跨部门周会议程摘录"
+              ],
+              "reasons": [
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 6,
+              "evidence_id": "e6",
+              "block_id": "h-1",
+              "role": "structural_support",
+              "quote": "跨部门周会议程摘录",
+              "heading_path": [
+                "跨部门周会议程摘录"
+              ],
+              "reasons": [
+                "同一章节"
+              ]
+            }
+          ],
+          "expected_support_recalled": true
+        },
+        "execution": {
+          "validation_attempts": null,
+          "locally_degraded": false,
+          "removed_claim_ids": [],
+          "validation_errors": [],
+          "elapsed_ms": null,
+          "pipeline_error": ""
+        }
+      }
     },
     {
       "case_id": "apple-fruit",
       "document_id": "apple-two-senses",
+      "category": "common_word_entity_disambiguation",
+      "difficulty": "basic",
+      "passed": true,
       "anchor_recalled": true,
       "support_recalled": true,
       "gold_evidence_recall": 1,
@@ -126,11 +1166,192 @@
         "p-2",
         "h-3",
         "p-5"
-      ]
+      ],
+      "review": {
+        "evaluation_scope": "retrieval_only",
+        "scope_note": "本案例只验证RAG证据召回，没有生成实际释义，不能据此判断最终回答是否正确。",
+        "document": {
+          "document_id": "apple-two-senses",
+          "title": "两个名为 Apple 的对象"
+        },
+        "selection": {
+          "text": "Apple",
+          "anchor_block_id": "p-1",
+          "anchor_context": "果园今年种植梨、桃和苹果。冷藏实验中，Apple 被作为水果样本切片称重。"
+        },
+        "expected": {
+          "meaning": "在这里指作为冷藏实验样本的苹果这种水果。",
+          "sense": "作为实验样本的苹果水果",
+          "certainty": "clear",
+          "author_intent_required": false,
+          "evidence": [
+            {
+              "rank": 1,
+              "evidence_id": null,
+              "block_id": "p-1",
+              "role": "direct_support",
+              "quote": "Apple 被作为水果样本切片称重",
+              "heading_path": [],
+              "reasons": []
+            }
+          ],
+          "must_include_groups": [
+            [
+              "苹果",
+              "水果"
+            ],
+            [
+              "样本"
+            ]
+          ],
+          "must_not_include": [
+            "苹果公司",
+            "科技公司",
+            "产品生态"
+          ]
+        },
+        "actual": null,
+        "retrieval": {
+          "retrieved_evidence": [
+            {
+              "rank": 1,
+              "evidence_id": "e1",
+              "block_id": "p-1",
+              "role": "coreference_support",
+              "quote": "果园今年种植梨、桃和苹果。冷藏实验中，Apple 被作为水果样本切片称重。",
+              "heading_path": [
+                "两个名为 Apple 的对象",
+                "果园记录"
+              ],
+              "reasons": [
+                "当前选区",
+                "同词出现×1"
+              ]
+            },
+            {
+              "rank": 2,
+              "evidence_id": "e2",
+              "block_id": "p-3",
+              "role": "direct_support",
+              "quote": "在另一份商业记录中，Apple 指美国科技公司苹果公司，而不是水果。",
+              "heading_path": [
+                "两个名为 Apple 的对象",
+                "公司动态"
+              ],
+              "reasons": [
+                "定义句",
+                "同词出现×1",
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 3,
+              "evidence_id": "e3",
+              "block_id": "h-1",
+              "role": "coreference_support",
+              "quote": "两个名为 Apple 的对象",
+              "heading_path": [
+                "两个名为 Apple 的对象"
+              ],
+              "reasons": [
+                "同词出现×1",
+                "相邻段落",
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 4,
+              "evidence_id": "e4",
+              "block_id": "p-4",
+              "role": "coreference_support",
+              "quote": "Apple 通过硬件、操作系统和服务组成产品生态，研究者据此分析平台协同。",
+              "heading_path": [
+                "两个名为 Apple 的对象",
+                "公司动态"
+              ],
+              "reasons": [
+                "同词出现×1",
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 5,
+              "evidence_id": "e5",
+              "block_id": "h-2",
+              "role": "structural_support",
+              "quote": "果园记录",
+              "heading_path": [
+                "两个名为 Apple 的对象",
+                "果园记录"
+              ],
+              "reasons": [
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 6,
+              "evidence_id": "e6",
+              "block_id": "p-2",
+              "role": "structural_support",
+              "quote": "这批苹果的糖度和硬度会在采摘后连续记录七天。",
+              "heading_path": [
+                "两个名为 Apple 的对象",
+                "果园记录"
+              ],
+              "reasons": [
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 7,
+              "evidence_id": "e7",
+              "block_id": "h-3",
+              "role": "structural_support",
+              "quote": "公司动态",
+              "heading_path": [
+                "两个名为 Apple 的对象",
+                "公司动态"
+              ],
+              "reasons": [
+                "相邻段落",
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 8,
+              "evidence_id": "e8",
+              "block_id": "p-5",
+              "role": "structural_support",
+              "quote": "两节使用了相同英文拼写，但指称对象必须由各自章节和句子确定。",
+              "heading_path": [
+                "两个名为 Apple 的对象",
+                "公司动态"
+              ],
+              "reasons": [
+                "标题相关"
+              ]
+            }
+          ],
+          "expected_support_recalled": true
+        },
+        "execution": {
+          "validation_attempts": null,
+          "locally_degraded": false,
+          "removed_claim_ids": [],
+          "validation_errors": [],
+          "elapsed_ms": null,
+          "pipeline_error": ""
+        }
+      }
     },
     {
       "case_id": "apple-company",
       "document_id": "apple-two-senses",
+      "category": "common_word_entity_disambiguation",
+      "difficulty": "basic",
+      "passed": true,
       "anchor_recalled": true,
       "support_recalled": true,
       "gold_evidence_recall": 1,
@@ -144,11 +1365,201 @@
         "h-3",
         "h-2",
         "p-2"
-      ]
+      ],
+      "review": {
+        "evaluation_scope": "retrieval_only",
+        "scope_note": "本案例只验证RAG证据召回，没有生成实际释义，不能据此判断最终回答是否正确。",
+        "document": {
+          "document_id": "apple-two-senses",
+          "title": "两个名为 Apple 的对象"
+        },
+        "selection": {
+          "text": "Apple",
+          "anchor_block_id": "p-4",
+          "anchor_context": "Apple 通过硬件、操作系统和服务组成产品生态，研究者据此分析平台协同。"
+        },
+        "expected": {
+          "meaning": "在这里指苹果公司，文中讨论的是它由硬件、系统和服务构成的产品生态。",
+          "sense": "美国科技公司苹果公司",
+          "certainty": "clear",
+          "author_intent_required": false,
+          "evidence": [
+            {
+              "rank": 1,
+              "evidence_id": null,
+              "block_id": "p-3",
+              "role": "direct_support",
+              "quote": "Apple 指美国科技公司苹果公司",
+              "heading_path": [],
+              "reasons": []
+            },
+            {
+              "rank": 2,
+              "evidence_id": null,
+              "block_id": "p-4",
+              "role": "coreference_support",
+              "quote": "Apple 通过硬件、操作系统和服务组成产品生态",
+              "heading_path": [],
+              "reasons": []
+            }
+          ],
+          "must_include_groups": [
+            [
+              "苹果公司",
+              "科技公司"
+            ],
+            [
+              "硬件",
+              "产品生态"
+            ]
+          ],
+          "must_not_include": [
+            "水果样本",
+            "糖度",
+            "硬度"
+          ]
+        },
+        "actual": null,
+        "retrieval": {
+          "retrieved_evidence": [
+            {
+              "rank": 1,
+              "evidence_id": "e1",
+              "block_id": "p-4",
+              "role": "coreference_support",
+              "quote": "Apple 通过硬件、操作系统和服务组成产品生态，研究者据此分析平台协同。",
+              "heading_path": [
+                "两个名为 Apple 的对象",
+                "公司动态"
+              ],
+              "reasons": [
+                "当前选区",
+                "同词出现×1"
+              ]
+            },
+            {
+              "rank": 2,
+              "evidence_id": "e2",
+              "block_id": "p-3",
+              "role": "direct_support",
+              "quote": "在另一份商业记录中，Apple 指美国科技公司苹果公司，而不是水果。",
+              "heading_path": [
+                "两个名为 Apple 的对象",
+                "公司动态"
+              ],
+              "reasons": [
+                "定义句",
+                "同词出现×1",
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 3,
+              "evidence_id": "e3",
+              "block_id": "p-1",
+              "role": "coreference_support",
+              "quote": "果园今年种植梨、桃和苹果。冷藏实验中，Apple 被作为水果样本切片称重。",
+              "heading_path": [
+                "两个名为 Apple 的对象",
+                "果园记录"
+              ],
+              "reasons": [
+                "同词出现×1",
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 4,
+              "evidence_id": "e4",
+              "block_id": "h-1",
+              "role": "coreference_support",
+              "quote": "两个名为 Apple 的对象",
+              "heading_path": [
+                "两个名为 Apple 的对象"
+              ],
+              "reasons": [
+                "同词出现×1",
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 5,
+              "evidence_id": "e5",
+              "block_id": "p-5",
+              "role": "structural_support",
+              "quote": "两节使用了相同英文拼写，但指称对象必须由各自章节和句子确定。",
+              "heading_path": [
+                "两个名为 Apple 的对象",
+                "公司动态"
+              ],
+              "reasons": [
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 6,
+              "evidence_id": "e6",
+              "block_id": "h-3",
+              "role": "structural_support",
+              "quote": "公司动态",
+              "heading_path": [
+                "两个名为 Apple 的对象",
+                "公司动态"
+              ],
+              "reasons": [
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 7,
+              "evidence_id": "e7",
+              "block_id": "h-2",
+              "role": "structural_support",
+              "quote": "果园记录",
+              "heading_path": [
+                "两个名为 Apple 的对象",
+                "果园记录"
+              ],
+              "reasons": [
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 8,
+              "evidence_id": "e8",
+              "block_id": "p-2",
+              "role": "structural_support",
+              "quote": "这批苹果的糖度和硬度会在采摘后连续记录七天。",
+              "heading_path": [
+                "两个名为 Apple 的对象",
+                "果园记录"
+              ],
+              "reasons": [
+                "标题相关"
+              ]
+            }
+          ],
+          "expected_support_recalled": true
+        },
+        "execution": {
+          "validation_attempts": null,
+          "locally_degraded": false,
+          "removed_claim_ids": [],
+          "validation_errors": [],
+          "elapsed_ms": null,
+          "pipeline_error": ""
+        }
+      }
     },
     {
       "case_id": "skills-human",
       "document_id": "agent-skills",
+      "category": "domain_sense_disambiguation",
+      "difficulty": "basic",
+      "passed": true,
       "anchor_recalled": true,
       "support_recalled": true,
       "gold_evidence_recall": 1,
@@ -162,11 +1573,195 @@
         "h-3",
         "p-3",
         "p-5"
-      ]
+      ],
+      "review": {
+        "evaluation_scope": "retrieval_only",
+        "scope_note": "本案例只验证RAG证据召回，没有生成实际释义，不能据此判断最终回答是否正确。",
+        "document": {
+          "document_id": "agent-skills",
+          "title": "人的技能与 Agent Skills"
+        },
+        "selection": {
+          "text": "Skills",
+          "anchor_block_id": "p-2",
+          "anchor_context": "这些 Skills 属于人的实际能力，需要通过学习和实践逐渐形成。"
+        },
+        "expected": {
+          "meaning": "在这里指人通过学习和实践获得的实际技能。",
+          "sense": "人通过学习和实践获得的技能",
+          "certainty": "clear",
+          "author_intent_required": false,
+          "evidence": [
+            {
+              "rank": 1,
+              "evidence_id": null,
+              "block_id": "p-2",
+              "role": "direct_support",
+              "quote": "Skills 属于人的实际能力，需要通过学习和实践逐渐形成",
+              "heading_path": [],
+              "reasons": []
+            }
+          ],
+          "must_include_groups": [
+            [
+              "人的",
+              "员工"
+            ],
+            [
+              "技能",
+              "能力"
+            ],
+            [
+              "学习",
+              "实践"
+            ]
+          ],
+          "must_not_include": [
+            "Agent 模块",
+            "脚本",
+            "加载"
+          ]
+        },
+        "actual": null,
+        "retrieval": {
+          "retrieved_evidence": [
+            {
+              "rank": 1,
+              "evidence_id": "e1",
+              "block_id": "p-2",
+              "role": "coreference_support",
+              "quote": "这些 Skills 属于人的实际能力，需要通过学习和实践逐渐形成。",
+              "heading_path": [
+                "人的技能与 Agent Skills",
+                "人员培训"
+              ],
+              "reasons": [
+                "当前选区",
+                "同词出现×1"
+              ]
+            },
+            {
+              "rank": 2,
+              "evidence_id": "e2",
+              "block_id": "p-4",
+              "role": "coreference_support",
+              "quote": "Agent 可以按任务加载不同 Skills，从而知道怎样完成某一类操作，而不必每次重新获得完整说明。",
+              "heading_path": [
+                "人的技能与 Agent Skills",
+                "Agent 能力扩展"
+              ],
+              "reasons": [
+                "同词出现×1",
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 3,
+              "evidence_id": "e3",
+              "block_id": "h-1",
+              "role": "coreference_support",
+              "quote": "人的技能与 Agent Skills",
+              "heading_path": [
+                "人的技能与 Agent Skills"
+              ],
+              "reasons": [
+                "同词出现×1",
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 4,
+              "evidence_id": "e4",
+              "block_id": "p-1",
+              "role": "structural_support",
+              "quote": "新员工通过练习沟通、写作和数据分析来获得职业技能。",
+              "heading_path": [
+                "人的技能与 Agent Skills",
+                "人员培训"
+              ],
+              "reasons": [
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 5,
+              "evidence_id": "e5",
+              "block_id": "h-2",
+              "role": "structural_support",
+              "quote": "人员培训",
+              "heading_path": [
+                "人的技能与 Agent Skills",
+                "人员培训"
+              ],
+              "reasons": [
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 6,
+              "evidence_id": "e6",
+              "block_id": "h-3",
+              "role": "structural_support",
+              "quote": "Agent 能力扩展",
+              "heading_path": [
+                "人的技能与 Agent Skills",
+                "Agent 能力扩展"
+              ],
+              "reasons": [
+                "相邻段落",
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 7,
+              "evidence_id": "e7",
+              "block_id": "p-3",
+              "role": "structural_support",
+              "quote": "在 Agent 系统中，开发者把一组可复用的操作说明、脚本和资源封装成能力模块。",
+              "heading_path": [
+                "人的技能与 Agent Skills",
+                "Agent 能力扩展"
+              ],
+              "reasons": [
+                "相邻段落",
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 8,
+              "evidence_id": "e8",
+              "block_id": "p-5",
+              "role": "structural_support",
+              "quote": "这里的模块可以更新和替换，但它们不是对员工熟练程度的评价。",
+              "heading_path": [
+                "人的技能与 Agent Skills",
+                "Agent 能力扩展"
+              ],
+              "reasons": [
+                "标题相关"
+              ]
+            }
+          ],
+          "expected_support_recalled": true
+        },
+        "execution": {
+          "validation_attempts": null,
+          "locally_degraded": false,
+          "removed_claim_ids": [],
+          "validation_errors": [],
+          "elapsed_ms": null,
+          "pipeline_error": ""
+        }
+      }
     },
     {
       "case_id": "skills-agent-module",
       "document_id": "agent-skills",
+      "category": "domain_sense_disambiguation",
+      "difficulty": "adversarial",
+      "passed": true,
       "anchor_recalled": true,
       "support_recalled": true,
       "gold_evidence_recall": 1,
@@ -180,11 +1775,202 @@
         "h-3",
         "p-1",
         "h-2"
-      ]
+      ],
+      "review": {
+        "evaluation_scope": "retrieval_only",
+        "scope_note": "本案例只验证RAG证据召回，没有生成实际释义，不能据此判断最终回答是否正确。",
+        "document": {
+          "document_id": "agent-skills",
+          "title": "人的技能与 Agent Skills"
+        },
+        "selection": {
+          "text": "Skills",
+          "anchor_block_id": "p-4",
+          "anchor_context": "Agent 可以按任务加载不同 Skills，从而知道怎样完成某一类操作，而不必每次重新获得完整说明。"
+        },
+        "expected": {
+          "meaning": "在这里指 Agent 可按任务加载的、封装了操作说明和资源的可复用能力模块。",
+          "sense": "供 Agent 按任务加载的可复用能力模块",
+          "certainty": "clear",
+          "author_intent_required": false,
+          "evidence": [
+            {
+              "rank": 1,
+              "evidence_id": null,
+              "block_id": "p-3",
+              "role": "direct_support",
+              "quote": "把一组可复用的操作说明、脚本和资源封装成能力模块",
+              "heading_path": [],
+              "reasons": []
+            },
+            {
+              "rank": 2,
+              "evidence_id": null,
+              "block_id": "p-4",
+              "role": "coreference_support",
+              "quote": "Agent 可以按任务加载不同 Skills",
+              "heading_path": [],
+              "reasons": []
+            }
+          ],
+          "must_include_groups": [
+            [
+              "Agent"
+            ],
+            [
+              "模块",
+              "操作说明"
+            ],
+            [
+              "加载",
+              "复用"
+            ]
+          ],
+          "must_not_include": [
+            "人的实际能力",
+            "员工熟练程度",
+            "教育"
+          ]
+        },
+        "actual": null,
+        "retrieval": {
+          "retrieved_evidence": [
+            {
+              "rank": 1,
+              "evidence_id": "e1",
+              "block_id": "p-4",
+              "role": "coreference_support",
+              "quote": "Agent 可以按任务加载不同 Skills，从而知道怎样完成某一类操作，而不必每次重新获得完整说明。",
+              "heading_path": [
+                "人的技能与 Agent Skills",
+                "Agent 能力扩展"
+              ],
+              "reasons": [
+                "当前选区",
+                "同词出现×1"
+              ]
+            },
+            {
+              "rank": 2,
+              "evidence_id": "e2",
+              "block_id": "p-2",
+              "role": "coreference_support",
+              "quote": "这些 Skills 属于人的实际能力，需要通过学习和实践逐渐形成。",
+              "heading_path": [
+                "人的技能与 Agent Skills",
+                "人员培训"
+              ],
+              "reasons": [
+                "同词出现×1",
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 3,
+              "evidence_id": "e3",
+              "block_id": "h-1",
+              "role": "coreference_support",
+              "quote": "人的技能与 Agent Skills",
+              "heading_path": [
+                "人的技能与 Agent Skills"
+              ],
+              "reasons": [
+                "同词出现×1",
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 4,
+              "evidence_id": "e4",
+              "block_id": "p-3",
+              "role": "structural_support",
+              "quote": "在 Agent 系统中，开发者把一组可复用的操作说明、脚本和资源封装成能力模块。",
+              "heading_path": [
+                "人的技能与 Agent Skills",
+                "Agent 能力扩展"
+              ],
+              "reasons": [
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 5,
+              "evidence_id": "e5",
+              "block_id": "p-5",
+              "role": "structural_support",
+              "quote": "这里的模块可以更新和替换，但它们不是对员工熟练程度的评价。",
+              "heading_path": [
+                "人的技能与 Agent Skills",
+                "Agent 能力扩展"
+              ],
+              "reasons": [
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 6,
+              "evidence_id": "e6",
+              "block_id": "h-3",
+              "role": "structural_support",
+              "quote": "Agent 能力扩展",
+              "heading_path": [
+                "人的技能与 Agent Skills",
+                "Agent 能力扩展"
+              ],
+              "reasons": [
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 7,
+              "evidence_id": "e7",
+              "block_id": "p-1",
+              "role": "structural_support",
+              "quote": "新员工通过练习沟通、写作和数据分析来获得职业技能。",
+              "heading_path": [
+                "人的技能与 Agent Skills",
+                "人员培训"
+              ],
+              "reasons": [
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 8,
+              "evidence_id": "e8",
+              "block_id": "h-2",
+              "role": "structural_support",
+              "quote": "人员培训",
+              "heading_path": [
+                "人的技能与 Agent Skills",
+                "人员培训"
+              ],
+              "reasons": [
+                "标题相关"
+              ]
+            }
+          ],
+          "expected_support_recalled": true
+        },
+        "execution": {
+          "validation_attempts": null,
+          "locally_degraded": false,
+          "removed_claim_ids": [],
+          "validation_errors": [],
+          "elapsed_ms": null,
+          "pipeline_error": ""
+        }
+      }
     },
     {
       "case_id": "benchmark-survey",
       "document_id": "benchmark-domains",
+      "category": "cross_domain_polysemy",
+      "difficulty": "contextual",
+      "passed": true,
       "anchor_recalled": true,
       "support_recalled": true,
       "gold_evidence_recall": 1,
@@ -198,11 +1984,201 @@
         "h-3",
         "p-3",
         "p-5"
-      ]
+      ],
+      "review": {
+        "evaluation_scope": "retrieval_only",
+        "scope_note": "本案例只验证RAG证据召回，没有生成实际释义，不能据此判断最终回答是否正确。",
+        "document": {
+          "document_id": "benchmark-domains",
+          "title": "Benchmark 在不同领域的含义"
+        },
+        "selection": {
+          "text": "Benchmark",
+          "anchor_block_id": "p-2",
+          "anchor_context": "这处 Benchmark 是后续测量引用的水准基点，位置必须长期稳定。"
+        },
+        "expected": {
+          "meaning": "在这里指测绘中高程已知、供后续测量引用的固定水准基点。",
+          "sense": "测绘中高程已知且位置稳定的水准基点",
+          "certainty": "clear",
+          "author_intent_required": false,
+          "evidence": [
+            {
+              "rank": 1,
+              "evidence_id": null,
+              "block_id": "p-1",
+              "role": "direct_support",
+              "quote": "高程已知的固定标记",
+              "heading_path": [],
+              "reasons": []
+            },
+            {
+              "rank": 2,
+              "evidence_id": null,
+              "block_id": "p-2",
+              "role": "direct_support",
+              "quote": "后续测量引用的水准基点",
+              "heading_path": [],
+              "reasons": []
+            }
+          ],
+          "must_include_groups": [
+            [
+              "测量",
+              "测绘"
+            ],
+            [
+              "水准基点",
+              "固定标记"
+            ]
+          ],
+          "must_not_include": [
+            "模型评测",
+            "任务集",
+            "评分规则"
+          ]
+        },
+        "actual": null,
+        "retrieval": {
+          "retrieved_evidence": [
+            {
+              "rank": 1,
+              "evidence_id": "e1",
+              "block_id": "p-2",
+              "role": "direct_support",
+              "quote": "这处 Benchmark 是后续测量引用的水准基点，位置必须长期稳定。",
+              "heading_path": [
+                "Benchmark 在不同领域的含义",
+                "测绘现场"
+              ],
+              "reasons": [
+                "当前选区",
+                "定义句",
+                "同词出现×1"
+              ]
+            },
+            {
+              "rank": 2,
+              "evidence_id": "e2",
+              "block_id": "p-4",
+              "role": "coreference_support",
+              "quote": "模型每次更新后都运行同一套 Benchmark，以比较能力、稳定性和成本是否发生变化。",
+              "heading_path": [
+                "Benchmark 在不同领域的含义",
+                "模型评测"
+              ],
+              "reasons": [
+                "同词出现×1",
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 3,
+              "evidence_id": "e3",
+              "block_id": "h-1",
+              "role": "coreference_support",
+              "quote": "Benchmark 在不同领域的含义",
+              "heading_path": [
+                "Benchmark 在不同领域的含义"
+              ],
+              "reasons": [
+                "同词出现×1",
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 4,
+              "evidence_id": "e4",
+              "block_id": "p-1",
+              "role": "structural_support",
+              "quote": "测量人员在墙体上保留一个高程已知的固定标记。",
+              "heading_path": [
+                "Benchmark 在不同领域的含义",
+                "测绘现场"
+              ],
+              "reasons": [
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 5,
+              "evidence_id": "e5",
+              "block_id": "h-2",
+              "role": "structural_support",
+              "quote": "测绘现场",
+              "heading_path": [
+                "Benchmark 在不同领域的含义",
+                "测绘现场"
+              ],
+              "reasons": [
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 6,
+              "evidence_id": "e6",
+              "block_id": "h-3",
+              "role": "structural_support",
+              "quote": "模型评测",
+              "heading_path": [
+                "Benchmark 在不同领域的含义",
+                "模型评测"
+              ],
+              "reasons": [
+                "相邻段落",
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 7,
+              "evidence_id": "e7",
+              "block_id": "p-3",
+              "role": "structural_support",
+              "quote": "研究团队准备了一组固定任务、输入数据、评分规则和基线结果。",
+              "heading_path": [
+                "Benchmark 在不同领域的含义",
+                "模型评测"
+              ],
+              "reasons": [
+                "相邻段落",
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 8,
+              "evidence_id": "e8",
+              "block_id": "p-5",
+              "role": "structural_support",
+              "quote": "这里讨论的是评测基准，而不是地面上的永久标记。",
+              "heading_path": [
+                "Benchmark 在不同领域的含义",
+                "模型评测"
+              ],
+              "reasons": [
+                "标题相关"
+              ]
+            }
+          ],
+          "expected_support_recalled": true
+        },
+        "execution": {
+          "validation_attempts": null,
+          "locally_degraded": false,
+          "removed_claim_ids": [],
+          "validation_errors": [],
+          "elapsed_ms": null,
+          "pipeline_error": ""
+        }
+      }
     },
     {
       "case_id": "benchmark-model-evaluation",
       "document_id": "benchmark-domains",
+      "category": "cross_domain_polysemy",
+      "difficulty": "adversarial",
+      "passed": true,
       "anchor_recalled": true,
       "support_recalled": true,
       "gold_evidence_recall": 1,
@@ -216,11 +2192,204 @@
         "h-3",
         "h-2",
         "p-1"
-      ]
+      ],
+      "review": {
+        "evaluation_scope": "retrieval_only",
+        "scope_note": "本案例只验证RAG证据召回，没有生成实际释义，不能据此判断最终回答是否正确。",
+        "document": {
+          "document_id": "benchmark-domains",
+          "title": "Benchmark 在不同领域的含义"
+        },
+        "selection": {
+          "text": "Benchmark",
+          "anchor_block_id": "p-4",
+          "anchor_context": "模型每次更新后都运行同一套 Benchmark，以比较能力、稳定性和成本是否发生变化。"
+        },
+        "expected": {
+          "meaning": "在这里指由固定任务、数据和评分规则组成、用于比较模型表现的评测基准。",
+          "sense": "用于比较模型表现的一套固定评测基准",
+          "certainty": "clear",
+          "author_intent_required": false,
+          "evidence": [
+            {
+              "rank": 1,
+              "evidence_id": null,
+              "block_id": "p-3",
+              "role": "direct_support",
+              "quote": "一组固定任务、输入数据、评分规则和基线结果",
+              "heading_path": [],
+              "reasons": []
+            },
+            {
+              "rank": 2,
+              "evidence_id": null,
+              "block_id": "p-4",
+              "role": "coreference_support",
+              "quote": "运行同一套 Benchmark，以比较能力、稳定性和成本",
+              "heading_path": [],
+              "reasons": []
+            }
+          ],
+          "must_include_groups": [
+            [
+              "模型"
+            ],
+            [
+              "评测",
+              "比较"
+            ],
+            [
+              "任务",
+              "数据",
+              "评分"
+            ]
+          ],
+          "must_not_include": [
+            "永久标记",
+            "地理位置",
+            "水准点"
+          ]
+        },
+        "actual": null,
+        "retrieval": {
+          "retrieved_evidence": [
+            {
+              "rank": 1,
+              "evidence_id": "e1",
+              "block_id": "p-4",
+              "role": "coreference_support",
+              "quote": "模型每次更新后都运行同一套 Benchmark，以比较能力、稳定性和成本是否发生变化。",
+              "heading_path": [
+                "Benchmark 在不同领域的含义",
+                "模型评测"
+              ],
+              "reasons": [
+                "当前选区",
+                "同词出现×1"
+              ]
+            },
+            {
+              "rank": 2,
+              "evidence_id": "e2",
+              "block_id": "p-2",
+              "role": "direct_support",
+              "quote": "这处 Benchmark 是后续测量引用的水准基点，位置必须长期稳定。",
+              "heading_path": [
+                "Benchmark 在不同领域的含义",
+                "测绘现场"
+              ],
+              "reasons": [
+                "定义句",
+                "同词出现×1",
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 3,
+              "evidence_id": "e3",
+              "block_id": "h-1",
+              "role": "coreference_support",
+              "quote": "Benchmark 在不同领域的含义",
+              "heading_path": [
+                "Benchmark 在不同领域的含义"
+              ],
+              "reasons": [
+                "同词出现×1",
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 4,
+              "evidence_id": "e4",
+              "block_id": "p-5",
+              "role": "structural_support",
+              "quote": "这里讨论的是评测基准，而不是地面上的永久标记。",
+              "heading_path": [
+                "Benchmark 在不同领域的含义",
+                "模型评测"
+              ],
+              "reasons": [
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 5,
+              "evidence_id": "e5",
+              "block_id": "p-3",
+              "role": "structural_support",
+              "quote": "研究团队准备了一组固定任务、输入数据、评分规则和基线结果。",
+              "heading_path": [
+                "Benchmark 在不同领域的含义",
+                "模型评测"
+              ],
+              "reasons": [
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 6,
+              "evidence_id": "e6",
+              "block_id": "h-3",
+              "role": "structural_support",
+              "quote": "模型评测",
+              "heading_path": [
+                "Benchmark 在不同领域的含义",
+                "模型评测"
+              ],
+              "reasons": [
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 7,
+              "evidence_id": "e7",
+              "block_id": "h-2",
+              "role": "structural_support",
+              "quote": "测绘现场",
+              "heading_path": [
+                "Benchmark 在不同领域的含义",
+                "测绘现场"
+              ],
+              "reasons": [
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 8,
+              "evidence_id": "e8",
+              "block_id": "p-1",
+              "role": "structural_support",
+              "quote": "测量人员在墙体上保留一个高程已知的固定标记。",
+              "heading_path": [
+                "Benchmark 在不同领域的含义",
+                "测绘现场"
+              ],
+              "reasons": [
+                "标题相关"
+              ]
+            }
+          ],
+          "expected_support_recalled": true
+        },
+        "execution": {
+          "validation_attempts": null,
+          "locally_degraded": false,
+          "removed_claim_ids": [],
+          "validation_errors": [],
+          "elapsed_ms": null,
+          "pipeline_error": ""
+        }
+      }
     },
     {
       "case_id": "echo-budget-definition",
       "document_id": "echo-budget",
+      "category": "author_defined_term",
+      "difficulty": "contextual",
+      "passed": true,
       "anchor_recalled": true,
       "support_recalled": true,
       "gold_evidence_recall": 1,
@@ -236,11 +2405,217 @@
         "p-4",
         "p-5",
         "h-3"
-      ]
+      ],
+      "review": {
+        "evaluation_scope": "retrieval_only",
+        "scope_note": "本案例只验证RAG证据召回，没有生成实际释义，不能据此判断最终回答是否正确。",
+        "document": {
+          "document_id": "echo-budget",
+          "title": "长文中的“回声预算”"
+        },
+        "selection": {
+          "text": "回声预算",
+          "anchor_block_id": "p-1",
+          "anchor_context": "本文把一次决策后允许系统继续引用旧反馈的最大轮数称为“回声预算”。"
+        },
+        "expected": {
+          "meaning": "在本文中指一次决策后，旧反馈还能被后续任务引用的最大轮数。",
+          "sense": "旧反馈可被后续任务继续引用的最大轮数",
+          "certainty": "clear",
+          "author_intent_required": false,
+          "evidence": [
+            {
+              "rank": 1,
+              "evidence_id": null,
+              "block_id": "p-1",
+              "role": "direct_support",
+              "quote": "允许系统继续引用旧反馈的最大轮数称为“回声预算”",
+              "heading_path": [],
+              "reasons": []
+            }
+          ],
+          "must_include_groups": [
+            [
+              "旧反馈"
+            ],
+            [
+              "最大轮数",
+              "多少轮"
+            ]
+          ],
+          "must_not_include": [
+            "金钱",
+            "回声实验室",
+            "机构"
+          ]
+        },
+        "actual": null,
+        "retrieval": {
+          "retrieved_evidence": [
+            {
+              "rank": 1,
+              "evidence_id": "e1",
+              "block_id": "p-1",
+              "role": "direct_support",
+              "quote": "本文把一次决策后允许系统继续引用旧反馈的最大轮数称为“回声预算”。",
+              "heading_path": [
+                "长文中的“回声预算”"
+              ],
+              "reasons": [
+                "当前选区",
+                "定义句",
+                "同词出现×1"
+              ]
+            },
+            {
+              "rank": 2,
+              "evidence_id": "e2",
+              "block_id": "h-1",
+              "role": "coreference_support",
+              "quote": "长文中的“回声预算”",
+              "heading_path": [
+                "长文中的“回声预算”"
+              ],
+              "reasons": [
+                "同词出现×1",
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 3,
+              "evidence_id": "e3",
+              "block_id": "p-7",
+              "role": "coreference_support",
+              "quote": "因此，回声预算控制的不是金钱，而是旧反馈还能被后续任务使用多少轮。",
+              "heading_path": [
+                "长文中的“回声预算”",
+                "后文结论"
+              ],
+              "reasons": [
+                "同词出现×1",
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 4,
+              "evidence_id": "e4",
+              "block_id": "p-6",
+              "role": "coreference_support",
+              "quote": "当任务变化频繁时，应缩短回声预算，避免过时经验持续影响新的判断。",
+              "heading_path": [
+                "长文中的“回声预算”",
+                "后文结论"
+              ],
+              "reasons": [
+                "同词出现×1",
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 5,
+              "evidence_id": "e5",
+              "block_id": "p-2",
+              "role": "structural_support",
+              "quote": "预算越高，旧经验保留越久，但错误反馈也可能被重复放大；预算越低，系统则更快忘记历史。",
+              "heading_path": [
+                "长文中的“回声预算”"
+              ],
+              "reasons": [
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 6,
+              "evidence_id": "e6",
+              "block_id": "h-2",
+              "role": "structural_support",
+              "quote": "执行阶段",
+              "heading_path": [
+                "长文中的“回声预算”",
+                "执行阶段"
+              ],
+              "reasons": [
+                "相邻段落",
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 7,
+              "evidence_id": "e7",
+              "block_id": "p-3",
+              "role": "structural_support",
+              "quote": "每轮任务结束后，系统给反馈标记来源、时间和剩余可引用次数。",
+              "heading_path": [
+                "长文中的“回声预算”",
+                "执行阶段"
+              ],
+              "reasons": [
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 8,
+              "evidence_id": "e8",
+              "block_id": "p-4",
+              "role": "structural_support",
+              "quote": "新任务只读取仍有剩余次数的反馈，并在使用后扣减一次。",
+              "heading_path": [
+                "长文中的“回声预算”",
+                "执行阶段"
+              ],
+              "reasons": [
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 9,
+              "evidence_id": "e9",
+              "block_id": "p-5",
+              "role": "structural_support",
+              "quote": "一家名为回声实验室的机构提供了演示数据，但机构名称与本文概念没有指称关系。",
+              "heading_path": [
+                "长文中的“回声预算”",
+                "执行阶段"
+              ],
+              "reasons": [
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 10,
+              "evidence_id": "e10",
+              "block_id": "h-3",
+              "role": "structural_support",
+              "quote": "后文结论",
+              "heading_path": [
+                "长文中的“回声预算”",
+                "后文结论"
+              ],
+              "reasons": [
+                "标题相关"
+              ]
+            }
+          ],
+          "expected_support_recalled": true
+        },
+        "execution": {
+          "validation_attempts": null,
+          "locally_degraded": false,
+          "removed_claim_ids": [],
+          "validation_errors": [],
+          "elapsed_ms": null,
+          "pipeline_error": ""
+        }
+      }
     },
     {
       "case_id": "echo-budget-long-distance",
       "document_id": "echo-budget",
+      "category": "long_distance_definition",
+      "difficulty": "adversarial",
+      "passed": true,
       "anchor_recalled": true,
       "support_recalled": true,
       "gold_evidence_recall": 1,
@@ -256,11 +2631,227 @@
         "p-3",
         "h-2",
         "p-2"
-      ]
+      ],
+      "review": {
+        "evaluation_scope": "retrieval_only",
+        "scope_note": "本案例只验证RAG证据召回，没有生成实际释义，不能据此判断最终回答是否正确。",
+        "document": {
+          "document_id": "echo-budget",
+          "title": "长文中的“回声预算”"
+        },
+        "selection": {
+          "text": "回声预算",
+          "anchor_block_id": "p-6",
+          "anchor_context": "当任务变化频繁时，应缩短回声预算，避免过时经验持续影响新的判断。"
+        },
+        "expected": {
+          "meaning": "在这里沿用前文定义，指旧反馈最多还能被后续任务使用多少轮。",
+          "sense": "前文定义的旧反馈最大可引用轮数",
+          "certainty": "clear",
+          "author_intent_required": false,
+          "evidence": [
+            {
+              "rank": 1,
+              "evidence_id": null,
+              "block_id": "p-1",
+              "role": "direct_support",
+              "quote": "允许系统继续引用旧反馈的最大轮数称为“回声预算”",
+              "heading_path": [],
+              "reasons": []
+            },
+            {
+              "rank": 2,
+              "evidence_id": null,
+              "block_id": "p-6",
+              "role": "coreference_support",
+              "quote": "缩短回声预算，避免过时经验持续影响新的判断",
+              "heading_path": [],
+              "reasons": []
+            }
+          ],
+          "must_include_groups": [
+            [
+              "旧反馈",
+              "过时经验"
+            ],
+            [
+              "轮数",
+              "多久"
+            ]
+          ],
+          "must_not_include": [
+            "回声实验室",
+            "资金",
+            "财务预算"
+          ]
+        },
+        "actual": null,
+        "retrieval": {
+          "retrieved_evidence": [
+            {
+              "rank": 1,
+              "evidence_id": "e1",
+              "block_id": "p-6",
+              "role": "coreference_support",
+              "quote": "当任务变化频繁时，应缩短回声预算，避免过时经验持续影响新的判断。",
+              "heading_path": [
+                "长文中的“回声预算”",
+                "后文结论"
+              ],
+              "reasons": [
+                "当前选区",
+                "同词出现×1"
+              ]
+            },
+            {
+              "rank": 2,
+              "evidence_id": "e2",
+              "block_id": "p-1",
+              "role": "direct_support",
+              "quote": "本文把一次决策后允许系统继续引用旧反馈的最大轮数称为“回声预算”。",
+              "heading_path": [
+                "长文中的“回声预算”"
+              ],
+              "reasons": [
+                "定义句",
+                "同词出现×1",
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 3,
+              "evidence_id": "e3",
+              "block_id": "p-7",
+              "role": "coreference_support",
+              "quote": "因此，回声预算控制的不是金钱，而是旧反馈还能被后续任务使用多少轮。",
+              "heading_path": [
+                "长文中的“回声预算”",
+                "后文结论"
+              ],
+              "reasons": [
+                "同词出现×1",
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 4,
+              "evidence_id": "e4",
+              "block_id": "h-1",
+              "role": "coreference_support",
+              "quote": "长文中的“回声预算”",
+              "heading_path": [
+                "长文中的“回声预算”"
+              ],
+              "reasons": [
+                "同词出现×1",
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 5,
+              "evidence_id": "e5",
+              "block_id": "h-3",
+              "role": "structural_support",
+              "quote": "后文结论",
+              "heading_path": [
+                "长文中的“回声预算”",
+                "后文结论"
+              ],
+              "reasons": [
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 6,
+              "evidence_id": "e6",
+              "block_id": "p-5",
+              "role": "structural_support",
+              "quote": "一家名为回声实验室的机构提供了演示数据，但机构名称与本文概念没有指称关系。",
+              "heading_path": [
+                "长文中的“回声预算”",
+                "执行阶段"
+              ],
+              "reasons": [
+                "相邻段落",
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 7,
+              "evidence_id": "e7",
+              "block_id": "p-4",
+              "role": "structural_support",
+              "quote": "新任务只读取仍有剩余次数的反馈，并在使用后扣减一次。",
+              "heading_path": [
+                "长文中的“回声预算”",
+                "执行阶段"
+              ],
+              "reasons": [
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 8,
+              "evidence_id": "e8",
+              "block_id": "p-3",
+              "role": "structural_support",
+              "quote": "每轮任务结束后，系统给反馈标记来源、时间和剩余可引用次数。",
+              "heading_path": [
+                "长文中的“回声预算”",
+                "执行阶段"
+              ],
+              "reasons": [
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 9,
+              "evidence_id": "e9",
+              "block_id": "h-2",
+              "role": "structural_support",
+              "quote": "执行阶段",
+              "heading_path": [
+                "长文中的“回声预算”",
+                "执行阶段"
+              ],
+              "reasons": [
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 10,
+              "evidence_id": "e10",
+              "block_id": "p-2",
+              "role": "structural_support",
+              "quote": "预算越高，旧经验保留越久，但错误反馈也可能被重复放大；预算越低，系统则更快忘记历史。",
+              "heading_path": [
+                "长文中的“回声预算”"
+              ],
+              "reasons": [
+                "标题相关"
+              ]
+            }
+          ],
+          "expected_support_recalled": true
+        },
+        "execution": {
+          "validation_attempts": null,
+          "locally_degraded": false,
+          "removed_claim_ids": [],
+          "validation_errors": [],
+          "elapsed_ms": null,
+          "pipeline_error": ""
+        }
+      }
     },
     {
       "case_id": "recipe-cooking",
       "document_id": "training-recipe",
+      "category": "borrowed_metaphor_disambiguation",
+      "difficulty": "basic",
+      "passed": true,
       "anchor_recalled": true,
       "support_recalled": true,
       "gold_evidence_recall": 1,
@@ -272,11 +2863,157 @@
         "p-2",
         "p-3",
         "p-5"
-      ]
+      ],
+      "review": {
+        "evaluation_scope": "retrieval_only",
+        "scope_note": "本案例只验证RAG证据召回，没有生成实际释义，不能据此判断最终回答是否正确。",
+        "document": {
+          "document_id": "training-recipe",
+          "title": "从烹饪配方到训练 Recipe"
+        },
+        "selection": {
+          "text": "recipe",
+          "anchor_block_id": "p-1",
+          "anchor_context": "厨房里的 recipe 会列出食材、用量、步骤和火候，帮助不同的人重复做出相近结果。"
+        },
+        "expected": {
+          "meaning": "在这里就是烹饪配方，列出食材、用量、步骤和火候。",
+          "sense": "烹饪配方",
+          "certainty": "clear",
+          "author_intent_required": false,
+          "evidence": [
+            {
+              "rank": 1,
+              "evidence_id": null,
+              "block_id": "p-1",
+              "role": "direct_support",
+              "quote": "厨房里的 recipe 会列出食材、用量、步骤和火候",
+              "heading_path": [],
+              "reasons": []
+            }
+          ],
+          "must_include_groups": [
+            [
+              "烹饪",
+              "厨房"
+            ],
+            [
+              "配方",
+              "食谱"
+            ]
+          ],
+          "must_not_include": [
+            "学习率",
+            "优化器",
+            "训练轮数"
+          ]
+        },
+        "actual": null,
+        "retrieval": {
+          "retrieved_evidence": [
+            {
+              "rank": 1,
+              "evidence_id": "e1",
+              "block_id": "p-1",
+              "role": "coreference_support",
+              "quote": "厨房里的 recipe 会列出食材、用量、步骤和火候，帮助不同的人重复做出相近结果。",
+              "heading_path": [
+                "从烹饪配方到训练 Recipe"
+              ],
+              "reasons": [
+                "当前选区",
+                "同词出现×1"
+              ]
+            },
+            {
+              "rank": 2,
+              "evidence_id": "e2",
+              "block_id": "h-1",
+              "role": "coreference_support",
+              "quote": "从烹饪配方到训练 Recipe",
+              "heading_path": [
+                "从烹饪配方到训练 Recipe"
+              ],
+              "reasons": [
+                "同词出现×1",
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 3,
+              "evidence_id": "e3",
+              "block_id": "p-4",
+              "role": "coreference_support",
+              "quote": "团队调整训练 Recipe 时，并不是只改一个参数，而是在修改这些训练选择如何组合和执行。",
+              "heading_path": [
+                "从烹饪配方到训练 Recipe"
+              ],
+              "reasons": [
+                "同词出现×1",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 4,
+              "evidence_id": "e4",
+              "block_id": "p-2",
+              "role": "structural_support",
+              "quote": "机器学习借用了这种说法，把训练所需的一整套搭配称为训练配方。",
+              "heading_path": [
+                "从烹饪配方到训练 Recipe"
+              ],
+              "reasons": [
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 5,
+              "evidence_id": "e5",
+              "block_id": "p-3",
+              "role": "structural_support",
+              "quote": "一套训练配方通常会共同规定数据处理、优化器、学习率、批量大小、训练轮数和评测安排。",
+              "heading_path": [
+                "从烹饪配方到训练 Recipe"
+              ],
+              "reasons": [
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 6,
+              "evidence_id": "e6",
+              "block_id": "p-5",
+              "role": "structural_support",
+              "quote": "不同配方可能使用相同模型结构，却产生不同的收敛速度和最终效果。",
+              "heading_path": [
+                "从烹饪配方到训练 Recipe"
+              ],
+              "reasons": [
+                "同一章节"
+              ]
+            }
+          ],
+          "expected_support_recalled": true
+        },
+        "execution": {
+          "validation_attempts": null,
+          "locally_degraded": false,
+          "removed_claim_ids": [],
+          "validation_errors": [],
+          "elapsed_ms": null,
+          "pipeline_error": ""
+        }
+      }
     },
     {
       "case_id": "training-recipe-mixed-language",
       "document_id": "training-recipe",
+      "category": "mixed_language_technical_term",
+      "difficulty": "contextual",
+      "passed": true,
       "anchor_recalled": true,
       "support_recalled": true,
       "gold_evidence_recall": 1,
@@ -285,14 +3022,185 @@
         "p-4",
         "h-1",
         "p-3",
-        "p-5",
         "p-2",
-        "p-1"
-      ]
+        "p-1",
+        "p-5"
+      ],
+      "review": {
+        "evaluation_scope": "retrieval_only",
+        "scope_note": "本案例只验证RAG证据召回，没有生成实际释义，不能据此判断最终回答是否正确。",
+        "document": {
+          "document_id": "training-recipe",
+          "title": "从烹饪配方到训练 Recipe"
+        },
+        "selection": {
+          "text": "训练 Recipe",
+          "anchor_block_id": "p-4",
+          "anchor_context": "团队调整训练 Recipe 时，并不是只改一个参数，而是在修改这些训练选择如何组合和执行。"
+        },
+        "expected": {
+          "meaning": "“训练 Recipe”可译为“训练配方”，在这里指数据处理、优化设置和执行安排等训练选择的整体组合。",
+          "sense": "训练配方，即训练设置及执行方式的整体组合",
+          "certainty": "clear",
+          "author_intent_required": false,
+          "evidence": [
+            {
+              "rank": 1,
+              "evidence_id": null,
+              "block_id": "p-2",
+              "role": "direct_support",
+              "quote": "把训练所需的一整套搭配称为训练配方",
+              "heading_path": [],
+              "reasons": []
+            },
+            {
+              "rank": 2,
+              "evidence_id": null,
+              "block_id": "p-3",
+              "role": "direct_support",
+              "quote": "共同规定数据处理、优化器、学习率、批量大小、训练轮数和评测安排",
+              "heading_path": [],
+              "reasons": []
+            },
+            {
+              "rank": 3,
+              "evidence_id": null,
+              "block_id": "p-4",
+              "role": "coreference_support",
+              "quote": "修改这些训练选择如何组合和执行",
+              "heading_path": [],
+              "reasons": []
+            }
+          ],
+          "must_include_groups": [
+            [
+              "训练配方"
+            ],
+            [
+              "组合",
+              "整套"
+            ],
+            [
+              "数据",
+              "优化器",
+              "学习率",
+              "训练选择"
+            ]
+          ],
+          "must_not_include": [
+            "食材",
+            "火候",
+            "菜谱"
+          ]
+        },
+        "actual": null,
+        "retrieval": {
+          "retrieved_evidence": [
+            {
+              "rank": 1,
+              "evidence_id": "e1",
+              "block_id": "p-4",
+              "role": "coreference_support",
+              "quote": "团队调整训练 Recipe 时，并不是只改一个参数，而是在修改这些训练选择如何组合和执行。",
+              "heading_path": [
+                "从烹饪配方到训练 Recipe"
+              ],
+              "reasons": [
+                "当前选区",
+                "同词出现×1"
+              ]
+            },
+            {
+              "rank": 2,
+              "evidence_id": "e2",
+              "block_id": "h-1",
+              "role": "coreference_support",
+              "quote": "从烹饪配方到训练 Recipe",
+              "heading_path": [
+                "从烹饪配方到训练 Recipe"
+              ],
+              "reasons": [
+                "同词出现×1",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 3,
+              "evidence_id": "e3",
+              "block_id": "p-3",
+              "role": "coreference_support",
+              "quote": "一套训练配方通常会共同规定数据处理、优化器、学习率、批量大小、训练轮数和评测安排。",
+              "heading_path": [
+                "从烹饪配方到训练 Recipe"
+              ],
+              "reasons": [
+                "词干出现×2",
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 4,
+              "evidence_id": "e4",
+              "block_id": "p-2",
+              "role": "coreference_support",
+              "quote": "机器学习借用了这种说法，把训练所需的一整套搭配称为训练配方。",
+              "heading_path": [
+                "从烹饪配方到训练 Recipe"
+              ],
+              "reasons": [
+                "词干出现×2",
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 5,
+              "evidence_id": "e5",
+              "block_id": "p-1",
+              "role": "coreference_support",
+              "quote": "厨房里的 recipe 会列出食材、用量、步骤和火候，帮助不同的人重复做出相近结果。",
+              "heading_path": [
+                "从烹饪配方到训练 Recipe"
+              ],
+              "reasons": [
+                "词干出现×1",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 6,
+              "evidence_id": "e6",
+              "block_id": "p-5",
+              "role": "structural_support",
+              "quote": "不同配方可能使用相同模型结构，却产生不同的收敛速度和最终效果。",
+              "heading_path": [
+                "从烹饪配方到训练 Recipe"
+              ],
+              "reasons": [
+                "相邻段落",
+                "同一章节"
+              ]
+            }
+          ],
+          "expected_support_recalled": true
+        },
+        "execution": {
+          "validation_attempts": null,
+          "locally_degraded": false,
+          "removed_claim_ids": [],
+          "validation_errors": [],
+          "elapsed_ms": null,
+          "pipeline_error": ""
+        }
+      }
     },
     {
       "case_id": "experience-return",
       "document_id": "rsi-special-terms",
+      "category": "document_defined_term",
+      "difficulty": "contextual",
+      "passed": true,
       "anchor_recalled": true,
       "support_recalled": true,
       "gold_evidence_recall": 1,
@@ -305,11 +3213,181 @@
         "p-1",
         "p-3",
         "h-1"
-      ]
+      ],
+      "review": {
+        "evaluation_scope": "retrieval_only",
+        "scope_note": "本案例只验证RAG证据召回，没有生成实际释义，不能据此判断最终回答是否正确。",
+        "document": {
+          "document_id": "rsi-special-terms",
+          "title": "自我改进系统中的反馈与增长"
+        },
+        "selection": {
+          "text": "经验回流",
+          "anchor_block_id": "p-6",
+          "anchor_context": "工程团队更关注怎样让经验回流保持可追踪、可撤销，并在任务变化后及时失效。"
+        },
+        "expected": {
+          "meaning": "在这里指把经过验证的任务结果写回数据、策略或规则，供下一轮任务继续使用。",
+          "sense": "把已验证结果写回系统供下一轮任务使用",
+          "certainty": "clear",
+          "author_intent_required": false,
+          "evidence": [
+            {
+              "rank": 1,
+              "evidence_id": null,
+              "block_id": "p-2",
+              "role": "direct_support",
+              "quote": "经过验证的结果重新写入数据、策略或运行规则，使其参与下一轮任务，称为经验回流",
+              "heading_path": [],
+              "reasons": []
+            },
+            {
+              "rank": 2,
+              "evidence_id": null,
+              "block_id": "p-6",
+              "role": "coreference_support",
+              "quote": "让经验回流保持可追踪、可撤销",
+              "heading_path": [],
+              "reasons": []
+            }
+          ],
+          "must_include_groups": [
+            [
+              "验证"
+            ],
+            [
+              "写入",
+              "写回"
+            ],
+            [
+              "下一轮",
+              "后续任务"
+            ]
+          ],
+          "must_not_include": [
+            "自动驾驶",
+            "Oak",
+            "外部监督"
+          ]
+        },
+        "actual": null,
+        "retrieval": {
+          "retrieved_evidence": [
+            {
+              "rank": 1,
+              "evidence_id": "e1",
+              "block_id": "p-6",
+              "role": "coreference_support",
+              "quote": "工程团队更关注怎样让经验回流保持可追踪、可撤销，并在任务变化后及时失效。",
+              "heading_path": [
+                "自我改进系统中的反馈与增长"
+              ],
+              "reasons": [
+                "当前选区",
+                "同词出现×1"
+              ]
+            },
+            {
+              "rank": 2,
+              "evidence_id": "e2",
+              "block_id": "p-2",
+              "role": "direct_support",
+              "quote": "本文把经过验证的结果重新写入数据、策略或运行规则，使其参与下一轮任务，称为经验回流。",
+              "heading_path": [
+                "自我改进系统中的反馈与增长"
+              ],
+              "reasons": [
+                "定义句",
+                "同词出现×1",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 3,
+              "evidence_id": "e3",
+              "block_id": "p-5",
+              "role": "structural_support",
+              "quote": "这个概念描述的是一种可能的增长机制，不等同于现实系统已经实现无限增长。",
+              "heading_path": [
+                "自我改进系统中的反馈与增长"
+              ],
+              "reasons": [
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 4,
+              "evidence_id": "e4",
+              "block_id": "p-4",
+              "role": "structural_support",
+              "quote": "理论讨论中的智能爆炸，是指智能系统改进自身后进一步加快改进，最终可能形成能力快速增长的正反馈过程。",
+              "heading_path": [
+                "自我改进系统中的反馈与增长"
+              ],
+              "reasons": [
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 5,
+              "evidence_id": "e5",
+              "block_id": "p-1",
+              "role": "structural_support",
+              "quote": "系统会记录每轮任务采用了什么方法、获得什么结果以及失败发生在哪里。",
+              "heading_path": [
+                "自我改进系统中的反馈与增长"
+              ],
+              "reasons": [
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 6,
+              "evidence_id": "e6",
+              "block_id": "p-3",
+              "role": "structural_support",
+              "quote": "未经核验的结果不会进入回流通道，以免偶然成功被系统当成稳定规律。",
+              "heading_path": [
+                "自我改进系统中的反馈与增长"
+              ],
+              "reasons": [
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 7,
+              "evidence_id": "e7",
+              "block_id": "h-1",
+              "role": "structural_support",
+              "quote": "自我改进系统中的反馈与增长",
+              "heading_path": [
+                "自我改进系统中的反馈与增长"
+              ],
+              "reasons": [
+                "同一章节"
+              ]
+            }
+          ],
+          "expected_support_recalled": true
+        },
+        "execution": {
+          "validation_attempts": null,
+          "locally_degraded": false,
+          "removed_claim_ids": [],
+          "validation_errors": [],
+          "elapsed_ms": null,
+          "pipeline_error": ""
+        }
+      }
     },
     {
       "case_id": "intelligence-explosion",
       "document_id": "rsi-special-terms",
+      "category": "technical_concept_in_context",
+      "difficulty": "basic",
+      "passed": true,
       "anchor_recalled": true,
       "support_recalled": true,
       "gold_evidence_recall": 1,
@@ -322,11 +3400,170 @@
         "p-2",
         "h-1",
         "p-1"
-      ]
+      ],
+      "review": {
+        "evaluation_scope": "retrieval_only",
+        "scope_note": "本案例只验证RAG证据召回，没有生成实际释义，不能据此判断最终回答是否正确。",
+        "document": {
+          "document_id": "rsi-special-terms",
+          "title": "自我改进系统中的反馈与增长"
+        },
+        "selection": {
+          "text": "智能爆炸",
+          "anchor_block_id": "p-4",
+          "anchor_context": "理论讨论中的智能爆炸，是指智能系统改进自身后进一步加快改进，最终可能形成能力快速增长的正反馈过程。"
+        },
+        "expected": {
+          "meaning": "在这里指智能系统改进自身后进一步加快改进，可能形成能力快速增长的正反馈过程。",
+          "sense": "智能系统自我改进形成能力快速增长的正反馈过程",
+          "certainty": "clear",
+          "author_intent_required": false,
+          "evidence": [
+            {
+              "rank": 1,
+              "evidence_id": null,
+              "block_id": "p-4",
+              "role": "direct_support",
+              "quote": "智能系统改进自身后进一步加快改进，最终可能形成能力快速增长的正反馈过程",
+              "heading_path": [],
+              "reasons": []
+            }
+          ],
+          "must_include_groups": [
+            [
+              "自我改进",
+              "改进自身"
+            ],
+            [
+              "快速增长",
+              "正反馈"
+            ]
+          ],
+          "must_not_include": [
+            "已经实现",
+            "现实必然",
+            "无限增长"
+          ]
+        },
+        "actual": null,
+        "retrieval": {
+          "retrieved_evidence": [
+            {
+              "rank": 1,
+              "evidence_id": "e1",
+              "block_id": "p-4",
+              "role": "direct_support",
+              "quote": "理论讨论中的智能爆炸，是指智能系统改进自身后进一步加快改进，最终可能形成能力快速增长的正反馈过程。",
+              "heading_path": [
+                "自我改进系统中的反馈与增长"
+              ],
+              "reasons": [
+                "当前选区",
+                "定义句",
+                "同词出现×1"
+              ]
+            },
+            {
+              "rank": 2,
+              "evidence_id": "e2",
+              "block_id": "p-5",
+              "role": "structural_support",
+              "quote": "这个概念描述的是一种可能的增长机制，不等同于现实系统已经实现无限增长。",
+              "heading_path": [
+                "自我改进系统中的反馈与增长"
+              ],
+              "reasons": [
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 3,
+              "evidence_id": "e3",
+              "block_id": "p-3",
+              "role": "structural_support",
+              "quote": "未经核验的结果不会进入回流通道，以免偶然成功被系统当成稳定规律。",
+              "heading_path": [
+                "自我改进系统中的反馈与增长"
+              ],
+              "reasons": [
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 4,
+              "evidence_id": "e4",
+              "block_id": "p-6",
+              "role": "structural_support",
+              "quote": "工程团队更关注怎样让经验回流保持可追踪、可撤销，并在任务变化后及时失效。",
+              "heading_path": [
+                "自我改进系统中的反馈与增长"
+              ],
+              "reasons": [
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 5,
+              "evidence_id": "e5",
+              "block_id": "p-2",
+              "role": "structural_support",
+              "quote": "本文把经过验证的结果重新写入数据、策略或运行规则，使其参与下一轮任务，称为经验回流。",
+              "heading_path": [
+                "自我改进系统中的反馈与增长"
+              ],
+              "reasons": [
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 6,
+              "evidence_id": "e6",
+              "block_id": "h-1",
+              "role": "structural_support",
+              "quote": "自我改进系统中的反馈与增长",
+              "heading_path": [
+                "自我改进系统中的反馈与增长"
+              ],
+              "reasons": [
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 7,
+              "evidence_id": "e7",
+              "block_id": "p-1",
+              "role": "structural_support",
+              "quote": "系统会记录每轮任务采用了什么方法、获得什么结果以及失败发生在哪里。",
+              "heading_path": [
+                "自我改进系统中的反馈与增长"
+              ],
+              "reasons": [
+                "同一章节"
+              ]
+            }
+          ],
+          "expected_support_recalled": true
+        },
+        "execution": {
+          "validation_attempts": null,
+          "locally_degraded": false,
+          "removed_claim_ids": [],
+          "validation_errors": [],
+          "elapsed_ms": null,
+          "pipeline_error": ""
+        }
+      }
     },
     {
       "case_id": "mercury-unresolved",
       "document_id": "mercury-ambiguity",
+      "category": "genuine_ambiguity",
+      "difficulty": "adversarial",
+      "passed": true,
       "anchor_recalled": true,
       "support_recalled": true,
       "gold_evidence_recall": 1,
@@ -338,11 +3575,174 @@
         "p-1",
         "h-1",
         "p-2"
-      ]
+      ],
+      "review": {
+        "evaluation_scope": "retrieval_only",
+        "scope_note": "本案例只验证RAG证据召回，没有生成实际释义，不能据此判断最终回答是否正确。",
+        "document": {
+          "document_id": "mercury-ambiguity",
+          "title": "Mercury 项目会议摘录"
+        },
+        "selection": {
+          "text": "Mercury",
+          "anchor_block_id": "p-3",
+          "anchor_context": "会议记录只写道“Mercury 的结果需要重新检查”，没有注明发言属于哪一组。"
+        },
+        "expected": {
+          "meaning": "这里无法唯一确定：它可能指内部数据工具，也可能指材料实验中的汞。",
+          "sense": "可能指数据工具，也可能指材料实验中的汞，原文不足以唯一确定",
+          "certainty": "ambiguous",
+          "author_intent_required": false,
+          "evidence": [
+            {
+              "rank": 1,
+              "evidence_id": null,
+              "block_id": "p-1",
+              "role": "sense_disambiguation",
+              "quote": "同时维护一个代号为 Mercury 的数据工具，并开展金属汞的材料实验",
+              "heading_path": [],
+              "reasons": []
+            },
+            {
+              "rank": 2,
+              "evidence_id": null,
+              "block_id": "p-3",
+              "role": "direct_support",
+              "quote": "没有注明发言属于哪一组",
+              "heading_path": [],
+              "reasons": []
+            }
+          ],
+          "must_include_groups": [
+            [
+              "无法确定",
+              "不能确定",
+              "可能"
+            ],
+            [
+              "数据工具",
+              "工具"
+            ],
+            [
+              "汞",
+              "材料实验"
+            ]
+          ],
+          "must_not_include": [
+            "就是数据工具",
+            "就是化学元素",
+            "水星"
+          ]
+        },
+        "actual": null,
+        "retrieval": {
+          "retrieved_evidence": [
+            {
+              "rank": 1,
+              "evidence_id": "e1",
+              "block_id": "p-3",
+              "role": "coreference_support",
+              "quote": "会议记录只写道“Mercury 的结果需要重新检查”，没有注明发言属于哪一组。",
+              "heading_path": [
+                "Mercury 项目会议摘录"
+              ],
+              "reasons": [
+                "当前选区",
+                "同词出现×1"
+              ]
+            },
+            {
+              "rank": 2,
+              "evidence_id": "e2",
+              "block_id": "p-4",
+              "role": "coreference_support",
+              "quote": "在材料实验附录中，Mercury 明确表示化学元素汞，符号为 Hg。",
+              "heading_path": [
+                "Mercury 项目会议摘录"
+              ],
+              "reasons": [
+                "同词出现×1",
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 3,
+              "evidence_id": "e3",
+              "block_id": "p-5",
+              "role": "coreference_support",
+              "quote": "在软件发布清单中，Mercury 则明确表示实验室内部的数据导入工具。",
+              "heading_path": [
+                "Mercury 项目会议摘录"
+              ],
+              "reasons": [
+                "同词出现×1",
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 4,
+              "evidence_id": "e4",
+              "block_id": "p-1",
+              "role": "coreference_support",
+              "quote": "实验室同时维护一个代号为 Mercury 的数据工具，并开展金属汞的材料实验。",
+              "heading_path": [
+                "Mercury 项目会议摘录"
+              ],
+              "reasons": [
+                "同词出现×1",
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 5,
+              "evidence_id": "e5",
+              "block_id": "h-1",
+              "role": "coreference_support",
+              "quote": "Mercury 项目会议摘录",
+              "heading_path": [
+                "Mercury 项目会议摘录"
+              ],
+              "reasons": [
+                "同词出现×1",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 6,
+              "evidence_id": "e6",
+              "block_id": "p-2",
+              "role": "structural_support",
+              "quote": "第一组汇报工具的导入速度，第二组汇报样品在不同温度下的变化。",
+              "heading_path": [
+                "Mercury 项目会议摘录"
+              ],
+              "reasons": [
+                "相邻段落",
+                "同一章节"
+              ]
+            }
+          ],
+          "expected_support_recalled": true
+        },
+        "execution": {
+          "validation_attempts": null,
+          "locally_degraded": false,
+          "removed_claim_ids": [],
+          "validation_errors": [],
+          "elapsed_ms": null,
+          "pipeline_error": ""
+        }
+      }
     },
     {
       "case_id": "mercury-chemical",
       "document_id": "mercury-ambiguity",
+      "category": "named_entity_disambiguation",
+      "difficulty": "basic",
+      "passed": true,
       "anchor_recalled": true,
       "support_recalled": true,
       "gold_evidence_recall": 1,
@@ -354,47 +3754,581 @@
         "p-1",
         "h-1",
         "p-2"
-      ]
+      ],
+      "review": {
+        "evaluation_scope": "retrieval_only",
+        "scope_note": "本案例只验证RAG证据召回，没有生成实际释义，不能据此判断最终回答是否正确。",
+        "document": {
+          "document_id": "mercury-ambiguity",
+          "title": "Mercury 项目会议摘录"
+        },
+        "selection": {
+          "text": "Mercury",
+          "anchor_block_id": "p-4",
+          "anchor_context": "在材料实验附录中，Mercury 明确表示化学元素汞，符号为 Hg。"
+        },
+        "expected": {
+          "meaning": "在这里指化学元素汞，元素符号是 Hg。",
+          "sense": "化学元素汞",
+          "certainty": "clear",
+          "author_intent_required": false,
+          "evidence": [
+            {
+              "rank": 1,
+              "evidence_id": null,
+              "block_id": "p-4",
+              "role": "direct_support",
+              "quote": "Mercury 明确表示化学元素汞，符号为 Hg",
+              "heading_path": [],
+              "reasons": []
+            }
+          ],
+          "must_include_groups": [
+            [
+              "化学元素",
+              "汞"
+            ],
+            [
+              "Hg"
+            ]
+          ],
+          "must_not_include": [
+            "数据导入工具",
+            "水星",
+            "项目代号"
+          ]
+        },
+        "actual": null,
+        "retrieval": {
+          "retrieved_evidence": [
+            {
+              "rank": 1,
+              "evidence_id": "e1",
+              "block_id": "p-4",
+              "role": "coreference_support",
+              "quote": "在材料实验附录中，Mercury 明确表示化学元素汞，符号为 Hg。",
+              "heading_path": [
+                "Mercury 项目会议摘录"
+              ],
+              "reasons": [
+                "当前选区",
+                "同词出现×1"
+              ]
+            },
+            {
+              "rank": 2,
+              "evidence_id": "e2",
+              "block_id": "p-5",
+              "role": "coreference_support",
+              "quote": "在软件发布清单中，Mercury 则明确表示实验室内部的数据导入工具。",
+              "heading_path": [
+                "Mercury 项目会议摘录"
+              ],
+              "reasons": [
+                "同词出现×1",
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 3,
+              "evidence_id": "e3",
+              "block_id": "p-3",
+              "role": "coreference_support",
+              "quote": "会议记录只写道“Mercury 的结果需要重新检查”，没有注明发言属于哪一组。",
+              "heading_path": [
+                "Mercury 项目会议摘录"
+              ],
+              "reasons": [
+                "同词出现×1",
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 4,
+              "evidence_id": "e4",
+              "block_id": "p-1",
+              "role": "coreference_support",
+              "quote": "实验室同时维护一个代号为 Mercury 的数据工具，并开展金属汞的材料实验。",
+              "heading_path": [
+                "Mercury 项目会议摘录"
+              ],
+              "reasons": [
+                "同词出现×1",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 5,
+              "evidence_id": "e5",
+              "block_id": "h-1",
+              "role": "coreference_support",
+              "quote": "Mercury 项目会议摘录",
+              "heading_path": [
+                "Mercury 项目会议摘录"
+              ],
+              "reasons": [
+                "同词出现×1",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 6,
+              "evidence_id": "e6",
+              "block_id": "p-2",
+              "role": "structural_support",
+              "quote": "第一组汇报工具的导入速度，第二组汇报样品在不同温度下的变化。",
+              "heading_path": [
+                "Mercury 项目会议摘录"
+              ],
+              "reasons": [
+                "相邻段落",
+                "同一章节"
+              ]
+            }
+          ],
+          "expected_support_recalled": true
+        },
+        "execution": {
+          "validation_attempts": null,
+          "locally_degraded": false,
+          "removed_claim_ids": [],
+          "validation_errors": [],
+          "elapsed_ms": null,
+          "pipeline_error": ""
+        }
+      }
     },
     {
       "case_id": "web-annotation-body",
       "document_id": "web-annotation-model",
+      "category": "standard_term_in_context",
+      "difficulty": "contextual",
+      "passed": true,
       "anchor_recalled": true,
       "support_recalled": true,
       "gold_evidence_recall": 1,
       "failures": [],
       "retrieved_block_ids": [
         "p-5",
-        "p-4",
         "p-3",
+        "p-4",
         "p-8",
         "p-6",
         "p-7",
         "p-2",
         "p-1"
-      ]
+      ],
+      "review": {
+        "evaluation_scope": "retrieval_only",
+        "scope_note": "本案例只验证RAG证据召回，没有生成实际释义，不能据此判断最终回答是否正确。",
+        "document": {
+          "document_id": "web-annotation-model",
+          "title": "Web Annotation Data Model：Body 与 Target"
+        },
+        "selection": {
+          "text": "Body",
+          "anchor_block_id": "p-5",
+          "anchor_context": "Body 可以引用外部资源，也可以把一段文本直接嵌入标注。简单评论、标签和说明文字都可以充当 Body。"
+        },
+        "expected": {
+          "meaning": "Body 在这里指网页标注中承载评论、标签或其他描述内容的资源。",
+          "sense": "网页标注中承载评论、标签或其他描述内容的资源",
+          "certainty": "clear",
+          "author_intent_required": false,
+          "evidence": [
+            {
+              "rank": 1,
+              "evidence_id": null,
+              "block_id": "p-3",
+              "role": "direct_support",
+              "quote": "Body 是评论、标签或其他描述性内容",
+              "heading_path": [],
+              "reasons": []
+            },
+            {
+              "rank": 2,
+              "evidence_id": null,
+              "block_id": "p-5",
+              "role": "coreference_support",
+              "quote": "简单评论、标签和说明文字都可以充当 Body",
+              "heading_path": [],
+              "reasons": []
+            }
+          ],
+          "must_include_groups": [
+            [
+              "标注"
+            ],
+            [
+              "评论",
+              "标签",
+              "描述"
+            ],
+            [
+              "内容",
+              "资源"
+            ]
+          ],
+          "must_not_include": [
+            "人体",
+            "HTML body",
+            "网页主体"
+          ]
+        },
+        "actual": null,
+        "retrieval": {
+          "retrieved_evidence": [
+            {
+              "rank": 1,
+              "evidence_id": "e1",
+              "block_id": "p-5",
+              "role": "coreference_support",
+              "quote": "Body 可以引用外部资源，也可以把一段文本直接嵌入标注。简单评论、标签和说明文字都可以充当 Body。",
+              "heading_path": [
+                "Web Annotation 的基本结构",
+                "Body"
+              ],
+              "reasons": [
+                "当前选区",
+                "同词出现×2"
+              ]
+            },
+            {
+              "rank": 2,
+              "evidence_id": "e2",
+              "block_id": "p-3",
+              "role": "direct_support",
+              "quote": "在这个模型里，Annotation 通常包含 Body 和 Target。Body 是评论、标签或其他描述性内容；Target 是这些内容所针对、谈论或标记的资源。",
+              "heading_path": [
+                "Web Annotation 的基本结构"
+              ],
+              "reasons": [
+                "定义句",
+                "同词出现×2",
+                "相邻段落",
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 3,
+              "evidence_id": "e3",
+              "block_id": "p-4",
+              "role": "coreference_support",
+              "quote": "Body",
+              "heading_path": [
+                "Web Annotation 的基本结构",
+                "Body"
+              ],
+              "reasons": [
+                "同词出现×1",
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 4,
+              "evidence_id": "e4",
+              "block_id": "p-8",
+              "role": "coreference_support",
+              "quote": "因此这里的 Body 和 Target 是数据模型中的角色名称，不分别指人体和日常语境中的射击目标。",
+              "heading_path": [
+                "Web Annotation 的基本结构",
+                "Target"
+              ],
+              "reasons": [
+                "同词出现×1",
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 5,
+              "evidence_id": "e5",
+              "block_id": "p-6",
+              "role": "structural_support",
+              "quote": "Target",
+              "heading_path": [
+                "Web Annotation 的基本结构",
+                "Target"
+              ],
+              "reasons": [
+                "相邻段落",
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 6,
+              "evidence_id": "e6",
+              "block_id": "p-7",
+              "role": "structural_support",
+              "quote": "Target 可以是完整网页、图片，也可以是借助 Selector 指定的某个片段。一个 Annotation 至少要有一个 Target。",
+              "heading_path": [
+                "Web Annotation 的基本结构",
+                "Target"
+              ],
+              "reasons": [
+                "相邻段落",
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 7,
+              "evidence_id": "e7",
+              "block_id": "p-2",
+              "role": "structural_support",
+              "quote": "网页标注用于把一段信息与另一个网络资源关联起来。为了让不同系统能够交换标注，模型把一条标注描述为若干相互连接的资源。",
+              "heading_path": [
+                "Web Annotation 的基本结构"
+              ],
+              "reasons": [
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 8,
+              "evidence_id": "e8",
+              "block_id": "p-1",
+              "role": "structural_support",
+              "quote": "Web Annotation 的基本结构",
+              "heading_path": [
+                "Web Annotation 的基本结构"
+              ],
+              "reasons": [
+                "标题相关"
+              ]
+            }
+          ],
+          "expected_support_recalled": true
+        },
+        "execution": {
+          "validation_attempts": null,
+          "locally_degraded": false,
+          "removed_claim_ids": [],
+          "validation_errors": [],
+          "elapsed_ms": null,
+          "pipeline_error": ""
+        }
+      }
     },
     {
       "case_id": "web-annotation-target",
       "document_id": "web-annotation-model",
+      "category": "standard_term_in_context",
+      "difficulty": "contextual",
+      "passed": true,
       "anchor_recalled": true,
       "support_recalled": true,
       "gold_evidence_recall": 1,
       "failures": [],
       "retrieved_block_ids": [
         "p-7",
-        "p-6",
         "p-8",
         "p-3",
+        "p-6",
         "p-5",
         "p-2",
         "p-4",
         "p-1"
-      ]
+      ],
+      "review": {
+        "evaluation_scope": "retrieval_only",
+        "scope_note": "本案例只验证RAG证据召回，没有生成实际释义，不能据此判断最终回答是否正确。",
+        "document": {
+          "document_id": "web-annotation-model",
+          "title": "Web Annotation Data Model：Body 与 Target"
+        },
+        "selection": {
+          "text": "Target",
+          "anchor_block_id": "p-7",
+          "anchor_context": "Target 可以是完整网页、图片，也可以是借助 Selector 指定的某个片段。一个 Annotation 至少要有一个 Target。"
+        },
+        "expected": {
+          "meaning": "Target 在这里指网页标注所针对、谈论或标记的网络资源或资源片段。",
+          "sense": "网页标注的内容所针对、谈论或标记的资源或片段",
+          "certainty": "clear",
+          "author_intent_required": false,
+          "evidence": [
+            {
+              "rank": 1,
+              "evidence_id": null,
+              "block_id": "p-3",
+              "role": "direct_support",
+              "quote": "Target 是这些内容所针对、谈论或标记的资源",
+              "heading_path": [],
+              "reasons": []
+            },
+            {
+              "rank": 2,
+              "evidence_id": null,
+              "block_id": "p-7",
+              "role": "coreference_support",
+              "quote": "Target 可以是完整网页、图片，也可以是借助 Selector 指定的某个片段",
+              "heading_path": [],
+              "reasons": []
+            }
+          ],
+          "must_include_groups": [
+            [
+              "标注"
+            ],
+            [
+              "针对",
+              "谈论",
+              "标记"
+            ],
+            [
+              "资源",
+              "片段"
+            ]
+          ],
+          "must_not_include": [
+            "射击目标",
+            "用户群体",
+            "营销对象"
+          ]
+        },
+        "actual": null,
+        "retrieval": {
+          "retrieved_evidence": [
+            {
+              "rank": 1,
+              "evidence_id": "e1",
+              "block_id": "p-7",
+              "role": "direct_support",
+              "quote": "Target 可以是完整网页、图片，也可以是借助 Selector 指定的某个片段。一个 Annotation 至少要有一个 Target。",
+              "heading_path": [
+                "Web Annotation 的基本结构",
+                "Target"
+              ],
+              "reasons": [
+                "当前选区",
+                "定义句",
+                "同词出现×2"
+              ]
+            },
+            {
+              "rank": 2,
+              "evidence_id": "e2",
+              "block_id": "p-8",
+              "role": "direct_support",
+              "quote": "因此这里的 Body 和 Target 是数据模型中的角色名称，不分别指人体和日常语境中的射击目标。",
+              "heading_path": [
+                "Web Annotation 的基本结构",
+                "Target"
+              ],
+              "reasons": [
+                "定义句",
+                "同词出现×1",
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 3,
+              "evidence_id": "e3",
+              "block_id": "p-3",
+              "role": "direct_support",
+              "quote": "在这个模型里，Annotation 通常包含 Body 和 Target。Body 是评论、标签或其他描述性内容；Target 是这些内容所针对、谈论或标记的资源。",
+              "heading_path": [
+                "Web Annotation 的基本结构"
+              ],
+              "reasons": [
+                "定义句",
+                "同词出现×2",
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 4,
+              "evidence_id": "e4",
+              "block_id": "p-6",
+              "role": "coreference_support",
+              "quote": "Target",
+              "heading_path": [
+                "Web Annotation 的基本结构",
+                "Target"
+              ],
+              "reasons": [
+                "同词出现×1",
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 5,
+              "evidence_id": "e5",
+              "block_id": "p-5",
+              "role": "structural_support",
+              "quote": "Body 可以引用外部资源，也可以把一段文本直接嵌入标注。简单评论、标签和说明文字都可以充当 Body。",
+              "heading_path": [
+                "Web Annotation 的基本结构",
+                "Body"
+              ],
+              "reasons": [
+                "相邻段落",
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 6,
+              "evidence_id": "e6",
+              "block_id": "p-2",
+              "role": "structural_support",
+              "quote": "网页标注用于把一段信息与另一个网络资源关联起来。为了让不同系统能够交换标注，模型把一条标注描述为若干相互连接的资源。",
+              "heading_path": [
+                "Web Annotation 的基本结构"
+              ],
+              "reasons": [
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 7,
+              "evidence_id": "e7",
+              "block_id": "p-4",
+              "role": "structural_support",
+              "quote": "Body",
+              "heading_path": [
+                "Web Annotation 的基本结构",
+                "Body"
+              ],
+              "reasons": [
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 8,
+              "evidence_id": "e8",
+              "block_id": "p-1",
+              "role": "structural_support",
+              "quote": "Web Annotation 的基本结构",
+              "heading_path": [
+                "Web Annotation 的基本结构"
+              ],
+              "reasons": [
+                "标题相关"
+              ]
+            }
+          ],
+          "expected_support_recalled": true
+        },
+        "execution": {
+          "validation_attempts": null,
+          "locally_degraded": false,
+          "removed_claim_ids": [],
+          "validation_errors": [],
+          "elapsed_ms": null,
+          "pipeline_error": ""
+        }
+      }
     },
     {
       "case_id": "javascript-closure",
       "document_id": "javascript-closures",
+      "category": "mixed_language_technical_term",
+      "difficulty": "basic",
+      "passed": true,
       "anchor_recalled": true,
       "support_recalled": true,
       "gold_evidence_recall": 1,
@@ -407,11 +4341,176 @@
         "p-5",
         "p-6",
         "p-7"
-      ]
+      ],
+      "review": {
+        "evaluation_scope": "retrieval_only",
+        "scope_note": "本案例只验证RAG证据召回，没有生成实际释义，不能据此判断最终回答是否正确。",
+        "document": {
+          "document_id": "javascript-closures",
+          "title": "JavaScript 闭包与词法环境"
+        },
+        "selection": {
+          "text": "Closure",
+          "anchor_block_id": "p-3",
+          "anchor_context": "Closure（闭包）是函数与其声明时周围状态的组合。即使外层函数已经执行结束，返回的内层函数仍可访问那一词法环境中的变量。"
+        },
+        "expected": {
+          "meaning": "Closure 中文通常称为“闭包”，指函数与其声明时周围词法环境的组合。",
+          "sense": "闭包，即函数与其声明时周围词法环境的组合",
+          "certainty": "clear",
+          "author_intent_required": false,
+          "evidence": [
+            {
+              "rank": 1,
+              "evidence_id": null,
+              "block_id": "p-3",
+              "role": "direct_support",
+              "quote": "Closure（闭包）是函数与其声明时周围状态的组合",
+              "heading_path": [],
+              "reasons": []
+            }
+          ],
+          "must_include_groups": [
+            [
+              "闭包"
+            ],
+            [
+              "函数"
+            ],
+            [
+              "词法环境",
+              "周围状态"
+            ]
+          ],
+          "must_not_include": [
+            "立即执行函数",
+            "固定常量",
+            "关闭连接"
+          ]
+        },
+        "actual": null,
+        "retrieval": {
+          "retrieved_evidence": [
+            {
+              "rank": 1,
+              "evidence_id": "e1",
+              "block_id": "p-3",
+              "role": "direct_support",
+              "quote": "Closure（闭包）是函数与其声明时周围状态的组合。即使外层函数已经执行结束，返回的内层函数仍可访问那一词法环境中的变量。",
+              "heading_path": [
+                "Closures"
+              ],
+              "reasons": [
+                "当前选区",
+                "定义句",
+                "同词出现×1"
+              ]
+            },
+            {
+              "rank": 2,
+              "evidence_id": "e2",
+              "block_id": "p-2",
+              "role": "structural_support",
+              "quote": "JavaScript 使用词法作用域：一个函数能够访问哪些变量，主要由它在源代码中声明的位置决定。",
+              "heading_path": [
+                "Closures"
+              ],
+              "reasons": [
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 3,
+              "evidence_id": "e3",
+              "block_id": "p-1",
+              "role": "structural_support",
+              "quote": "Closures",
+              "heading_path": [
+                "Closures"
+              ],
+              "reasons": [
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 4,
+              "evidence_id": "e4",
+              "block_id": "p-4",
+              "role": "structural_support",
+              "quote": "词法环境",
+              "heading_path": [
+                "Closures",
+                "词法环境"
+              ],
+              "reasons": [
+                "相邻段落",
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 5,
+              "evidence_id": "e5",
+              "block_id": "p-5",
+              "role": "structural_support",
+              "quote": "词法环境可以理解为当前作用域中的标识符与其值，以及它对外层作用域的引用。闭包保存的是对相关环境的访问，而不是把变量改写成固定常量。",
+              "heading_path": [
+                "Closures",
+                "词法环境"
+              ],
+              "reasons": [
+                "相邻段落",
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 6,
+              "evidence_id": "e6",
+              "block_id": "p-6",
+              "role": "structural_support",
+              "quote": "闭包常用于封装状态、制作函数工厂或实现回调。多个函数也可能共享同一个外层词法环境。",
+              "heading_path": [
+                "Closures",
+                "词法环境"
+              ],
+              "reasons": [
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 7,
+              "evidence_id": "e7",
+              "block_id": "p-7",
+              "role": "structural_support",
+              "quote": "闭包并不等同于立即执行函数；函数在创建时就会和当时的词法环境建立联系。",
+              "heading_path": [
+                "Closures",
+                "词法环境"
+              ],
+              "reasons": [
+                "标题相关"
+              ]
+            }
+          ],
+          "expected_support_recalled": true
+        },
+        "execution": {
+          "validation_attempts": null,
+          "locally_degraded": false,
+          "removed_claim_ids": [],
+          "validation_errors": [],
+          "elapsed_ms": null,
+          "pipeline_error": ""
+        }
+      }
     },
     {
       "case_id": "javascript-lexical-environment",
       "document_id": "javascript-closures",
+      "category": "technical_concept_in_context",
+      "difficulty": "contextual",
+      "passed": true,
       "anchor_recalled": true,
       "support_recalled": true,
       "gold_evidence_recall": 1,
@@ -424,11 +4523,179 @@
         "p-3",
         "p-2",
         "p-1"
-      ]
+      ],
+      "review": {
+        "evaluation_scope": "retrieval_only",
+        "scope_note": "本案例只验证RAG证据召回，没有生成实际释义，不能据此判断最终回答是否正确。",
+        "document": {
+          "document_id": "javascript-closures",
+          "title": "JavaScript 闭包与词法环境"
+        },
+        "selection": {
+          "text": "词法环境",
+          "anchor_block_id": "p-5",
+          "anchor_context": "词法环境可以理解为当前作用域中的标识符与其值，以及它对外层作用域的引用。闭包保存的是对相关环境的访问，而不是把变量改写成固定常量。"
+        },
+        "expected": {
+          "meaning": "词法环境在这里指当前作用域中的标识符和值，以及通向外层作用域的引用关系。",
+          "sense": "由当前作用域标识符及其值和对外层作用域引用构成的环境",
+          "certainty": "clear",
+          "author_intent_required": false,
+          "evidence": [
+            {
+              "rank": 1,
+              "evidence_id": null,
+              "block_id": "p-5",
+              "role": "direct_support",
+              "quote": "词法环境可以理解为当前作用域中的标识符与其值，以及它对外层作用域的引用",
+              "heading_path": [],
+              "reasons": []
+            }
+          ],
+          "must_include_groups": [
+            [
+              "作用域"
+            ],
+            [
+              "标识符",
+              "变量"
+            ],
+            [
+              "外层"
+            ]
+          ],
+          "must_not_include": [
+            "自然语言",
+            "操作系统环境变量",
+            "固定常量"
+          ]
+        },
+        "actual": null,
+        "retrieval": {
+          "retrieved_evidence": [
+            {
+              "rank": 1,
+              "evidence_id": "e1",
+              "block_id": "p-5",
+              "role": "coreference_support",
+              "quote": "词法环境可以理解为当前作用域中的标识符与其值，以及它对外层作用域的引用。闭包保存的是对相关环境的访问，而不是把变量改写成固定常量。",
+              "heading_path": [
+                "Closures",
+                "词法环境"
+              ],
+              "reasons": [
+                "当前选区",
+                "同词出现×1"
+              ]
+            },
+            {
+              "rank": 2,
+              "evidence_id": "e2",
+              "block_id": "p-6",
+              "role": "coreference_support",
+              "quote": "闭包常用于封装状态、制作函数工厂或实现回调。多个函数也可能共享同一个外层词法环境。",
+              "heading_path": [
+                "Closures",
+                "词法环境"
+              ],
+              "reasons": [
+                "同词出现×1",
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 3,
+              "evidence_id": "e3",
+              "block_id": "p-4",
+              "role": "coreference_support",
+              "quote": "词法环境",
+              "heading_path": [
+                "Closures",
+                "词法环境"
+              ],
+              "reasons": [
+                "同词出现×1",
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 4,
+              "evidence_id": "e4",
+              "block_id": "p-7",
+              "role": "coreference_support",
+              "quote": "闭包并不等同于立即执行函数；函数在创建时就会和当时的词法环境建立联系。",
+              "heading_path": [
+                "Closures",
+                "词法环境"
+              ],
+              "reasons": [
+                "同词出现×1",
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 5,
+              "evidence_id": "e5",
+              "block_id": "p-3",
+              "role": "coreference_support",
+              "quote": "Closure（闭包）是函数与其声明时周围状态的组合。即使外层函数已经执行结束，返回的内层函数仍可访问那一词法环境中的变量。",
+              "heading_path": [
+                "Closures"
+              ],
+              "reasons": [
+                "同词出现×1",
+                "相邻段落",
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 6,
+              "evidence_id": "e6",
+              "block_id": "p-2",
+              "role": "structural_support",
+              "quote": "JavaScript 使用词法作用域：一个函数能够访问哪些变量，主要由它在源代码中声明的位置决定。",
+              "heading_path": [
+                "Closures"
+              ],
+              "reasons": [
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 7,
+              "evidence_id": "e7",
+              "block_id": "p-1",
+              "role": "structural_support",
+              "quote": "Closures",
+              "heading_path": [
+                "Closures"
+              ],
+              "reasons": [
+                "标题相关"
+              ]
+            }
+          ],
+          "expected_support_recalled": true
+        },
+        "execution": {
+          "validation_attempts": null,
+          "locally_degraded": false,
+          "removed_claim_ids": [],
+          "validation_errors": [],
+          "elapsed_ms": null,
+          "pipeline_error": ""
+        }
+      }
     },
     {
       "case_id": "kubernetes-pod",
       "document_id": "kubernetes-pods",
+      "category": "common_word_entity_disambiguation",
+      "difficulty": "basic",
+      "passed": true,
       "anchor_recalled": true,
       "support_recalled": true,
       "gold_evidence_recall": 1,
@@ -442,11 +4709,203 @@
         "p-1",
         "p-4",
         "p-7"
-      ]
+      ],
+      "review": {
+        "evaluation_scope": "retrieval_only",
+        "scope_note": "本案例只验证RAG证据召回，没有生成实际释义，不能据此判断最终回答是否正确。",
+        "document": {
+          "document_id": "kubernetes-pods",
+          "title": "Kubernetes 中的 Pod"
+        },
+        "selection": {
+          "text": "Pod",
+          "anchor_block_id": "p-3",
+          "anchor_context": "一个 Pod 可以包含一个或多个容器。这些容器被共同调度到同一位置，并共享部分网络和存储资源，因而像在同一个逻辑主机中运行。"
+        },
+        "expected": {
+          "meaning": "Pod 在这里指 Kubernetes 中最小的可部署计算单元，可包含一个或多个共享运行资源的容器。",
+          "sense": "Kubernetes 中可部署的最小计算单元，由一个或多个共享运行资源的容器组成",
+          "certainty": "clear",
+          "author_intent_required": false,
+          "evidence": [
+            {
+              "rank": 1,
+              "evidence_id": null,
+              "block_id": "p-2",
+              "role": "direct_support",
+              "quote": "Pod 是能够创建和管理的最小部署单元",
+              "heading_path": [],
+              "reasons": []
+            },
+            {
+              "rank": 2,
+              "evidence_id": null,
+              "block_id": "p-3",
+              "role": "coreference_support",
+              "quote": "一个 Pod 可以包含一个或多个容器",
+              "heading_path": [],
+              "reasons": []
+            }
+          ],
+          "must_include_groups": [
+            [
+              "Kubernetes"
+            ],
+            [
+              "最小",
+              "部署单元"
+            ],
+            [
+              "容器"
+            ],
+            [
+              "共享"
+            ]
+          ],
+          "must_not_include": [
+            "豆荚",
+            "鲸群",
+            "物理服务器"
+          ]
+        },
+        "actual": null,
+        "retrieval": {
+          "retrieved_evidence": [
+            {
+              "rank": 1,
+              "evidence_id": "e1",
+              "block_id": "p-3",
+              "role": "coreference_support",
+              "quote": "一个 Pod 可以包含一个或多个容器。这些容器被共同调度到同一位置，并共享部分网络和存储资源，因而像在同一个逻辑主机中运行。",
+              "heading_path": [
+                "Pods"
+              ],
+              "reasons": [
+                "当前选区",
+                "同词出现×1"
+              ]
+            },
+            {
+              "rank": 2,
+              "evidence_id": "e2",
+              "block_id": "p-2",
+              "role": "direct_support",
+              "quote": "Kubernetes 用工作负载对象来运行应用，其中 Pod 是能够创建和管理的最小部署单元。",
+              "heading_path": [
+                "Pods"
+              ],
+              "reasons": [
+                "定义句",
+                "同词出现×1",
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 3,
+              "evidence_id": "e3",
+              "block_id": "p-5",
+              "role": "coreference_support",
+              "quote": "Pod 有自己的生命周期；当它因节点故障而失效时，通常创建新的 Pod，而不是让原有对象在别处继续存在。",
+              "heading_path": [
+                "Pods",
+                "生命周期与管理"
+              ],
+              "reasons": [
+                "同词出现×2",
+                "相邻段落"
+              ]
+            },
+            {
+              "rank": 4,
+              "evidence_id": "e4",
+              "block_id": "p-8",
+              "role": "coreference_support",
+              "quote": "同一 Pod 中的容器适合承担联系紧密、需要共享运行上下文的任务，但 Pod 本身不是一台物理服务器。",
+              "heading_path": [
+                "Pods",
+                "容器关系"
+              ],
+              "reasons": [
+                "同词出现×2",
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 5,
+              "evidence_id": "e5",
+              "block_id": "p-6",
+              "role": "coreference_support",
+              "quote": "实际使用时，人们常通过 Deployment 等更高层资源管理一组 Pod，使期望数量的实例持续运行。",
+              "heading_path": [
+                "Pods",
+                "生命周期与管理"
+              ],
+              "reasons": [
+                "同词出现×1"
+              ]
+            },
+            {
+              "rank": 6,
+              "evidence_id": "e6",
+              "block_id": "p-1",
+              "role": "structural_support",
+              "quote": "Pods",
+              "heading_path": [
+                "Pods"
+              ],
+              "reasons": [
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 7,
+              "evidence_id": "e7",
+              "block_id": "p-4",
+              "role": "sense_disambiguation",
+              "quote": "生命周期与管理",
+              "heading_path": [
+                "Pods",
+                "生命周期与管理"
+              ],
+              "reasons": [
+                "相邻段落"
+              ]
+            },
+            {
+              "rank": 8,
+              "evidence_id": "e8",
+              "block_id": "p-7",
+              "role": "structural_support",
+              "quote": "容器关系",
+              "heading_path": [
+                "Pods",
+                "容器关系"
+              ],
+              "reasons": [
+                "标题相关"
+              ]
+            }
+          ],
+          "expected_support_recalled": true
+        },
+        "execution": {
+          "validation_attempts": null,
+          "locally_degraded": false,
+          "removed_claim_ids": [],
+          "validation_errors": [],
+          "elapsed_ms": null,
+          "pipeline_error": ""
+        }
+      }
     },
     {
       "case_id": "kubernetes-deployment",
       "document_id": "kubernetes-pods",
+      "category": "technical_concept_in_context",
+      "difficulty": "contextual",
+      "passed": true,
       "anchor_recalled": true,
       "support_recalled": true,
       "gold_evidence_recall": 1,
@@ -460,11 +4919,185 @@
         "p-3",
         "p-2",
         "p-1"
-      ]
+      ],
+      "review": {
+        "evaluation_scope": "retrieval_only",
+        "scope_note": "本案例只验证RAG证据召回，没有生成实际释义，不能据此判断最终回答是否正确。",
+        "document": {
+          "document_id": "kubernetes-pods",
+          "title": "Kubernetes 中的 Pod"
+        },
+        "selection": {
+          "text": "Deployment",
+          "anchor_block_id": "p-6",
+          "anchor_context": "实际使用时，人们常通过 Deployment 等更高层资源管理一组 Pod，使期望数量的实例持续运行。"
+        },
+        "expected": {
+          "meaning": "Deployment 在这里指 Kubernetes 中管理一组 Pod、维持期望实例数量的更高层工作负载资源。",
+          "sense": "Kubernetes 中用于管理一组 Pod 并维持期望实例状态的更高层工作负载资源",
+          "certainty": "inferred",
+          "author_intent_required": false,
+          "evidence": [
+            {
+              "rank": 1,
+              "evidence_id": null,
+              "block_id": "p-6",
+              "role": "sense_disambiguation",
+              "quote": "通过 Deployment 等更高层资源管理一组 Pod，使期望数量的实例持续运行",
+              "heading_path": [],
+              "reasons": []
+            }
+          ],
+          "must_include_groups": [
+            [
+              "Kubernetes",
+              "更高层"
+            ],
+            [
+              "管理"
+            ],
+            [
+              "Pod"
+            ],
+            [
+              "期望数量",
+              "实例"
+            ]
+          ],
+          "must_not_include": [
+            "一般部署行为",
+            "发布网站",
+            "物理机器"
+          ]
+        },
+        "actual": null,
+        "retrieval": {
+          "retrieved_evidence": [
+            {
+              "rank": 1,
+              "evidence_id": "e1",
+              "block_id": "p-6",
+              "role": "coreference_support",
+              "quote": "实际使用时，人们常通过 Deployment 等更高层资源管理一组 Pod，使期望数量的实例持续运行。",
+              "heading_path": [
+                "Pods",
+                "生命周期与管理"
+              ],
+              "reasons": [
+                "当前选区",
+                "同词出现×1"
+              ]
+            },
+            {
+              "rank": 2,
+              "evidence_id": "e2",
+              "block_id": "p-5",
+              "role": "structural_support",
+              "quote": "Pod 有自己的生命周期；当它因节点故障而失效时，通常创建新的 Pod，而不是让原有对象在别处继续存在。",
+              "heading_path": [
+                "Pods",
+                "生命周期与管理"
+              ],
+              "reasons": [
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 3,
+              "evidence_id": "e3",
+              "block_id": "p-4",
+              "role": "structural_support",
+              "quote": "生命周期与管理",
+              "heading_path": [
+                "Pods",
+                "生命周期与管理"
+              ],
+              "reasons": [
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 4,
+              "evidence_id": "e4",
+              "block_id": "p-7",
+              "role": "sense_disambiguation",
+              "quote": "容器关系",
+              "heading_path": [
+                "Pods",
+                "容器关系"
+              ],
+              "reasons": [
+                "相邻段落"
+              ]
+            },
+            {
+              "rank": 5,
+              "evidence_id": "e5",
+              "block_id": "p-8",
+              "role": "sense_disambiguation",
+              "quote": "同一 Pod 中的容器适合承担联系紧密、需要共享运行上下文的任务，但 Pod 本身不是一台物理服务器。",
+              "heading_path": [
+                "Pods",
+                "容器关系"
+              ],
+              "reasons": [
+                "相邻段落"
+              ]
+            },
+            {
+              "rank": 6,
+              "evidence_id": "e6",
+              "block_id": "p-3",
+              "role": "sense_disambiguation",
+              "quote": "一个 Pod 可以包含一个或多个容器。这些容器被共同调度到同一位置，并共享部分网络和存储资源，因而像在同一个逻辑主机中运行。",
+              "heading_path": [
+                "Pods"
+              ],
+              "reasons": []
+            },
+            {
+              "rank": 7,
+              "evidence_id": "e7",
+              "block_id": "p-2",
+              "role": "sense_disambiguation",
+              "quote": "Kubernetes 用工作负载对象来运行应用，其中 Pod 是能够创建和管理的最小部署单元。",
+              "heading_path": [
+                "Pods"
+              ],
+              "reasons": []
+            },
+            {
+              "rank": 8,
+              "evidence_id": "e8",
+              "block_id": "p-1",
+              "role": "sense_disambiguation",
+              "quote": "Pods",
+              "heading_path": [
+                "Pods"
+              ],
+              "reasons": []
+            }
+          ],
+          "expected_support_recalled": true
+        },
+        "execution": {
+          "validation_attempts": null,
+          "locally_degraded": false,
+          "removed_claim_ids": [],
+          "validation_errors": [],
+          "elapsed_ms": null,
+          "pipeline_error": ""
+        }
+      }
     },
     {
       "case_id": "extension-service-worker",
       "document_id": "chrome-extension-runtime",
+      "category": "mixed_language_technical_term",
+      "difficulty": "contextual",
+      "passed": true,
       "anchor_recalled": true,
       "support_recalled": true,
       "gold_evidence_recall": 1,
@@ -478,11 +5111,206 @@
         "p-7",
         "p-1",
         "p-8"
-      ]
+      ],
+      "review": {
+        "evaluation_scope": "retrieval_only",
+        "scope_note": "本案例只验证RAG证据召回，没有生成实际释义，不能据此判断最终回答是否正确。",
+        "document": {
+          "document_id": "chrome-extension-runtime",
+          "title": "Chrome 扩展中的后台与页面脚本"
+        },
+        "selection": {
+          "text": "Service Worker",
+          "anchor_block_id": "p-4",
+          "anchor_context": "扩展 Service Worker 是扩展的中央事件处理器。它按需启动，在空闲后可能终止，不能直接访问网页 DOM，因此持久状态不应只保存在全局变量里。"
+        },
+        "expected": {
+          "meaning": "Service Worker 在这里指 Chrome 扩展中按需运行、集中处理事件的后台执行环境；它可能在空闲后终止且不能直接访问 DOM。",
+          "sense": "Chrome 扩展中按需运行、集中处理扩展事件的后台执行环境",
+          "certainty": "clear",
+          "author_intent_required": true,
+          "evidence": [
+            {
+              "rank": 1,
+              "evidence_id": null,
+              "block_id": "p-4",
+              "role": "direct_support",
+              "quote": "扩展 Service Worker 是扩展的中央事件处理器",
+              "heading_path": [],
+              "reasons": []
+            },
+            {
+              "rank": 2,
+              "evidence_id": null,
+              "block_id": "p-4",
+              "role": "author_intent_support",
+              "quote": "它按需启动，在空闲后可能终止，不能直接访问网页 DOM",
+              "heading_path": [],
+              "reasons": []
+            }
+          ],
+          "must_include_groups": [
+            [
+              "扩展"
+            ],
+            [
+              "事件"
+            ],
+            [
+              "按需",
+              "后台"
+            ],
+            [
+              "DOM",
+              "空闲"
+            ]
+          ],
+          "must_not_include": [
+            "网页缓存代理",
+            "持续常驻",
+            "直接操作 DOM"
+          ]
+        },
+        "actual": null,
+        "retrieval": {
+          "retrieved_evidence": [
+            {
+              "rank": 1,
+              "evidence_id": "e1",
+              "block_id": "p-4",
+              "role": "direct_support",
+              "quote": "扩展 Service Worker 是扩展的中央事件处理器。它按需启动，在空闲后可能终止，不能直接访问网页 DOM，因此持久状态不应只保存在全局变量里。",
+              "heading_path": [
+                "扩展程序的两个运行环境",
+                "Extension service worker"
+              ],
+              "reasons": [
+                "当前选区",
+                "定义句",
+                "同词出现×1"
+              ]
+            },
+            {
+              "rank": 2,
+              "evidence_id": "e2",
+              "block_id": "p-3",
+              "role": "coreference_support",
+              "quote": "Extension service worker",
+              "heading_path": [
+                "扩展程序的两个运行环境",
+                "Extension service worker"
+              ],
+              "reasons": [
+                "同词出现×1",
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 3,
+              "evidence_id": "e3",
+              "block_id": "p-2",
+              "role": "coreference_support",
+              "quote": "Manifest V3 扩展通常把后台事件处理放在 extension service worker 中，把需要读取或操作网页的代码放在 content script 中。",
+              "heading_path": [
+                "扩展程序的两个运行环境"
+              ],
+              "reasons": [
+                "同词出现×1",
+                "相邻段落",
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 4,
+              "evidence_id": "e4",
+              "block_id": "p-5",
+              "role": "structural_support",
+              "quote": "它可以响应扩展事件、调用获准的 Chrome API，并与其他扩展上下文交换消息。",
+              "heading_path": [
+                "扩展程序的两个运行环境",
+                "Extension service worker"
+              ],
+              "reasons": [
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 5,
+              "evidence_id": "e5",
+              "block_id": "p-6",
+              "role": "structural_support",
+              "quote": "Content script",
+              "heading_path": [
+                "扩展程序的两个运行环境",
+                "Content script"
+              ],
+              "reasons": [
+                "相邻段落",
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 6,
+              "evidence_id": "e6",
+              "block_id": "p-7",
+              "role": "structural_support",
+              "quote": "Content script 是注入网页并在页面环境附近运行的扩展脚本，能够读取或修改页面 DOM，也可以通过消息与扩展的其他部分通信。",
+              "heading_path": [
+                "扩展程序的两个运行环境",
+                "Content script"
+              ],
+              "reasons": [
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 7,
+              "evidence_id": "e7",
+              "block_id": "p-1",
+              "role": "structural_support",
+              "quote": "扩展程序的两个运行环境",
+              "heading_path": [
+                "扩展程序的两个运行环境"
+              ],
+              "reasons": [
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 8,
+              "evidence_id": "e8",
+              "block_id": "p-8",
+              "role": "structural_support",
+              "quote": "Content script 与页面自身脚本通常运行在相互隔离的 JavaScript 世界中；它不是从网络下载后任意执行的远程代码。",
+              "heading_path": [
+                "扩展程序的两个运行环境",
+                "Content script"
+              ],
+              "reasons": [
+                "标题相关"
+              ]
+            }
+          ],
+          "expected_support_recalled": true
+        },
+        "execution": {
+          "validation_attempts": null,
+          "locally_degraded": false,
+          "removed_claim_ids": [],
+          "validation_errors": [],
+          "elapsed_ms": null,
+          "pipeline_error": ""
+        }
+      }
     },
     {
       "case_id": "extension-content-script",
       "document_id": "chrome-extension-runtime",
+      "category": "mixed_language_technical_term",
+      "difficulty": "contextual",
+      "passed": true,
       "anchor_recalled": true,
       "support_recalled": true,
       "gold_evidence_recall": 1,
@@ -496,7 +5324,188 @@
         "p-4",
         "p-3",
         "p-1"
-      ]
+      ],
+      "review": {
+        "evaluation_scope": "retrieval_only",
+        "scope_note": "本案例只验证RAG证据召回，没有生成实际释义，不能据此判断最终回答是否正确。",
+        "document": {
+          "document_id": "chrome-extension-runtime",
+          "title": "Chrome 扩展中的后台与页面脚本"
+        },
+        "selection": {
+          "text": "Content script",
+          "anchor_block_id": "p-7",
+          "anchor_context": "Content script 是注入网页并在页面环境附近运行的扩展脚本，能够读取或修改页面 DOM，也可以通过消息与扩展的其他部分通信。"
+        },
+        "expected": {
+          "meaning": "Content script 在这里指注入网页、能够操作页面 DOM 并与扩展其他部分通信的扩展脚本。",
+          "sense": "注入网页、能读取或修改页面 DOM 并与扩展其他部分通信的脚本",
+          "certainty": "clear",
+          "author_intent_required": false,
+          "evidence": [
+            {
+              "rank": 1,
+              "evidence_id": null,
+              "block_id": "p-7",
+              "role": "direct_support",
+              "quote": "Content script 是注入网页并在页面环境附近运行的扩展脚本",
+              "heading_path": [],
+              "reasons": []
+            }
+          ],
+          "must_include_groups": [
+            [
+              "注入",
+              "网页"
+            ],
+            [
+              "DOM",
+              "页面"
+            ],
+            [
+              "通信",
+              "消息"
+            ]
+          ],
+          "must_not_include": [
+            "网页自身脚本",
+            "远程代码",
+            "后台中央事件处理器"
+          ]
+        },
+        "actual": null,
+        "retrieval": {
+          "retrieved_evidence": [
+            {
+              "rank": 1,
+              "evidence_id": "e1",
+              "block_id": "p-7",
+              "role": "direct_support",
+              "quote": "Content script 是注入网页并在页面环境附近运行的扩展脚本，能够读取或修改页面 DOM，也可以通过消息与扩展的其他部分通信。",
+              "heading_path": [
+                "扩展程序的两个运行环境",
+                "Content script"
+              ],
+              "reasons": [
+                "当前选区",
+                "定义句",
+                "同词出现×1"
+              ]
+            },
+            {
+              "rank": 2,
+              "evidence_id": "e2",
+              "block_id": "p-8",
+              "role": "coreference_support",
+              "quote": "Content script 与页面自身脚本通常运行在相互隔离的 JavaScript 世界中；它不是从网络下载后任意执行的远程代码。",
+              "heading_path": [
+                "扩展程序的两个运行环境",
+                "Content script"
+              ],
+              "reasons": [
+                "同词出现×1",
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 3,
+              "evidence_id": "e3",
+              "block_id": "p-6",
+              "role": "coreference_support",
+              "quote": "Content script",
+              "heading_path": [
+                "扩展程序的两个运行环境",
+                "Content script"
+              ],
+              "reasons": [
+                "同词出现×1",
+                "相邻段落",
+                "同一章节"
+              ]
+            },
+            {
+              "rank": 4,
+              "evidence_id": "e4",
+              "block_id": "p-2",
+              "role": "coreference_support",
+              "quote": "Manifest V3 扩展通常把后台事件处理放在 extension service worker 中，把需要读取或操作网页的代码放在 content script 中。",
+              "heading_path": [
+                "扩展程序的两个运行环境"
+              ],
+              "reasons": [
+                "同词出现×1",
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 5,
+              "evidence_id": "e5",
+              "block_id": "p-5",
+              "role": "structural_support",
+              "quote": "它可以响应扩展事件、调用获准的 Chrome API，并与其他扩展上下文交换消息。",
+              "heading_path": [
+                "扩展程序的两个运行环境",
+                "Extension service worker"
+              ],
+              "reasons": [
+                "相邻段落",
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 6,
+              "evidence_id": "e6",
+              "block_id": "p-4",
+              "role": "structural_support",
+              "quote": "扩展 Service Worker 是扩展的中央事件处理器。它按需启动，在空闲后可能终止，不能直接访问网页 DOM，因此持久状态不应只保存在全局变量里。",
+              "heading_path": [
+                "扩展程序的两个运行环境",
+                "Extension service worker"
+              ],
+              "reasons": [
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 7,
+              "evidence_id": "e7",
+              "block_id": "p-3",
+              "role": "structural_support",
+              "quote": "Extension service worker",
+              "heading_path": [
+                "扩展程序的两个运行环境",
+                "Extension service worker"
+              ],
+              "reasons": [
+                "标题相关"
+              ]
+            },
+            {
+              "rank": 8,
+              "evidence_id": "e8",
+              "block_id": "p-1",
+              "role": "structural_support",
+              "quote": "扩展程序的两个运行环境",
+              "heading_path": [
+                "扩展程序的两个运行环境"
+              ],
+              "reasons": [
+                "标题相关"
+              ]
+            }
+          ],
+          "expected_support_recalled": true
+        },
+        "execution": {
+          "validation_attempts": null,
+          "locally_degraded": false,
+          "removed_claim_ids": [],
+          "validation_errors": [],
+          "elapsed_ms": null,
+          "pipeline_error": ""
+        }
+      }
     }
   ]
 }

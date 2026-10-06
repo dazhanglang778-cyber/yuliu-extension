@@ -71,11 +71,18 @@ vm.runInContext(fs.readFileSync(require.resolve("../background.js"), "utf8"), co
   const content = fs.readFileSync(path.join(__dirname, "..", "content.js"), "utf8");
   const popup = fs.readFileSync(path.join(__dirname, "..", "popup.html"), "utf8");
   const dashboard = fs.readFileSync(path.join(__dirname, "..", "diagnostics.html"), "utf8");
+  const dashboardScript = fs.readFileSync(path.join(__dirname, "..", "diagnostics.js"), "utf8");
   assert.ok(content.includes("diagnosticSessionId: activeDiagnosticSessionId"));
   assert.ok(content.includes('sendDiagnosticEvent("validation_failed"'));
   assert.ok(popup.includes("开发诊断模式"));
   assert.ok(dashboard.includes("候选义项"));
   assert.ok(dashboard.includes("不会记录 API Key"));
+  assert.ok(dashboard.includes('id="evaluationCases"'));
+  assert.ok(dashboard.includes("导出可读报告"));
+  assert.ok(dashboardScript.includes("人工预期"));
+  assert.ok(dashboardScript.includes("实际输出"));
+  assert.ok(dashboardScript.includes("RAG实际召回的依据"));
+  assert.ok(dashboardScript.includes("最终回答实际采用的依据"));
   console.log("PASS 诊断记录会话化保存并排除密钥");
   console.log("PASS 前端、后台、设置页和诊断页链路完整");
 })().catch((error) => {

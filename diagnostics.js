@@ -63,6 +63,7 @@ document.querySelector("#export").addEventListener("click", exportDiagnostics);
 document.querySelector("#clear").addEventListener("click", clearDiagnostics);
 document.querySelector("#runEvaluation").addEventListener("click", runEvaluation);
 document.querySelector("#exportEvaluation").addEventListener("click", exportEvaluation);
+document.querySelector("#exportEvaluationJson").addEventListener("click", exportEvaluationJson);
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area !== "local") return;
   if (changes[STORAGE_KEY]) {
@@ -93,7 +94,9 @@ async function runEvaluation() {
   progressBar.value = 0;
   document.querySelector("#evaluationSummary").hidden = true;
   document.querySelector("#evaluationFailures").hidden = true;
+  document.querySelector("#evaluationCases").hidden = true;
   document.querySelector("#exportEvaluation").disabled = true;
+  document.querySelector("#exportEvaluationJson").disabled = true;
   setEvaluationMessage("正在载入固定测试集……");
   try {
     const report = await YuliuBrowserEvaluation.run({
@@ -116,6 +119,7 @@ async function runEvaluation() {
     evaluationRunning = false;
     runButton.textContent = "重新运行完整评测";
     if (!latestEvaluation) document.querySelector("#exportEvaluation").disabled = true;
+    if (!latestEvaluation) document.querySelector("#exportEvaluationJson").disabled = true;
   }
 }
 
@@ -165,6 +169,8 @@ function renderEvaluation(report) {
   }
   failuresElement.hidden = false;
   document.querySelector("#exportEvaluation").disabled = false;
+  document.querySelector("#exportEvaluationJson").disabled = false;
+  renderEvaluationCases(report);
   const completed = Number(report.completed_cases ?? summary.total_cases ?? 0);
   const planned = Number(report.planned_cases ?? summary.total_cases ?? 0);
   setEvaluationMessage(report.cancelled
@@ -216,13 +222,206 @@ function failureLabel(code) {
 
 function exportEvaluation() {
   if (!latestEvaluation) return;
-  const blob = new Blob([JSON.stringify(latestEvaluation, null, 2)], { type: "application/json" });
+  downloadText(
+    `语流-核心语义评测-${new Date().toISOString().slice(0, 10)}.md`,
+    evaluationMarkdown(latestEvaluation),
+    "text/markdown",
+  );
+}
+
+function exportEvaluationJson() {
+  if (!latestEvaluation) return;
+  downloadText(
+    `语流-核心语义评测-${new Date().toISOString().slice(0, 10)}.json`,
+    JSON.stringify(latestEvaluation, null, 2),
+    "application/json",
+  );
+}
+
+function downloadText(filename, text, type) {
+  const blob = new Blob([text], { type });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `语流-核心语义评测-${new Date().toISOString().slice(0, 10)}.json`;
+  link.download = filename;
   link.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function renderEvaluationCases(report) {
+  const container = document.querySelector("#evaluationCases");
+  container.replaceChildren();
+  const heading = document.createElement("div");
+  heading.className = "evaluation-cases-heading";
+  const title = document.createElement("strong");
+  title.textContent = "逐案例效果";
+  const note = document.createElement("span");
+  note.textContent = "展开后可直接对照选中位置、人工预期、实际回答、召回依据与最终采用依据。";
+  heading.append(title, note);
+  container.append(heading);
+  const cases = Array.isArray(report.cases) ? report.cases : [];
+  if (!cases.some((item) => item.review)) {
+    const legacy = document.createElement("p");
+    legacy.className = "evaluation-legacy-note";
+    legacy.textContent = "这是一份旧版汇总报告，没有保存逐案例内容。请重新运行完整评测生成透明报告。";
+    container.append(legacy);
+    container.hidden = false;
+    return;
+  }
+  for (const [index, item] of cases.entries()) container.append(renderEvaluationCase(item, index));
+  container.hidden = false;
+}
+
+function renderEvaluationCase(item, index) {
+  const review = item.review || {};
+  const details = document.createElement("details");
+  details.className = "evaluation-case";
+  const failed = item.passed === false || item.failures?.length;
+  if (failed) details.open = true;
+  const summary = document.createElement("summary");
+  const identity = document.createElement("span");
+  identity.innerHTML = `<b>${index + 1}. ${escapeHtml(review.selection?.text || item.case_id)}</b><small>${escapeHtml(review.document?.title || item.case_id)}</small>`;
+  const badge = document.createElement("span");
+  badge.className = failed ? "case-status fail" : "case-status pass";
+  badge.textContent = failed ? "失败" : "通过";
+  summary.append(identity, badge);
+  details.append(summary);
+  const body = document.createElement("div");
+  body.className = "evaluation-case-body";
+  body.append(
+    reviewTextSection("评测范围", review.scope_note || "—"),
+    reviewTextSection("当前选中位置", review.selection?.anchor_context || "—"),
+    reviewTextSection("人工预期", review.expected?.meaning || "—"),
+    reviewTextSection("实际输出", review.actual?.meaning || "未执行模型生成，因此不能评价最终回答质量。", !review.actual),
+  );
+  if (review.actual?.author_intent) body.append(reviewTextSection("作者想表达什么", review.actual.author_intent));
+  body.append(
+    reviewEvidenceSection("人工标注的关键依据", review.expected?.evidence),
+    reviewEvidenceSection("RAG实际召回的依据", review.retrieval?.retrieved_evidence),
+  );
+  if (review.actual) {
+    body.append(
+      reviewEvidenceSection("最终回答实际采用的依据", review.actual.adopted_evidence),
+      reviewChecksSection(item.checks),
+      reviewTextSection("执行过程", executionText(review.execution)),
+    );
+  }
+  body.append(reviewTextSection("失败原因", item.failures?.length ? item.failures.map(failureLabel).join("；") : "无"));
+  details.append(body);
+  return details;
+}
+
+function reviewTextSection(title, text, muted = false) {
+  const section = document.createElement("section");
+  section.className = muted ? "case-section muted" : "case-section";
+  const heading = document.createElement("h4");
+  heading.textContent = title;
+  const paragraph = document.createElement("p");
+  paragraph.textContent = text;
+  section.append(heading, paragraph);
+  return section;
+}
+
+function reviewEvidenceSection(title, evidence) {
+  const section = document.createElement("section");
+  section.className = "case-section";
+  const heading = document.createElement("h4");
+  heading.textContent = title;
+  const list = document.createElement("ol");
+  const items = Array.isArray(evidence) ? evidence : [];
+  if (!items.length) {
+    const item = document.createElement("li");
+    item.textContent = "无";
+    list.append(item);
+  } else {
+    for (const evidenceItem of items) {
+      const item = document.createElement("li");
+      const reasons = evidenceItem.reasons?.length ? `（${evidenceItem.reasons.join("、")}）` : "";
+      item.textContent = `[${evidenceItem.block_id || "未知段落"}] ${evidenceItem.quote || "没有可见引文"}${reasons}`;
+      list.append(item);
+    }
+  }
+  section.append(heading, list);
+  return section;
+}
+
+function reviewChecksSection(checks) {
+  const section = document.createElement("section");
+  section.className = "case-section";
+  const heading = document.createElement("h4");
+  heading.textContent = "分项评分";
+  const list = document.createElement("div");
+  list.className = "case-checks";
+  const labels = {
+    output_schema: "输出结构", selection_match: "解释对象", required_information: "关键语义",
+    forbidden_information: "错误义项排除", referent_type: "对象类型", specificity_safe: "具体程度",
+    certainty: "确定性", notice: "提示状态", evidence_valid: "引文真实性",
+    evidence_support: "关键依据采用", retrieval_support: "RAG依据召回", pipeline_completed: "生成链路",
+    author_intent_appropriate: "作者意图适配", author_intent_distinct: "作者意图区分", semantic_support: "主张语义支持",
+  };
+  for (const [key, value] of Object.entries(checks || {})) {
+    const chip = document.createElement("span");
+    chip.className = value === true ? "check-pass" : value === false ? "check-fail" : "check-skip";
+    chip.textContent = `${value === true ? "✓" : value === false ? "×" : "—"} ${labels[key] || key}`;
+    list.append(chip);
+  }
+  section.append(heading, list);
+  return section;
+}
+
+function executionText(execution) {
+  const parts = [];
+  if (execution?.validation_attempts != null) parts.push(`${execution.validation_attempts} 次校验`);
+  if (execution?.locally_degraded) parts.push("发生局部降级");
+  if (execution?.elapsed_ms != null) parts.push(`耗时 ${formatDuration(execution.elapsed_ms)}`);
+  if (execution?.validation_errors?.length) parts.push(`校验错误：${execution.validation_errors.join("、")}`);
+  if (execution?.pipeline_error) parts.push(`管线错误：${execution.pipeline_error}`);
+  return parts.join("；") || "没有执行信息";
+}
+
+function evaluationMarkdown(report) {
+  const lines = ["# 语流核心语义评测", "", `- 生成时间：${report.generated_at || "—"}`, `- 完成案例：${report.completed_cases ?? report.summary?.total_cases ?? 0}`, ""];
+  lines.push("## 逐案例", "");
+  for (const [index, item] of (report.cases || []).entries()) {
+    const review = item.review || {};
+    const failed = item.passed === false || item.failures?.length;
+    lines.push(
+      `### ${index + 1}. ${review.selection?.text || item.case_id} · ${failed ? "失败" : "通过"}`,
+      "",
+      `- 文档：${review.document?.title || "—"}`,
+      `- 评测范围：${review.scope_note || "旧报告未记录"}`,
+      `- 当前选中位置：${oneLine(review.selection?.anchor_context || "—")}`,
+      `- 人工预期：${oneLine(review.expected?.meaning || "—")}`,
+      `- 实际输出：${oneLine(review.actual?.meaning || "未执行或旧报告未记录")}`,
+      `- 作者意图：${oneLine(review.actual?.author_intent || "无")}`,
+      `- 执行过程：${executionText(review.execution)}`,
+      `- 失败原因：${item.failures?.length ? item.failures.join("、") : "无"}`,
+      "",
+      "**RAG实际召回的依据**", "",
+      ...markdownEvidence(review.retrieval?.retrieved_evidence),
+      "", "**最终回答实际采用的依据**", "",
+      ...markdownEvidence(review.actual?.adopted_evidence),
+      "",
+    );
+  }
+  return `${lines.join("\n")}\n`;
+}
+
+function markdownEvidence(evidence) {
+  const items = Array.isArray(evidence) ? evidence : [];
+  return items.length
+    ? items.map((item, index) => `- ${index + 1}. [${item.block_id || "未知段落"}] ${oneLine(item.quote || "没有可见引文")}`)
+    : ["- 无"];
+}
+
+function oneLine(value) {
+  return String(value || "").replace(/\s+/g, " ").trim();
+}
+
+function escapeHtml(value) {
+  return String(value || "").replace(/[&<>"']/g, (character) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  }[character]));
 }
 
 function render() {

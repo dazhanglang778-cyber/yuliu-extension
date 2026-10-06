@@ -350,6 +350,81 @@
     return { passed: Object.values(checks).every((item) => item.passed), checks };
   }
 
+  function normalizedEvidenceReview(item, index = 0) {
+    return {
+      rank: Number(item?.rank) || index + 1,
+      evidence_id: item?.evidence_id || null,
+      block_id: item?.block_id || null,
+      role: item?.role || null,
+      quote: String(item?.quote || item?.text || "").trim(),
+      heading_path: Array.isArray(item?.heading_path) ? item.heading_path : [],
+      reasons: Array.isArray(item?.reasons) ? item.reasons : [],
+    };
+  }
+
+  function buildCaseReview(document, gold, prediction, blockMap, trace, scored) {
+    const rawResult = prediction && Object.prototype.hasOwnProperty.call(prediction, "result")
+      ? prediction.result
+      : prediction || null;
+    const result = resultView(rawResult);
+    const retrieved = Array.isArray(trace?.retrieved_evidence)
+      ? trace.retrieved_evidence.map(normalizedEvidenceReview)
+      : (trace?.retrieved_block_ids || []).map((blockId, index) => normalizedEvidenceReview({
+        rank: index + 1,
+        block_id: blockId,
+        quote: blockMap.get(blockId) || "",
+      }, index));
+    const adopted = Array.isArray(result?.evidence)
+      ? result.evidence.map(normalizedEvidenceReview)
+      : [];
+    return {
+      evaluation_scope: result ? "end_to_end" : "retrieval_only",
+      scope_note: result
+        ? "本案例已经执行模型生成、证据校验和最终评分。"
+        : "本案例只验证RAG证据召回，没有生成实际释义，不能据此判断最终回答是否正确。",
+      document: {
+        document_id: document?.document_id || trace?.document_id || null,
+        title: document?.title || "",
+      },
+      selection: {
+        text: gold.selection.exact,
+        anchor_block_id: gold.selection.anchor_block_id,
+        anchor_context: String(blockMap.get(gold.selection.anchor_block_id) || trace?.anchor_text || "").trim(),
+      },
+      expected: {
+        meaning: gold.expected.reference_answer || gold.expected.sense || "",
+        sense: gold.expected.sense || "",
+        certainty: gold.expected.certainty,
+        author_intent_required: gold.expected.author_intent_required === true,
+        evidence: (gold.evidence || []).map(normalizedEvidenceReview),
+        must_include_groups: gold.expected.must_include_groups || [],
+        must_not_include: gold.expected.must_not_include || [],
+      },
+      actual: result ? {
+        meaning: String(result.meaning_here || "").trim(),
+        author_intent: String(result.author_intent || "").trim(),
+        certainty: result.certainty || "",
+        resolved_sense: result.resolved_sense || null,
+        notice_code: result.notice_code || "none",
+        adopted_evidence: adopted,
+      } : null,
+      retrieval: {
+        retrieved_evidence: retrieved,
+        expected_support_recalled: scored?.checks
+          ? scored.checks.retrieval_support !== false
+          : scored?.support_recalled !== false,
+      },
+      execution: {
+        validation_attempts: prediction?._meta?.validation_attempts ?? null,
+        locally_degraded: prediction?._meta?.locally_degraded === true,
+        removed_claim_ids: prediction?._meta?.removed_claim_ids || [],
+        validation_errors: prediction?._meta?.validation_errors || [],
+        elapsed_ms: prediction?._meta?.elapsed_ms ?? null,
+        pipeline_error: prediction?._meta?.pipeline_error || prediction?._meta?.error || "",
+      },
+    };
+  }
+
   function evaluateDataset(dataset, predictions, documents = {}) {
     const predictionsById = new Map((predictions || []).map((item) => [item.case_id, item]));
     const cases = [];
@@ -365,16 +440,21 @@
           expected_author_intent_required: gold.expected.author_intent_required === true,
           document_id: document.document_id,
         };
-        cases.push(evaluateCase(gold, prediction, blocks, trace));
+        const scored = evaluateCase(gold, prediction, blocks, trace);
+        scored.review = buildCaseReview(document, gold, prediction, blocks, trace, scored);
+        cases.push(scored);
       }
     }
     return { summary: aggregate(cases), cases };
   }
 
-  function evaluateRetrieval(dataset, traces) {
+  function evaluateRetrieval(dataset, traces, documents = {}) {
     const byId = new Map((traces || []).map((item) => [item.case_id, item]));
     const cases = [];
     for (const document of dataset?.documents || []) {
+      const blocks = documents[document.document_id] instanceof Map
+        ? documents[document.document_id]
+        : documentBlocksFromHtml(documents[document.document_id] || "");
       for (const gold of document.cases || []) {
         const trace = byId.get(gold.case_id) || { retrieved_block_ids: [] };
         const retrieved = new Set(trace.retrieved_block_ids || []);
@@ -382,15 +462,20 @@
         const targets = direct.length ? direct : gold.evidence;
         const goldHits = gold.evidence.filter((item) => retrieved.has(item.block_id)).length;
         const supportHit = targets.some((item) => retrieved.has(item.block_id));
-        cases.push({
+        const scored = {
           case_id: gold.case_id,
           document_id: document.document_id,
+          category: gold.category,
+          difficulty: gold.difficulty,
+          passed: supportHit,
           anchor_recalled: retrieved.has(gold.selection.anchor_block_id),
           support_recalled: supportHit,
           gold_evidence_recall: gold.evidence.length ? goldHits / gold.evidence.length : 1,
           failures: supportHit ? [] : ["RETRIEVAL_MISS"],
           retrieved_block_ids: [...retrieved],
-        });
+        };
+        scored.review = buildCaseReview(document, gold, null, blocks, trace, scored);
+        cases.push(scored);
       }
     }
     return {
@@ -405,5 +490,5 @@
     };
   }
 
-  return { normalize, documentBlocksFromHtml, evaluateCase, aggregate, evaluateDataset, evaluateRetrieval, caseIndex, buildReleaseGate };
+  return { normalize, documentBlocksFromHtml, evaluateCase, aggregate, evaluateDataset, evaluateRetrieval, caseIndex, buildReleaseGate, buildCaseReview };
 });

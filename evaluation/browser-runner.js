@@ -48,6 +48,23 @@
     return { document, gold, html, snapshot, retrieval };
   }
 
+  function retrievalTrace(entry) {
+    const anchor = entry.snapshot.blocks.find((item) => item.block_id === entry.gold.selection.anchor_block_id);
+    return {
+      retrieved_block_ids: entry.retrieval.candidates.map((item) => item.block_id),
+      anchor_text: anchor?.text || "",
+      retrieved_evidence: entry.retrieval.candidates.map((item, index) => ({
+        rank: index + 1,
+        evidence_id: item.evidence_id,
+        block_id: item.block_id,
+        role: item.role,
+        quote: item.quote || item.text || "",
+        heading_path: item.heading_path || [],
+        reasons: item.reasons || [],
+      })),
+    };
+  }
+
   async function loadSuite(runtime, loadText = async (url) => (await fetch(url)).text()) {
     const datasetUrl = runtime.getURL("evaluation/datasets/core-context-v1.json");
     const dataset = JSON.parse(await loadText(datasetUrl));
@@ -96,7 +113,7 @@
       }
       prediction.trace = {
         ...(prediction.trace || {}),
-        retrieved_block_ids: entry.retrieval.candidates.map((item) => item.block_id),
+        ...retrievalTrace(entry),
         expected_certainty: entry.gold.expected.certainty,
       };
       predictions.push(prediction);
@@ -126,5 +143,5 @@
     return new Promise((resolve) => setTimeout(resolve, Math.max(0, Number(milliseconds) || 0)));
   }
 
-  return { blocksFromHtml, prepareCase, loadSuite, run, wait };
+  return { blocksFromHtml, prepareCase, retrievalTrace, loadSuite, run, wait };
 });

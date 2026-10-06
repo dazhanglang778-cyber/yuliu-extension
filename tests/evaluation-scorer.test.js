@@ -172,15 +172,39 @@ test("把FDE编成实战营运营方法会被金标准明确拦截", () => {
 
 test("批量检索评测覆盖全部28个案例并达到当前基线", () => {
   const prepared = Runner.prepareCases(dataset, {});
-  const traces = prepared.map((entry) => ({
-    case_id: entry.gold.case_id,
-    retrieved_block_ids: entry.retrieval.candidates.map((item) => item.block_id),
-  }));
-  const report = Scorer.evaluateRetrieval(dataset, traces);
+  const traces = prepared.map(Runner.retrievalTrace);
+  const documents = Object.fromEntries(prepared.map((entry) => [entry.document.document_id, entry.source.html]));
+  const report = Scorer.evaluateRetrieval(dataset, traces, documents);
   assert.equal(report.summary.total_cases, 28);
   assert.equal(report.summary.anchor_recall, 100);
   assert.equal(report.summary.support_recall, 100);
   assert.equal(report.summary.retrieval_misses, 0);
+  assert.equal(report.cases[0].review.evaluation_scope, "retrieval_only");
+  assert.equal(report.cases[0].review.selection.text, "Harness");
+  assert.ok(report.cases[0].review.selection.anchor_context.includes("运行框架"));
+  assert.ok(report.cases[0].review.expected.meaning.includes("运行框架"));
+  assert.equal(report.cases[0].review.actual, null);
+  assert.ok(report.cases[0].review.retrieval.retrieved_evidence[0].quote.includes("Harness"));
+  const markdown = Runner.markdownReport({
+    mode: "retrieval", dataset_id: dataset.dataset_id, generated_at: "test",
+    summary: report.summary, cases: report.cases.slice(0, 1),
+  });
+  assert.ok(markdown.includes("只验证正确原文有没有进入候选证据"));
+  assert.ok(markdown.includes("人工预期"));
+  assert.ok(markdown.includes("实际输出：未执行模型生成"));
+  assert.ok(markdown.includes("RAG实际召回的依据"));
+});
+
+test("端到端报告保留实际回答、采用依据和执行过程", () => {
+  const report = Scorer.evaluateDataset(dataset, [goodPrediction()], {
+    [harnessDocument.document_id]: harnessHtml,
+  });
+  const item = report.cases.find((entry) => entry.case_id === harnessGold.case_id);
+  assert.equal(item.review.evaluation_scope, "end_to_end");
+  assert.equal(item.review.actual.meaning, "在这里指组织模型、工具与环境交互的一套运行框架。");
+  assert.equal(item.review.actual.adopted_evidence[0].block_id, "p-4");
+  assert.equal(item.review.execution.validation_attempts, 1);
+  assert.equal(item.review.execution.elapsed_ms, 1200);
 });
 
 test("汇总报告同时给出正确率、风险率和失败频次", () => {

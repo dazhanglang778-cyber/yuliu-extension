@@ -82,6 +82,24 @@ function prepareCases(dataset, args) {
   return prepared;
 }
 
+function retrievalTrace(entry) {
+  const anchor = entry.source.blocks.find((item) => item.block_id === entry.gold.selection.anchor_block_id);
+  return {
+    case_id: entry.gold.case_id,
+    retrieved_block_ids: entry.retrieval.candidates.map((item) => item.block_id),
+    anchor_text: anchor?.text || "",
+    retrieved_evidence: entry.retrieval.candidates.map((item, index) => ({
+      rank: index + 1,
+      evidence_id: item.evidence_id,
+      block_id: item.block_id,
+      role: item.role,
+      quote: item.quote || item.text || "",
+      heading_path: item.heading_path || [],
+      reasons: item.reasons || [],
+    })),
+  };
+}
+
 async function callModel(apiKey, messages, model = "glm-4.7-flash") {
   const body = { model, messages, temperature: 0, max_tokens: 900, stream: false };
   if (model === "glm-4.7-flash") body.thinking = { type: "disabled" };
@@ -133,7 +151,7 @@ async function runLive(prepared, args) {
         error,
       },
       trace: {
-        retrieved_block_ids: entry.retrieval.candidates.map((item) => item.block_id),
+        ...retrievalTrace(entry),
         expected_certainty: entry.gold.expected.certainty,
       },
     });
@@ -148,7 +166,11 @@ function markdownReport(payload) {
     `# 语流批量评测报告`, "", `- 模式：${payload.mode}`, `- 数据集：${payload.dataset_id}`, `- 生成时间：${payload.generated_at}`, "",
   ];
   if (payload.mode === "retrieval") {
-    lines.push("## 检索阶段", "", `- 当前选区召回率：${s.anchor_recall}%`, `- 关键支持证据召回率：${s.support_recall}%`, `- 全部金标准证据召回率：${s.gold_evidence_recall}%`, `- 检索遗漏：${s.retrieval_misses} 条`);
+    lines.push(
+      "> **范围说明：这是一份RAG检索报告。它只验证正确原文有没有进入候选证据，不包含模型实际回答，不能据此判断最终释义是否正确。**",
+      "",
+      "## 检索阶段", "", `- 当前选区召回率：${s.anchor_recall}%`, `- 关键支持证据召回率：${s.support_recall}%`, `- 全部金标准证据召回率：${s.gold_evidence_recall}%`, `- 检索遗漏：${s.retrieval_misses} 条`,
+    );
   } else {
     lines.push(
       "## 核心指标", "",
@@ -171,8 +193,77 @@ function markdownReport(payload) {
     lines.push(...(failures.length ? failures.map(([name, count]) => `- ${name}：${count}`) : ["- 无"]));
   }
   lines.push("", "## 逐案例", "");
-  for (const item of payload.cases) lines.push(`- ${item.case_id}：${item.passed === false || item.failures?.length ? `失败（${(item.failures || []).join("、")}）` : "通过"}`);
+  for (const [index, item] of (payload.cases || []).entries()) {
+    const review = item.review || {};
+    const failed = item.passed === false || item.failures?.length;
+    lines.push(
+      `### ${index + 1}. ${review.selection?.text || item.case_id} · ${failed ? "失败" : "通过"}`,
+      "",
+      `- 案例编号：${item.case_id}`,
+      `- 文档：${review.document?.title || review.document?.document_id || item.document_id || "—"}`,
+      `- 评测范围：${review.evaluation_scope === "retrieval_only" ? "仅RAG检索，不含实际回答" : "端到端生成与评分"}`,
+      `- 当前选中位置：${markdownInline(review.selection?.anchor_context || "—")}`,
+      `- 人工预期：${markdownInline(review.expected?.meaning || "—")}`,
+      `- 实际输出：${review.actual ? markdownInline(review.actual.meaning || "（空）") : "未执行模型生成，不能评价回答质量"}`,
+    );
+    if (review.actual?.author_intent) lines.push(`- 作者意图：${markdownInline(review.actual.author_intent)}`);
+    if (review.actual) {
+      lines.push(
+        `- 确定性：预期 ${review.expected?.certainty || "—"}；实际 ${review.actual.certainty || "—"}`,
+        `- 执行：${executionSummary(review.execution)}`,
+      );
+    }
+    lines.push("", "**人工标注的关键依据**", "");
+    lines.push(...evidenceLines(review.expected?.evidence, "未提供人工依据"));
+    lines.push("", "**RAG实际召回的依据（按排名）**", "");
+    lines.push(...evidenceLines(review.retrieval?.retrieved_evidence, "没有召回依据"));
+    if (review.actual) {
+      lines.push("", "**最终回答实际采用的依据**", "");
+      lines.push(...evidenceLines(review.actual.adopted_evidence, "最终回答没有采用原文依据"));
+      lines.push("", "**分项检查**", "");
+      lines.push(...checkLines(item.checks));
+    }
+    lines.push("", `- 失败原因：${item.failures?.length ? item.failures.join("、") : "无"}`, "");
+  }
   return `${lines.join("\n")}\n`;
+}
+
+function markdownInline(value) {
+  return String(value || "").replace(/\s+/g, " ").trim().replace(/\|/g, "\\|");
+}
+
+function evidenceLines(items, emptyText) {
+  if (!Array.isArray(items) || !items.length) return [`- ${emptyText}`];
+  return items.map((item, index) => {
+    const rank = item.rank || index + 1;
+    const reason = item.reasons?.length ? `；入选原因：${item.reasons.join("、")}` : "";
+    return `- ${rank}. [${item.block_id || "未知段落"}] ${markdownInline(item.quote || "（没有可见引文）")}${reason}`;
+  });
+}
+
+function checkLines(checks) {
+  const labels = {
+    output_schema: "输出结构", selection_match: "解释对象", required_information: "关键语义",
+    forbidden_information: "错误义项排除", referent_type: "对象类型", specificity_safe: "具体程度",
+    certainty: "确定性", notice: "提示状态", evidence_valid: "引文真实性",
+    evidence_support: "关键依据采用", retrieval_support: "RAG关键依据召回",
+    pipeline_completed: "生成链路", author_intent_appropriate: "作者意图适配",
+    author_intent_distinct: "作者意图区分", semantic_support: "主张语义支持",
+  };
+  const entries = Object.entries(checks || {});
+  if (!entries.length) return ["- 没有分项评分"];
+  return entries.map(([key, value]) => `- ${value === true ? "通过" : value === false ? "失败" : "未评估"}：${labels[key] || key}`);
+}
+
+function executionSummary(execution) {
+  if (!execution) return "没有执行信息";
+  const parts = [];
+  if (execution.validation_attempts != null) parts.push(`${execution.validation_attempts} 次校验`);
+  if (execution.locally_degraded) parts.push("发生局部降级");
+  if (execution.elapsed_ms != null) parts.push(`耗时 ${execution.elapsed_ms} ms`);
+  if (execution.validation_errors?.length) parts.push(`校验错误：${execution.validation_errors.join("、")}`);
+  if (execution.pipeline_error) parts.push(`管线错误：${execution.pipeline_error}`);
+  return parts.join("；") || "没有执行信息";
 }
 
 function writeReport(basePath, payload) {
@@ -187,9 +278,10 @@ async function main() {
   const prepared = prepareCases(dataset, args);
   let payload;
   if (args.mode === "retrieval") {
-    const traces = prepared.map((entry) => ({ case_id: entry.gold.case_id, retrieved_block_ids: entry.retrieval.candidates.map((item) => item.block_id) }));
+    const traces = prepared.map(retrievalTrace);
     const filteredDataset = filterDataset(dataset, new Set(prepared.map((item) => item.gold.case_id)));
-    const report = Scorer.evaluateRetrieval(filteredDataset, traces);
+    const documents = Object.fromEntries(prepared.map((item) => [item.document.document_id, item.source.html]));
+    const report = Scorer.evaluateRetrieval(filteredDataset, traces, documents);
     payload = { mode: "retrieval", dataset_id: dataset.dataset_id, generated_at: new Date().toISOString(), ...report };
   } else {
     const predictions = args.mode === "live"
@@ -226,4 +318,4 @@ function filterDataset(dataset, ids) {
 
 if (require.main === module) main().catch((error) => { console.error(error.message || error); process.exitCode = 1; });
 
-module.exports = { parseArgs, blocksFromDocument, snapshotFor, prepareCases, markdownReport, filterDataset };
+module.exports = { parseArgs, blocksFromDocument, snapshotFor, prepareCases, retrievalTrace, markdownReport, filterDataset };
