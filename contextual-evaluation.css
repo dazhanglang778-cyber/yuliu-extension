@@ -1,0 +1,9 @@
+.context-case { padding: 22px; margin: 18px 0; border: 1px solid #dfcfb1; border-radius: 12px; background: #fffdf8; }
+.context-case h2 { margin: 0 0 12px; font-size: 21px; }
+.context-case h3 { font-size: 16px; margin: 16px 0 6px; }
+.context-case p, .context-case pre { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.7; }
+.context-case pre { font: 14px/1.65 monospace; max-height: 420px; overflow: auto; padding: 12px; background: #f4f1eb; }
+.context-case summary { cursor: pointer; color: #87601c; padding: 8px 0; }
+.context-case .actual { padding: 12px; background: #eff6ef; border-left: 3px solid #5e8561; }
+.context-case .pending { color: #796f61; }
+#progress { padding: 12px; } button:disabled { opacity: .55; }

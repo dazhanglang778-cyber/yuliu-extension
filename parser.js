@@ -77,6 +77,10 @@
       return {
         structured: true,
         schemaVersion: "2.0",
+        viewKind: json.view_kind || "legacy",
+        targetType: json.target_type || "other",
+        canExpandGeneral: json.can_expand_general !== false,
+        contextualDetails: json.contextual_details || null,
         selectedText: cleanVisible(json.selected_text),
         resolvedSense: selectedSense ? {
           label: cleanVisible(selectedSense.label),
@@ -137,7 +141,61 @@
   function parseSimple(raw) {
     const text = String(raw || "");
     const marker = find(patterns.simple, text);
-    return cleanVisible(marker ? text.slice(marker.end) : (text.length > 8 ? text : ""));
+    const trimmed = text.trim();
+    if (!marker && trimmed && ("一句话解释：".startsWith(trimmed) || "一句话解释:".startsWith(trimmed))) return "";
+    return cleanVisible(marker ? text.slice(marker.end) : text);
+  }
+
+  function simplificationSource(raw) {
+    const parsed = parseInitial(raw);
+    // Meaning is a sense-selection clue, not a paragraph to summarize.
+    // Exclude author intent so the short definition does not retell the article's argument.
+    return JSON.stringify({
+      meaning: parsed.meaning,
+      target_type: parsed.targetType || "other",
+      resolved_sense: parsed.resolvedSense || null,
+      certainty: parsed.certainty || "",
+      notice: parsed.noticeCode || parsed.note || "",
+    });
+  }
+
+  function generalDefinitionContext(item = {}, raw = "") {
+    const parsed = parseInitial(raw);
+    const snapshot = item.documentContext || {};
+    const selection = snapshot.selection || {};
+    const blocks = Array.isArray(snapshot.blocks) ? snapshot.blocks : [];
+    const anchor = blocks.find(b => b.block_id === selection.anchor_block_id);
+    const normalize = value => String(value || "").replace(/\s+/g, " ").trim();
+    const original = String(anchor?.text || item.localContext || "");
+    const offset = anchor && Number.isInteger(selection.start_offset) ? selection.start_offset : 0;
+    const start = Math.max(0, Math.min(offset, original.length) - 450);
+    const relatedOriginal = [];
+    const seen = new Set();
+    // Reuse existing retrieved snippets, not a new whole-document retrieval strategy.
+    // Never promote a model-invented quote into original text.
+    const candidates = [...(parsed.evidence || []), ...(snapshot.evidence_candidates || [])];
+    for (const candidate of candidates) {
+      const blockId = candidate.block_id;
+      if (!blockId || blockId === selection.anchor_block_id || seen.has(blockId)) continue;
+      const block = blocks.find(b => b.block_id === blockId);
+      const text = normalize(candidate.quote);
+      if (!block || !text || !normalize(block.text).includes(text)) continue;
+      seen.add(blockId);
+      relatedOriginal.push({blockId, text:text.slice(0, 600)});
+      if (relatedOriginal.length === 4) break;
+    }
+    return {
+      occurrence:selection.occurrence_id || "",
+      anchorBlock:selection.anchor_block_id || "",
+      prefix:String(selection.text_quote?.prefix || "").slice(-200),
+      suffix:String(selection.text_quote?.suffix || "").slice(0, 200),
+      localOriginal:original.slice(start, start + 1200),
+      relatedOriginal,
+      previousInterpretation:parsed.meaning.slice(0, 700),
+      expansionScope:parsed.contextualDetails?.expansion_scope || "uncertain",
+      certainty:parsed.certainty || "",
+      notice:parsed.noticeCode || parsed.note || "",
+    };
   }
 
   function isPlainSimple(raw) {
@@ -273,6 +331,8 @@
     parseInitial,
     parseExpanded,
     parseSimple,
+    simplificationSource,
+    generalDefinitionContext,
     isPlainSimple,
     normalizeCertainty,
     cleanOptionalNote,

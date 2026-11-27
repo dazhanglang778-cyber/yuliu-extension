@@ -144,7 +144,12 @@
     return overlap / Math.max(a.size, b.size);
   }
 
-  function bestQuote(text, term, maximum = 260) {
+  function bestQuote(text, term, maximum = 260, selectedStart = null) {
+    const raw = String(text || ""), needle = normalizeText(term);
+    if (Number.isInteger(selectedStart) && selectedStart >= 0 && raw.slice(selectedStart, selectedStart + needle.length) === needle) {
+      const from = Math.max(0, selectedStart - Math.max(0, Math.min(80, maximum - needle.length)));
+      return raw.slice(from, Math.max(selectedStart + needle.length, from + maximum)).trim();
+    }
     const source = normalizeText(text);
     if (source.length <= maximum) return source;
     const sentences = source.split(/(?<=[。！？!?；;])\s*/).filter(Boolean);
@@ -162,6 +167,16 @@
     if (signals.variantOccurrences > 0) return "coreference_support";
     if (signals.headingOverlap > 0.15) return "structural_support";
     return "sense_disambiguation";
+  }
+
+  // A heading is a retrieval bridge, not necessarily an explanation. Preserve
+  // short definitions and assertions; classify structure, never term-specific words.
+  function isStructuralLabel(block, term) {
+    const value = normalizeText(block.text);
+    if (definitionSignal(value, term) || /[。！？!?；;]/.test(value)
+      || /(?:用于|表示|意味着|必须|需要|包含|采用|负责|不能|不得)/.test(value)) return false;
+    return block.type === "heading" || (value.length <= 48
+      && (/^[0-9]+(?:\.[0-9]+)*[.、\s]/.test(value) || /[：:]$/.test(value)));
   }
 
   function retrieve(snapshot, options = {}) {
@@ -186,6 +201,18 @@
     let totalOccurrences = 0;
     let definitionMatches = 0;
 
+    const labels = blocks.map(b => isStructuralLabel(b, term));
+    const headingSupport = new Set();
+    for (let i = 0; i < blocks.length; i++) {
+      if (!labels[i] || !(countTermOccurrences(blocks[i].text, term)
+        || countVariantOccurrences(blocks[i].text, term, variants))) continue;
+      // Pull the following explanatory text even when it omits the selected word.
+      for (let j = i + 1, kept = 0; j < Math.min(blocks.length, i + 5) && kept < 2; j++) {
+        if (labels[j]) break;
+        headingSupport.add(blocks[j].block_id); kept++;
+      }
+    }
+
     const scored = blocks.map((block, index) => {
       const exactOccurrences = countTermOccurrences(block.text, term);
       const variantOccurrences = exactOccurrences ? 0 : countVariantOccurrences(block.text, term, variants);
@@ -208,9 +235,15 @@
       else if (distance <= 5) score += 12;
       if (sameSection) score += 30;
       score += overlap * 35;
+      if (options.headingAware !== false) {
+        if (labels[index] && !isAnchor) score -= 245;
+        if (headingSupport.has(block.block_id)) score += 190;
+      }
 
       const reasons = [];
       if (isAnchor) reasons.push("当前选区");
+      if (options.headingAware !== false && labels[index] && !isAnchor) reasons.push("结构标题降权（未删除）");
+      if (options.headingAware !== false && headingSupport.has(block.block_id)) reasons.push("相关标题后的正文");
       if (definition) reasons.push("定义句");
       if (exactOccurrences) reasons.push(`同词出现×${exactOccurrences}`);
       if (variantOccurrences) reasons.push(`词干出现×${variantOccurrences}`);
@@ -228,6 +261,8 @@
         sameSection,
         headingOverlap: Number(overlap.toFixed(3)),
         bm25: Number(lexicalScores[index].toFixed(4)),
+        structural_label: labels[index],
+        heading_body: headingSupport.has(block.block_id),
       };
       return {
         block,
@@ -240,25 +275,39 @@
 
     scored.sort((left, right) => right.score - left.score || left.block.order - right.block.order);
     const limit = Math.max(4, Math.min(20, Number(options.limit) || DEFAULT_LIMIT));
-    const selected = scored.slice(0, limit);
+    // Keep the local antecedent even when many distant repetitions outrank it.
+    // This supports prose references as well as spoken question/answer pairs.
+    const anchorIndex = blocks.findIndex((b) => b.block_id === anchor.block_id);
+    const localIds = new Set(blocks.slice(Math.max(0, anchorIndex - 2), anchorIndex + 3).map((b) => b.block_id));
+    const reserved = scored.filter((s) => localIds.has(s.block.block_id));
+    const selected = [...reserved, ...scored.filter((s) => !localIds.has(s.block.block_id)).slice(0, Math.max(0, limit - reserved.length))]
+      .sort((a, b) => b.score - a.score || a.block.order - b.block.order);
     const candidates = selected.map((item, index) => ({
       evidence_id: `e${index + 1}`,
       block_id: item.block.block_id,
-      quote: bestQuote(item.block.text, term),
+      quote: bestQuote(item.block.text, term, 260, item.signals.anchor ? selection.start_offset : null),
       text: item.block.text,
+      source_start: 0,
+      source_end: item.block.text.length,
       heading_path: item.block.heading_path || [],
-      relation_to_selection: item.block.relation_to_selection || "",
+      relation_to_selection: item.signals.anchor ? "anchor" : item.block.relation_to_selection || "",
       role: item.role,
       score: Number(item.score.toFixed(3)),
       reasons: item.reasons,
       signals: item.signals,
     }));
+    const Discourse = typeof module !== "undefined" && module.exports ? require("./discourse-context.js") : globalThis.YuliuDiscourseContext;
+    const dialogue = Discourse?.retrieve(snapshot, candidates, options);
+    if (dialogue) {
+      snapshot.conversation = dialogue.conversation;
+      return { ...dialogue, promptContext: formatForPrompt(dialogue.candidates, options.maxPromptCharacters || 14500) };
+    }
     const promptContext = formatForPrompt(candidates, options.maxPromptCharacters);
     return {
       candidates,
       promptContext,
       summary: {
-        strategy: "local_multi_signal_v1",
+        strategy: options.headingAware === false ? "local_multi_signal_v1" : "heading_body_v2",
         block_count: blocks.length,
         candidate_count: candidates.length,
         term_occurrence_count: totalOccurrences,
@@ -295,6 +344,7 @@
       evidence_candidates: candidates,
       retrieval: snapshot.retrieval || null,
       extraction: snapshot.extraction,
+      conversation: snapshot.conversation || null,
     };
   }
 
@@ -305,6 +355,7 @@
     definitionSignal,
     bm25Scores,
     bestQuote,
+    isStructuralLabel,
     retrieve,
     formatForPrompt,
     compactSnapshot,

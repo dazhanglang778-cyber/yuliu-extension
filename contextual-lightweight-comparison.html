@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>语流｜原A与轻量候选对照</title><link rel="stylesheet" href="diagnostics.css">
+<link rel="stylesheet" href="contextual-evaluation.css"><link rel="stylesheet" href="contextual-review-ablation.css"></head>
+<body data-experiment="lightweight"><header class="topbar"><div>
+<p class="eyebrow">语流 · 单次生成候选 · 尚未替换正式流程</p>
+<h1>保留自然解释，减轻结构负担</h1>
+<p>原A指令不变；L已更新：中性引用字段说明＋唯一精确引文纠号。两组都不调用模型核验。</p>
+<a href="diagnostics.html">返回诊断后台</a> · <a href="contextual-review-ablation.html">查看原三组实验</a></div></header>
+<main><section class="privacy-card"><strong>沿用原来的4个虚构开发案例，不读取私人文档</strong>
+<span>当前候选实测已发现条件含义退步，尚不适合替换正式流程。本次只修来源展示：重新打开本页即可对已保存输出离线展示模型列出的原文，无需点击开始、无需新增模型请求。列出的原文不等于已验证依据。</span>
+<span>默认同一模型、1轮、8次请求；可选2轮、16次请求。沿用已有4例，A/L交替先后顺序。相同选中位置、相同证据、相同输出预算；无重试、无自动换模型，单次最长15秒。</span>
+<span>L只输出meaning（释义）、intent（必要时的表达作用）和references（原文片段）。程序只检查格式、编号和引文能否定位，不负责判断语义正确，也不因引用失败删除释义。</span>
+<span>如果引文与编号不符，但能在其他来源唯一精确定位，程序仅纠正编号并显示修改记录；重复、冲突或找不到时不猜。旧A/L及归因报告独立保留。新提示能否补齐跨段引用尚待实测，纠号成功不等于语义支持完整。</span>
+<span>先看：选中义项和条件方向是否正确；是否扩大人物职责；解释是否简洁；提问/回答、身份/局部作用所需的引用是否齐全。引用真实不代表支持结论。人工评分可留空，导出后再逐条评审。</span>
+<span>这是已见小样本，不是盲测；两组同时改变了指令和格式，不能将差异单独归因于JSON。结果独立保存，不覆盖原A/B/C报告。当前候选尚未用于日常双击解释。</span>
+<span>操作：Chrome扩展管理页重新加载语流 → 重新打开本页 → 开始。file://预览页不能运行模型。</span></section>
+<section class="toolbar"><label>固定模型 <select id="model"><option>glm-4-flash-250414</option><option>glm-4.7-flash</option></select></label>
+<label>重复轮数 <select id="rounds"><option value="1">1轮（8次）</option><option value="2">2轮（16次）</option></select></label>
+<button id="run" disabled>开始A与轻量候选对照</button><button id="stop" disabled>本例结束后停止</button>
+<button id="export" disabled>导出完整对照报告</button></section>
+<p id="progress" role="status">尚未运行真实模型。</p><section id="summary"></section><section id="cases"></section></main>
+<script src="contextual-reasoning.js"></script><script src="contextual-lightweight.js"></script>
+<script src="contextual-review-ablation.js"></script></body></html>

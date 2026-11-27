@@ -6,14 +6,16 @@
   const BLOCK_SELECTOR = [
     "h1", "h2", "h3", "h4", "h5", "h6",
     "p", "li", "blockquote", "pre", "td", "th", "figcaption",
-    "[role='heading']", "[role='paragraph']",
+    "[role='heading']", "[role='paragraph']", ".docx-text-block", ".text-block",
   ].join(",");
   const ROOT_SELECTOR = "article, main, [role='main']";
+  const CONTENT_SELECTOR = "[itemprop='articleBody'], .article-content, .article-body, .post-content, .post-body, .entry-content, .markdown-body";
   const NOISE_SELECTOR = [
     "script", "style", "noscript", "template", "svg", "canvas",
     "nav", "aside", "footer", "form", "dialog",
     "[aria-hidden='true']", "[hidden]",
     "[role='navigation']", "[role='complementary']", "[role='contentinfo']",
+    ".article-footer", ".translation-banner",
     "#context-explainer-host",
   ].join(",");
   const NOISE_NAME = /(?:^|[-_\s])(comment|comments|recommend|related|advert|ads|promo|share|toolbar|breadcrumb|pagination|cookie|modal|popup|sidebar)(?:$|[-_\s])/i;
@@ -62,8 +64,25 @@
     const duplicateCounts = new Map();
     const records = [];
 
-    for (const item of items || []) {
-      const text = normalizeText(item.text).slice(0, MAX_BLOCK_LENGTH);
+    const expandedItems = (items || []).flatMap((item, index) => {
+      const source = normalizeText(item.text);
+      const parts = [];
+      for (let start = 0; start < source.length;) {
+        let end = Math.min(source.length, start + MAX_BLOCK_LENGTH);
+        if (end < source.length) {
+          const tail = source.slice(Math.max(start, end - 500), end);
+          const boundaries = [...tail.matchAll(/[。！？;；\n]/g)];
+          if (boundaries.length) end = Math.max(start, end - 500) + boundaries.at(-1).index + 1;
+        }
+        let contentStart = start;
+        while (contentStart < end && /\s/.test(source[contentStart])) contentStart++;
+        parts.push({ ...item, text: source.slice(contentStart, end), sourceIndex: item.sourceIndex ?? index, sourceStart: contentStart });
+        start = end;
+      }
+      return parts;
+    });
+    for (const item of expandedItems) {
+      const text = normalizeText(item.text);
       if (text.length < 2) continue;
 
       const type = item.type || blockType(item.tagName, item.role);
@@ -86,6 +105,7 @@
         text,
         order: records.length,
         source_index: item.sourceIndex ?? records.length,
+        source_start: item.sourceStart || 0,
       });
     }
     return records;
@@ -156,7 +176,7 @@
     return { text: text.join(""), positions };
   }
 
-  function findTextQuoteRange(element, quote, documentObject = element?.ownerDocument) {
+  function findTextQuoteRange(element, quote, documentObject = element?.ownerDocument, approximateStart = 0) {
     if (!element || !documentObject?.createRange) return null;
     const showText = documentObject.defaultView?.NodeFilter?.SHOW_TEXT || globalThis.NodeFilter?.SHOW_TEXT || 4;
     const walker = documentObject.createTreeWalker(element, showText);
@@ -165,7 +185,7 @@
     if (!nodes.length) return null;
     const indexed = buildNormalizedTextIndex(nodes.map((node) => node.nodeValue || ""));
     const target = normalizeText(quote);
-    const start = indexed.text.indexOf(target);
+    const start = nearestOccurrence(indexed.text, target, approximateStart).start;
     if (start < 0 || !target) return null;
     const first = indexed.positions[start];
     const last = indexed.positions[start + target.length - 1];
@@ -217,8 +237,12 @@
     if (!element || element === root) return false;
     const noiseAncestor = element.closest?.(NOISE_SELECTOR);
     if (noiseAncestor && noiseAncestor !== root) return true;
-    const names = `${element.id || ""} ${typeof element.className === "string" ? element.className : ""}`;
-    if (NOISE_NAME.test(names)) return true;
+    // Noise is usually named on a wrapper, not on its descendant paragraphs.
+    // Never classify prose by its words: an article may discuss ads or comments.
+    for (let current = element; current && current !== root; current = current.parentElement) {
+      const names = `${current.id || ""} ${typeof current.className === "string" ? current.className : ""}`;
+      if (NOISE_NAME.test(names)) return true;
+    }
     if (element.hidden || element.getAttribute?.("aria-hidden") === "true") return true;
     if (typeof getComputedStyle === "function") {
       const style = getComputedStyle(element);
@@ -240,12 +264,14 @@
   }
 
   function chooseRoot(startElement, documentObject) {
+    const content = startElement?.closest?.(CONTENT_SELECTOR);
+    if (content && content.querySelector?.(BLOCK_SELECTOR)) return content;
     const nearby = startElement?.closest?.(ROOT_SELECTOR);
     if (nearby) return nearby;
     return documentObject.body || documentObject.documentElement;
   }
 
-  function collectBlockElements(root, anchorElement) {
+  function collectBlockElements(root, anchorElement, stats = {}) {
     const candidates = [...root.querySelectorAll(BLOCK_SELECTOR)];
     if (anchorElement && !candidates.includes(anchorElement)) candidates.push(anchorElement);
     candidates.sort((left, right) => {
@@ -253,8 +279,13 @@
       const position = left.compareDocumentPosition(right);
       return position & 4 ? -1 : 1;
     });
+    stats.candidate_count = candidates.length;
+    stats.excluded_noise_count = 0;
     return candidates.filter((element) => {
-      if (isNoiseElement(element, root)) return false;
+      if (isNoiseElement(element, root) && element !== anchorElement) {
+        stats.excluded_noise_count++;
+        return false;
+      }
       const text = normalizeText(element.innerText || element.textContent);
       if (text.length < 2) return false;
       if (element !== anchorElement && element.querySelector?.(BLOCK_SELECTOR)) return false;
@@ -279,7 +310,8 @@
     const startElement = elementFromNode(range.startContainer || range.commonAncestorContainer);
     const root = chooseRoot(startElement, documentObject);
     const readingBlock = findReadingBlock(startElement, root);
-    const elements = collectBlockElements(root, readingBlock);
+    const collectionStats = {};
+    const elements = collectBlockElements(root, readingBlock, collectionStats);
     const items = elements.map((element, sourceIndex) => ({
       sourceIndex,
       tagName: element.tagName,
@@ -294,7 +326,7 @@
       const element = elements[block.source_index];
       if (!element) continue;
       elementByBlockId.set(block.block_id, element);
-      blockIdByElement.set(element, block.block_id);
+      if (!blockIdByElement.has(element)) blockIdByElement.set(element, block.block_id);
     }
 
     let anchorBlockId = blockIdByElement.get(readingBlock) || "";
@@ -304,10 +336,14 @@
         if (anchorBlockId) break;
       }
     }
-    const anchorBlock = blocks.find((block) => block.block_id === anchorBlockId) || blocks[0];
+    const approximateStart = approximateRangeOffset(range, readingBlock);
+    const sourceIndex = elements.indexOf(readingBlock);
+    const sourceBlocks = blocks.filter((block) => block.source_index === sourceIndex);
+    const anchorBlock = sourceBlocks.find((block) => approximateStart >= block.source_start && approximateStart < block.source_start + block.text.length)
+      || blocks.find((block) => block.block_id === anchorBlockId) || blocks[0];
     if (!anchorBlock) return null;
     anchorBlockId = anchorBlock.block_id;
-    const quote = createTextQuote(anchorBlock.text, selectedText, approximateRangeOffset(range, readingBlock));
+    const quote = createTextQuote(anchorBlock.text, selectedText, approximateStart - (anchorBlock.source_start || 0));
     const occurrenceId = `${anchorBlockId}:o${Math.max(0, quote.occurrence_index)}`;
 
     const enrichedBlocks = blocks.map((block) => {
@@ -339,10 +375,19 @@
       },
       blocks: enrichedBlocks.map(({ source_index, ...block }) => block),
       extraction: {
+        collector_version: "article-scope-v1-2026-10-30",
+        scope_strategy: root.matches?.(CONTENT_SELECTOR) ? "article_content" : root === documentObject.body ? "body_fallback" : "semantic_root",
+        scope_uncertain: root === documentObject.body,
+        candidate_element_count: collectionStats.candidate_count,
+        excluded_noise_count: collectionStats.excluded_noise_count,
+        selected_noise_preserved: isNoiseElement(readingBlock, root),
         root_type: root === documentObject.body ? "body" : String(root.tagName || "root").toLocaleLowerCase(),
         block_count: enrichedBlocks.length,
         character_count: enrichedBlocks.reduce((sum, block) => sum + block.text.length, 0),
         truncated: false,
+        coverage: "loaded_content_only",
+        coverage_note: "仅索引当前页面已加载的正文；未验证是否为完整文档。",
+        chunked_source_count: new Set(blocks.filter((b) => b.source_start > 0).map((b) => b.source_index)).size,
       },
       evidence_candidates: [],
     };

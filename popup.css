@@ -16,6 +16,7 @@ h1 { margin: 8px 0 6px; font-size: 22px; }
 h1 small { color: #9a958b; font-size: 12px; font-weight: 400; }
 .intro { margin: 0 0 20px; color: #73716c; font-size: 13px; line-height: 1.7; }
 label { display: block; margin-bottom: 8px; font-size: 13px; font-weight: 700; }
+select { width: 100%; padding: 9px; margin-bottom: 14px; border: 1px solid #d8c8ab; border-radius: 9px; background: white; }
 .key-row { display: flex; gap: 8px; }
 input {
   flex: 1;

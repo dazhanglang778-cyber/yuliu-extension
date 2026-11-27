@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>语流｜核验协议小样本</title><link rel="stylesheet" href="diagnostics.css"><link rel="stylesheet" href="contextual-evaluation.css"></head>
+<body data-dataset="evaluation/fixtures/contextual-relations-v1.json" data-storage="yuliuContextualProtocolSmokeV1" data-cases="relation-permission-allowed,relation-feature-current,relation-team-self,relation-dialogue-resolved">
+<header class="topbar"><div><p class="eyebrow">语流 · 协议冒烟测试</p><h1>核验协议小样本 · 4 例</h1><p class="lead">先检查导出、离线模式、团队归属、短答对象能否正常交付，不先跑整套。</p><a href="diagnostics.html">返回开发诊断后台</a></div></header>
+<main>
+<section class="privacy-card"><strong>纯合成开发材料，不含内部会议</strong><span>沿用原开发集的 4 个案例，方便对照失败报告。期望不进入模型输入；通过也不代表真实页面采集或产品质量已验收。</span><span>正常两次调用；核验协议修复通常共三次；内容修复最多四次。网络失败可能另有重试。结果独立保存，不覆盖原 12 例报告。运行前请重新加载插件。</span></section>
+<section class="toolbar"><button id="run">运行4例真实模型测试</button><button id="stop" disabled>本例结束后停止</button><button id="export" disabled>导出全部原文与实际结果</button></section>
+<p id="progress" role="status">尚未运行；下方仅为测试输入与期望。</p><section id="cases"></section>
+</main>
+<script src="discourse-context.js"></script><script src="document-retrieval.js"></script><script src="evaluation/contextual-suite.js"></script><script src="contextual-evaluation.js"></script>
+</body></html>

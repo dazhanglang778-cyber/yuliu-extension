@@ -8,13 +8,13 @@ assert.ok(content.includes('message.type === "GROUNDED_RESULT"'), "前端必须�
 assert.ok(content.includes("!parsedInitial.structured && !answerNamesSelection"), "结构化结果不得再靠答案复述选词来判断正确性");
 assert.ok(!content.includes("const missedIntent"), "作者意图为空不得导致整条解释重试");
 assert.ok(/data-section="intent"[\s\S]{0,160}作者想表达什么/.test(content), "可独立隐藏的必须是作者意图板块，而不是核心解释板块");
-assert.ok(content.includes('intentSection.hidden = done && !parsed.intent'), "作者意图为空时必须隐藏板块");
+assert.ok(content.includes('intentSection.hidden = !parsed.intent?.trim()'), "没有实际内容时，等待中与完成后均隐藏意图板块");
 assert.ok(content.includes('multiple_senses: "原文存在多种合理理解，目前无法唯一确定。"'));
 assert.ok(content.includes('insufficient_context: "当前原文信息不足，暂时无法可靠确定这里的具体所指。"'));
 assert.ok(content.includes('term_unrecognized: "暂时无法可靠识别这个词；它可能是生僻术语、拼写变体或乱码。"'));
 assert.ok(content.includes("external_lookup_failed"), "外部核对失败必须由程序显示受控提示");
 assert.ok(content.includes('data-field="evidence-summary"'), "卡片必须提供统一的依据入口");
-assert.ok(content.includes("原文依据 · ${groups.page.length}处"), "原文依据必须独立分组");
+assert.ok(content.includes("原文依据 · ${groups.pageGroups.length}组 / ${groups.page.length}个片段"), "原文依据应区分阅读组和片段数");
 assert.ok(content.includes("术语资料 · ${groups.terminology.length}条"), "外部术语资料必须独立分组");
 assert.ok(content.includes("terminology_source_opened"), "打开术语资料必须进入诊断记录");
 assert.ok(content.includes("overflow-wrap: anywhere"), "长标题和来源地址不得撑破卡片");

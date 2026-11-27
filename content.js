@@ -12,6 +12,9 @@
   let armTimer = null;
   let activePort = null;
   let activeRequestId = "";
+  let activeInitialRequestId = "";
+  const requestTimings = new Map();
+  const requestStreams = new Map();
   let initialAnswer = "";
   let normalAnswer = "";
   let simpleAnswer = "";
@@ -176,6 +179,7 @@
 
   function showCard(item) {
     closeCard(true);
+    activeInitialRequestId = "";
     activeDiagnosticSessionId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
     activeDiagnosticItem = item;
     sendDiagnosticEvent("session_started", {
@@ -213,28 +217,30 @@
           </div>
           <div class="normal-answer">
             <div class="section">
-              <h3><span>♧</span> 这里指什么</h3>
+              <h3><span>♧</span> <span data-label="meaning">这里指什么</span></h3>
               <p data-field="meaning"><span class="streaming">正在理解这里的意思</span></p>
             </div>
-            <div class="section" data-section="intent">
-              <h3><span>✎</span> 作者想表达什么</h3>
-              <p data-field="intent"><span class="streaming">正在结合上下文</span></p>
+            <div class="section" data-section="intent" hidden>
+              <h3><span>✎</span> <span data-label="intent">作者想表达什么</span></h3>
+              <p data-field="intent"></p>
             </div>
           </div>
           <div class="evidence-panel" hidden>
+            <small class="coverage-note" hidden></small>
             <button class="evidence-toggle" type="button" aria-expanded="false">
               <span data-field="evidence-summary">依据</span><i aria-hidden="true">⌄</i>
             </button>
             <div class="evidence-list" hidden></div>
           </div>
           <div class="simple-answer" hidden>
-            <h3>一句话解释：</h3>
+            <h3>一句话讲懂：</h3>
             <p data-field="simple"><span class="cursor"></span></p>
+            <small class="coverage-note">依据供核对原语境；本句及类比未另行核验。</small>
           </div>
           <p class="notice" hidden></p>
           <div class="expanded" hidden>
-            <div data-module="general"><h4>通用定义</h4><p data-field="general"></p><button class="module-retry" data-retry="general" hidden>重试通用定义</button></div>
-            <div data-module="example"><h4>举个例子</h4><p data-field="example"></p><button class="module-retry" data-retry="example" hidden>重试举例</button></div>
+            <div data-module="general"><h4>通用定义</h4><small class="coverage-note" data-state="general" hidden></small><p data-field="general"></p><button class="module-retry" data-retry="general" hidden>重试通用定义</button></div>
+            <div data-module="example"><h4>举个例子</h4><small class="coverage-note" data-state="example" hidden></small><p data-field="example">通用定义完成后，可按需生成一个例子。</p><button class="module-retry" data-retry="example" disabled>举个例子</button></div>
           </div>
         </div>
         <footer class="actions">
@@ -269,13 +275,13 @@
     showLoading(shadow, loadingText(mode));
     clearTimeout(waitingTimer);
     waitingTimer = setTimeout(() => {
-      showLoading(shadow, "正在等待免费模型响应，请稍候……");
+      showLoading(shadow, "正在等待所选模型响应，请稍候……");
     }, 3500);
     if (mode === "initial") {
       initialAnswer = "";
-      shadow.querySelector("[data-section='intent']").hidden = false;
+      shadow.querySelector("[data-section='intent']").hidden = true;
       shadow.querySelector("[data-field='meaning']").innerHTML = '<span class="cursor"></span>';
-      shadow.querySelector("[data-field='intent']").innerHTML = '<span class="cursor"></span>';
+      shadow.querySelector("[data-field='intent']").textContent = "";
     } else if (mode === "simplify") {
       initialAnswer = "";
       shadow.querySelector("[data-field='simple']").innerHTML = '<span class="cursor"></span>';
@@ -292,6 +298,9 @@
     }
     const requestId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
     activeRequestId = requestId;
+    requestTimings.set(requestId, performance.now());
+    if (requestTimings.size > 20) requestTimings.delete(requestTimings.keys().next().value);
+    if (mode === "initial") activeInitialRequestId = requestId;
     let settled = false;
     requestPort.onMessage.addListener((message) => {
       if (message.requestId !== requestId) return;
@@ -318,7 +327,7 @@
           || { ...item.documentContext, request_id: requestId })
         : null,
       title: mode === "initial" ? item.title : "",
-      existing: mode === "simplify" ? previousAnswer : "",
+      existing: mode === "simplify" ? Parser.simplificationSource(previousAnswer) : "",
       strictSimple: mode === "simplify" && focusRetry > 0,
     });
   }
@@ -347,7 +356,18 @@
       activeSources = Array.isArray(message.sources) ? message.sources : [];
       return;
     }
+    if (message.type === "MEANING_PREVIEW" && mode === "initial") {
+      hideLoading(shadow);
+      const field = shadow.querySelector("[data-field='meaning']");
+      field.dataset.preview = "true";
+      setAnswerMode(shadow, "释义预览 · 尚未核验");
+      setStreamText(field, message.text, false);
+      noteVisibleStream(message.requestId, mode, message.text);
+      return;
+    }
     if (message.type === "GROUNDED_RESULT") {
+      delete shadow.querySelector("[data-field='meaning']").dataset.preview;
+      setAnswerMode(shadow, "");
       initialAnswer = JSON.stringify(message.result || {});
       hideLoading(shadow);
       renderInitial(shadow, initialAnswer, false);
@@ -358,6 +378,7 @@
       if (mode === "simplify") {
         hideLoading(shadow);
         renderSimple(shadow, initialAnswer, false);
+        noteVisibleStream(message.requestId, mode, Parser.parseSimple(initialAnswer));
       } else if (answerNamesSelection(parseInitial(initialAnswer).meaning, item.text)) {
         hideLoading(shadow);
         renderInitial(shadow, initialAnswer, false);
@@ -386,16 +407,9 @@
         return;
       }
       if (mode === "simplify") {
-        const invalidEnglishGloss = /[A-Za-z]/.test(item.text) && Parser.hasInvalidEnglishGloss(initialAnswer);
-        if (!Parser.isPlainSimple(initialAnswer) || invalidEnglishGloss) {
-          if (focusRetry < 1) {
-            showLoading(shadow, invalidEnglishGloss
-              ? "正在统一英文中文释义和双引号格式……"
-              : "这句话仍然偏专业，正在改成真正的大白话……");
-            requestExplanation("simplify", item, focusRetry + 1);
-          } else {
-            showError(shadow, "免费模型连续两次没有说清楚，请稍后重新点击“说简单点”。", false);
-          }
+        if (!Parser.parseSimple(initialAnswer)) {
+          sendDiagnosticEvent("ui_error", { mode, code: "EMPTY_SIMPLIFICATION", message: "简明解释返回空内容" }, message.requestId);
+          showError(shadow, "这次没有返回简明解释，可返回原解释查看；不会自动重试。", false);
           return;
         }
         simpleAnswer = initialAnswer;
@@ -406,7 +420,9 @@
       } else {
         normalAnswer = initialAnswer;
         renderInitial(shadow, normalAnswer, true);
-        sendDiagnosticEvent("answer_displayed", { mode: "initial", finalOutput: parseInitial(normalAnswer) }, message.requestId);
+        sendDiagnosticEvent("answer_displayed", { mode: "initial", finalOutput: parseInitial(normalAnswer),
+          rendered: { meaning: shadow.querySelector("[data-field='meaning']")?.textContent || "",
+            intent: shadow.querySelector("[data-section='intent']")?.hidden ? "" : shadow.querySelector("[data-field='intent']")?.textContent || "" } }, message.requestId);
         setAnswerMode(shadow, "");
       }
       setBusy(shadow, false, mode);
@@ -421,12 +437,23 @@
     return !!term && normalize(answer).includes(term);
   }
 
+  function closedExpansionLabel(parsed) {
+    return parsed.viewKind === "contextual" && !parsed.canExpandGeneral ? "查看依据" : "展开讲讲";
+  }
+
   function renderInitial(shadow, raw, done) {
     const parsed = parseInitial(raw);
+    const inDialogue = !!activeDiagnosticItem?.documentContext?.conversation;
+    shadow.querySelector('[data-label="meaning"]').textContent = parsed.targetType === "person" ? "这里指谁" : "这里指什么";
+    shadow.querySelector('[data-label="intent"]').textContent = inDialogue ? "这段话的作用" : "作者想表达什么";
+    shadow.querySelector('.expand').textContent = closedExpansionLabel(parsed);
+    const coverageNote = shadow.querySelector('.coverage-note');
+    coverageNote.hidden = !(parsed.viewKind === "contextual" && parsed.contextualDetails?.coverage === "loaded_content_only");
+    coverageNote.textContent = coverageNote.hidden ? "" : "依据来自页面当前已读取内容，未确认全文完整性。";
     setStreamText(shadow.querySelector("[data-field='meaning']"), parsed.meaning, done);
     const intentSection = shadow.querySelector("[data-section='intent']");
-    intentSection.hidden = done && !parsed.intent;
-    if (parsed.intent || !done) setStreamText(shadow.querySelector("[data-field='intent']"), parsed.intent, done);
+    intentSection.hidden = !parsed.intent?.trim();
+    if (!intentSection.hidden) setStreamText(shadow.querySelector("[data-field='intent']"), parsed.intent, done);
 
     const notice = shadow.querySelector(".notice");
     notice.classList.remove("error");
@@ -438,7 +465,7 @@
       term_unrecognized: "暂时无法可靠识别这个词；它可能是生僻术语、拼写变体或乱码。",
       external_lookup_failed: "需要核对的外部资料暂时没有加载成功，当前仅保留能够可靠说明的范围。",
     };
-    const programNotice = notices[parsed.noticeCode] || "";
+    const programNotice = parsed.viewKind === "contextual" ? parsed.contextualDetails?.citation_warning || "" : notices[parsed.noticeCode] || "";
     const legacyUncertain = !parsed.structured && parsed.certainty && !["clear", "inferred"].includes(parsed.certainty);
     if (done && (programNotice || legacyUncertain || (!parsed.structured && parsed.note))) {
       notice.hidden = false;
@@ -454,7 +481,7 @@
     const list = shadow.querySelector(".evidence-list");
     const toggle = shadow.querySelector(".evidence-toggle");
     const groups = done && EvidenceViewModel
-      ? EvidenceViewModel.build(evidence, externalSources)
+      ? EvidenceViewModel.build(evidence, externalSources, activeDiagnosticItem?.documentContext?.blocks)
       : { page: [], terminology: [], total: 0, summary: "" };
     if (!groups.total) {
       panel.hidden = true;
@@ -476,20 +503,40 @@
       const pageGroup = document.createElement("section");
       pageGroup.className = "evidence-group page-evidence-group";
       const heading = document.createElement("h4");
-      heading.textContent = `原文依据 · ${groups.page.length}处`;
+      heading.textContent = `原文依据 · ${groups.pageGroups.length}组 / ${groups.page.length}个片段`;
       pageGroup.append(heading);
-      for (const [index, item] of groups.page.entries()) {
+      for (const [groupIndex, group] of groups.pageGroups.entries()) {
+        const section = document.createElement("section");
+        section.className = "evidence-location-group";
+        const title = document.createElement("h4");
+        const first = group.items[0];
+        title.textContent = `${groupIndex + 1}. ${first.heading_path?.at(-1) || "原文位置"} · ${group.items.length}个片段`;
+        section.append(title);
+      for (const [index, item] of group.items.entries()) {
         const button = document.createElement("button");
         button.type = "button";
         button.className = "evidence-item";
         const meta = document.createElement("span");
         meta.className = "evidence-meta";
-        meta.textContent = evidencePositionLabel(item, activeDiagnosticItem, index);
+        meta.textContent = evidencePositionLabel(item, activeDiagnosticItem, index, false);
         const quote = document.createElement("q");
         quote.textContent = item.quote;
         button.append(meta, quote);
         button.addEventListener("click", () => focusEvidence(item, activeDiagnosticItem));
-        pageGroup.append(button);
+        section.append(button);
+        const context = evidenceReadingContext(item, activeDiagnosticItem);
+        if (context) {
+          const details = document.createElement("details");
+          details.className = "evidence-reading-context";
+          const label = document.createElement("summary");
+          label.textContent = "阅读上下文（非新增依据）";
+          const text = document.createElement("p");
+          text.textContent = context;
+          details.append(label, text);
+          section.append(details);
+        }
+      }
+        pageGroup.append(section);
       }
       list.append(pageGroup);
     }
@@ -527,19 +574,38 @@
     }
   }
 
-  function evidencePositionLabel(evidence, item, index) {
+  function evidencePositionLabel(evidence, item, index, includeHeading = true) {
     const anchorId = item?.documentContext?.selection?.anchor_block_id;
     let relation = "文内依据";
-    if (evidence.display_purpose === "current_location" || evidence.block_id === anchorId) relation = "当前位置";
+    if (evidence.display_purpose === "current_location") relation = "当前位置";
     else if (evidence.display_purpose === "meaning_support") relation = "核心释义依据";
     else if (evidence.display_purpose === "author_intent_support") relation = "作者意图依据";
     else if (evidence.display_purpose === "context_support") relation = "语境补充";
+    else if (evidence.block_id === anchorId && !evidence.display_purpose) relation = "当前位置";
     else if (evidence.role === "direct_support") relation = "原文定义";
     else if (evidence.relation_to_selection === "neighbor") relation = "相邻段落";
     else if (evidence.relation_to_selection === "same_section") relation = "同一章节";
     else if (evidence.relation_to_selection === "term_occurrence") relation = "同词位置";
     const heading = Array.isArray(evidence.heading_path) ? evidence.heading_path.at(-1) : "";
-    return `${index + 1}. ${relation}${heading ? ` · ${heading}` : ""}`;
+    const turn = [evidence.speaker, evidence.time].filter(Boolean).join(" · ");
+    return `${index + 1}. ${relation}${turn ? ` · ${turn}` : heading && includeHeading ? ` · ${heading}` : ""}`;
+  }
+
+  function evidenceReadingContext(evidence, item) {
+    const element = item?.blockElements?.get?.(evidence.block_id);
+    const cell = element?.closest?.("td, th");
+    const row = cell?.closest?.("tr");
+    if (row) {
+      const table = cell.closest("table");
+      const firstRow = table?.rows?.[0];
+      const header = table?.tHead?.rows?.[0] || (firstRow?.cells?.length &&
+        Array.from(firstRow.cells).every(c => c.tagName === "TH") ? firstRow : null);
+      const rowText = Array.from(row.cells || []).map(c => cleanText(c.innerText || c.textContent)).join(" | ");
+      const headerText = header && header !== row ? Array.from(header.cells || []).map(c => cleanText(c.innerText || c.textContent)).join(" | ") : "";
+      if (rowText && rowText.length + headerText.length <= 1000)
+        return (headerText ? `表头：${headerText}\n` : "") + `所在行：${rowText}`;
+    }
+    return EvidenceViewModel.readingContext(evidence, item?.documentContext?.blocks);
   }
 
   function focusEvidence(evidence, item) {
@@ -547,7 +613,8 @@
     if (!element?.isConnected) return;
     element.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
     clearEvidenceFocus();
-    const range = DocumentContext?.findTextQuoteRange?.(element, evidence.quote);
+    const range = DocumentContext?.findTextQuoteRange?.(element, evidence.quote, element.ownerDocument,
+      (evidence.source_offset || 0) + (evidence.source_start || 0));
     if (range && globalThis.CSS?.highlights && globalThis.Highlight) {
       ensureEvidenceHighlightStyle();
       CSS.highlights.set(EVIDENCE_HIGHLIGHT_NAME, new Highlight(range));
@@ -558,9 +625,13 @@
     }
     sendDiagnosticEvent("evidence_navigated", {
       evidenceId: evidence.evidence_id,
+      evidenceIds: (evidence.members || [evidence]).map(e => e.evidence_id).filter(Boolean),
       blockId: evidence.block_id,
       role: evidence.role,
-    }, "", item);
+      match: range && globalThis.CSS?.highlights && globalThis.Highlight ? "exact_range" : "element_fallback",
+      quote_length: String(evidence.quote || "").length,
+      element_length: String(element.innerText || element.textContent || "").length,
+    }, activeInitialRequestId, item);
     evidenceHighlightTimer = setTimeout(clearEvidenceFocus, 3500);
   }
 
@@ -592,9 +663,10 @@
 
   async function startExpansion(item, from = "general") {
     const shadow = document.getElementById(HOST_ID)?.shadowRoot;
-    if (!shadow) return;
+    if (!shadow || primaryBusy || expansionBusy) return;
     const fields = ["general", "example"];
     const selectedField = fields.includes(from) ? from : "general";
+    if (selectedField === "example" && !expandedAnswers.general) return;
     const fieldsToReset = selectedField === "general" ? fields : [selectedField];
     const runId = ++expansionRunId;
     expansionBusy = true;
@@ -605,7 +677,10 @@
     refreshActionButtons(shadow);
     for (const field of fieldsToReset) {
       expandedAnswers[field] = "";
-      setModuleStatus(shadow, field, field === selectedField ? expansionStatus(field) : "等待通用定义完成……");
+      setModuleStatus(shadow, field, field === selectedField ? expansionStatus(field) : "通用定义完成后，可点击下方按钮生成例子。");
+      const state = shadow.querySelector(`[data-state='${field}']`);
+      state.hidden = field !== selectedField;
+      state.textContent = "正在生成 · 预览尚未完成检查";
     }
 
     const runField = async (field) => {
@@ -616,8 +691,13 @@
         if (runId !== expansionRunId) return;
         expandedAnswers[field] = result.text;
         const element = shadow.querySelector(`[data-field='${field}']`);
-        if (field === "general") setTextWithCitationLinks(element, result.text, activeSources);
+        if (field === "general" && result.outputPolicy !== "concept-general-v1") setTextWithCitationLinks(element, result.text, activeSources);
         else setStreamText(element, result.text, true);
+        const state = shadow.querySelector(`[data-state='${field}']`);
+        state.hidden = false;
+        state.textContent = result.outputPolicy === "concept-general-v1"
+          ? "基于模型知识生成 · 未联网检索或独立事实核验"
+          : "已完成输出检查 · 不代表逐项事实核验";
         shadow.querySelector(`[data-retry='${field}']`).hidden = true;
         return true;
       } catch (error) {
@@ -630,8 +710,10 @@
     if (selectedField === "general") {
       const generalSucceeded = await runField("general");
       if (generalSucceeded && runId === expansionRunId) {
-        setModuleStatus(shadow, "example", expansionStatus("example"));
-        await runField("example");
+        setModuleStatus(shadow, "example", "需要具体场景时再点击；会新增模型请求。", true);
+        const button = shadow.querySelector("[data-retry='example']");
+        button.textContent = "举个例子";
+        button.hidden = false;
       } else if (runId === expansionRunId) {
         setModuleStatus(shadow, "example", "通用定义完成后再生成这一部分。", true);
       }
@@ -650,6 +732,12 @@
     for (let attempt = 0; attempt < 2; attempt += 1) {
       try {
         const result = await requestExpansionModule(field, item, runId, attempt);
+        if (field === "general" && result.outputPolicy === "concept-general-v1") {
+          if (!result.text.trim()) throw Object.assign(new Error("通用定义未返回正文，可手动重试。"), { noRetry:true });
+          sendDiagnosticEvent("module_generated", { field, policy:result.outputPolicy,
+            validation:"nonempty_only", finalOutput:result.text, externalSearch:false }, "");
+          return result;
+        }
         if (result.text.trim().length < 4) throw new Error("这部分没有完整生成，正在重新整理。");
         if (field === "general" && Parser.generalHasContextLeak(result.text, item.text)) {
           throw new Error("通用定义的表达仍带有当前文章口吻，正在重新整理。");
@@ -692,7 +780,7 @@
           attempt: attempt + 1,
           rule: error?.message || "模块校验失败",
         }, "");
-        if (error?.cancelled || runId !== expansionRunId) throw error;
+        if (error?.cancelled || error?.noRetry || runId !== expansionRunId) throw error;
         if (attempt === 0) {
           const shadow = document.getElementById(HOST_ID)?.shadowRoot;
           if (shadow) setModuleStatus(shadow, field, "第一次结果未通过检查，正在重新整理……");
@@ -708,6 +796,8 @@
     return new Promise((resolve, reject) => {
       const mode = `expand_${field}`;
       const requestId = `${Date.now()}-${field}-${attempt}-${Math.random().toString(16).slice(2)}`;
+      requestTimings.set(requestId, performance.now());
+      if (requestTimings.size > 20) requestTimings.delete(requestTimings.keys().next().value);
       let raw = "";
       let settled = false;
       let port;
@@ -715,7 +805,7 @@
         port = chrome.runtime.connect({ name: "context-explainer" });
         expansionPorts.add(port);
       } catch (_) {
-        reject(new Error("插件刚刚更新过，请刷新当前网页后再试。"));
+        reject(Object.assign(new Error("插件刚刚更新过，请刷新当前网页后再试。"), { noRetry:true }));
         return;
       }
 
@@ -743,23 +833,33 @@
         } else if (message.type === "DELTA") {
           raw += message.delta;
           const partial = Parser.parseExpanded(raw)[field];
-          // 通用定义必须在完整生成并通过来源、语境、篇幅和格式检查后一次性显示。
-          // 其他模块仍可流式预览，不让未经验证的通用定义先闪现再消失。
-          if (field !== "general" && partial) {
+          const labelOnly = field === "general" && ["通用定义：", "通用定义:", "专业定义：", "专业定义:", "一般来说：", "一般来说:"]
+            .some(label => label.startsWith(raw.trim()));
+          // Real model deltas, explicitly marked as a preview until checks finish.
+          if (partial && !labelOnly) {
+            const state = shadow.querySelector(`[data-state='${field}']`);
+            state.hidden = false;
+            state.textContent = "正在生成 · 预览尚未完成检查";
             setStreamText(shadow.querySelector(`[data-field='${field}']`), partial, false);
+            noteVisibleStream(requestId, mode, partial);
           }
         } else if (message.type === "DONE") {
           const text = Parser.parseExpanded(raw)[field];
-          finish(resolve, { text, raw });
+          const state = shadow.querySelector(`[data-state='${field}']`);
+          state.hidden = false;
+          state.textContent = "生成结束 · 正在检查输出";
+          sendDiagnosticEvent("module_response_received", { mode }, requestId, item);
+          finish(resolve, { text, raw, outputPolicy:message.outputPolicy });
         } else if (message.type === "NEED_KEY") {
           finish(reject, new Error("请先点击 Chrome 右上角的语流图标，填写并保存 API Key。"));
         } else if (message.type === "ERROR") {
-          finish(reject, new Error(message.message || "这部分暂时没有生成成功。"));
+          finish(reject, Object.assign(new Error(message.message || "这部分暂时没有生成成功。"), { noRetry:true }));
         }
       });
       port.onDisconnect.addListener(() => {
         expansionPorts.delete(port);
-        if (!settled && runId === expansionRunId) finish(reject, new Error("插件后台连接中断，请刷新网页后重试。"));
+        if (!settled && runId === expansionRunId) finish(reject,
+          Object.assign(new Error("插件后台连接中断，请刷新网页后重试。"), { noRetry:true }));
       });
       port.postMessage({
         type: "EXPLAIN",
@@ -769,6 +869,7 @@
         selection: item.text,
         senseMeaning: parseInitial(normalAnswer).meaning || item.text,
         senseIdentity: activeSenseIdentity,
+        generalContext: field === "general" ? Parser.generalDefinitionContext(item, normalAnswer) : undefined,
         generalDefinition: expandedAnswers.general,
         context: "",
         strictGeneral: field === "general" && attempt > 0,
@@ -802,7 +903,12 @@
     const element = shadow.querySelector(`[data-field='${field}']`);
     element.textContent = text;
     element.classList.add("module-status", "module-error");
-    shadow.querySelector(`[data-retry='${field}']`).hidden = false;
+    const state = shadow.querySelector(`[data-state='${field}']`);
+    state.hidden = false;
+    state.textContent = "未完成 · 预览不作为最终结果";
+    const retry = shadow.querySelector(`[data-retry='${field}']`);
+    retry.hidden = false;
+    retry.textContent = field === "general" ? "重试通用定义" : "重试举例";
     sendDiagnosticEvent("module_error", { field, message: text }, "");
   }
 
@@ -843,6 +949,14 @@
   function toggleExpanded(item) {
     const shadow = document.getElementById(HOST_ID)?.shadowRoot;
     if (!shadow) return;
+    const parsed = parseInitial(normalAnswer || initialAnswer);
+    if (parsed.viewKind === "contextual" && !parsed.canExpandGeneral) {
+      const list = shadow.querySelector('.evidence-list');
+      const toggle = shadow.querySelector('.evidence-toggle');
+      list.hidden = !list.hidden;
+      toggle.setAttribute('aria-expanded', String(!list.hidden));
+      return;
+    }
     shadow.querySelector(".simple-answer").hidden = true;
     shadow.querySelector(".normal-answer").hidden = false;
     shadow.querySelector(".simple").textContent = "说简单点";
@@ -852,7 +966,7 @@
     const button = shadow.querySelector(".expand");
     if (!panel.hidden) {
       panel.hidden = true;
-      button.textContent = "展开讲讲";
+      button.textContent = closedExpansionLabel(parsed);
       return;
     }
     panel.hidden = false;
@@ -879,7 +993,7 @@
     }
 
     shadow.querySelector(".expanded").hidden = true;
-    shadow.querySelector(".expand").textContent = "展开讲讲";
+    shadow.querySelector(".expand").textContent = closedExpansionLabel(parseInitial(normalAnswer || initialAnswer));
     normalPanel.hidden = true;
     simplePanel.hidden = false;
     simpleButton.textContent = "返回原解释";
@@ -905,10 +1019,13 @@
     const expand = shadow.querySelector(".expand");
     simple.disabled = primaryBusy;
     expand.disabled = primaryBusy || expansionBusy;
+    for (const button of shadow.querySelectorAll("[data-retry]")) {
+      button.disabled = primaryBusy || expansionBusy || (button.dataset.retry === "example" && !expandedAnswers.general);
+    }
   }
 
   function loadingText(mode) {
-    if (mode === "simplify") return "正在把解释换成更容易懂的说法……";
+    if (mode === "simplify") return "正在用一句话讲清核心意思……";
     if (mode === "expand") return "正在检索外部专业资料并核对来源……";
     return "正在读取选区，并结合文章上下文理解……";
   }
@@ -934,6 +1051,12 @@
 
   function showError(shadow, text, needsKey) {
     hideLoading(shadow);
+    const field = shadow.querySelector("[data-field='meaning']");
+    if (field?.dataset?.preview) {
+      field.textContent = "";
+      delete field.dataset.preview;
+      setAnswerMode(shadow, "");
+    }
     const notice = shadow.querySelector(".notice");
     notice.hidden = false;
     notice.textContent = text;
@@ -994,7 +1117,24 @@
     activeDiagnosticItem = null;
   }
 
+  function noteVisibleStream(requestId, mode, text) {
+    if (!text || !requestTimings.has(requestId)) return;
+    let metrics = requestStreams.get(requestId);
+    if (!metrics) {
+      metrics = { firstVisibleMs: Math.round(performance.now() - requestTimings.get(requestId)), visibleUpdates: 0 };
+      requestStreams.set(requestId, metrics);
+      if (requestStreams.size > 20) requestStreams.delete(requestStreams.keys().next().value);
+      sendDiagnosticEvent("first_text_displayed", { mode, firstVisibleMs: metrics.firstVisibleMs }, requestId);
+    }
+    metrics.visibleUpdates++;
+  }
+
   function sendDiagnosticEvent(eventType, data = {}, requestId = "", item = activeDiagnosticItem) {
+    if (["answer_displayed", "module_response_received"].includes(eventType) && requestTimings.has(requestId)) {
+      data = { ...data, responseElapsedMs: Math.round(performance.now() - requestTimings.get(requestId)), ...requestStreams.get(requestId) };
+      requestTimings.delete(requestId);
+      requestStreams.delete(requestId);
+    }
     if (!activeDiagnosticSessionId || !chrome.runtime?.sendMessage) return;
     try {
       chrome.runtime.sendMessage({
@@ -1002,6 +1142,7 @@
         sessionId: activeDiagnosticSessionId,
         requestId,
         eventType,
+        occurredAt: Date.now(),
         selection: item?.text || "",
         pageTitle: item?.title || document.title,
         localContext: (item?.localContext || cleanText(item?.readingBlock?.innerText || item?.text || "")).slice(0, 1200),
@@ -1125,7 +1266,10 @@
       .evidence-item { min-width: 0; width: 100%; padding: 8px 10px; color: #3b4650; background: #faf6ed; border: 1px solid #eadcc2; border-radius: 7px; cursor: pointer; text-align: left; }
       .evidence-item:hover { border-color: #d5b479; background: #fffaf0; }
       .evidence-meta { display: block; margin-bottom: 3px; color: #9a702b; font: 600 11px/1.5 "Microsoft YaHei UI", sans-serif; }
-      .evidence-item q { display: block; overflow: hidden; color: #48525b; font: 12px/1.65 "Microsoft YaHei UI", sans-serif; text-overflow: ellipsis; white-space: nowrap; }
+      .evidence-location-group { display: grid; gap: 7px; margin-bottom: 12px; }
+      .evidence-reading-context { color: #756650; font: 12px/1.7 "Microsoft YaHei UI", sans-serif; }
+      .evidence-reading-context p { white-space: pre-wrap; overflow-wrap: anywhere; }
+      .evidence-item q { display: block; color: #48525b; font: 12px/1.65 "Microsoft YaHei UI", sans-serif; white-space: pre-wrap; overflow-wrap: anywhere; }
       .evidence-item q::before, .evidence-item q::after { color: #b58a45; }
       .terminology-source { display: grid; min-width: 0; gap: 2px; padding: 8px 10px; overflow: hidden; color: #394752; background: #f7f4ed; border: 1px solid #e4dac8; border-radius: 7px; text-decoration: none; }
       .terminology-source:hover { border-color: #caa96e; background: #fffaf0; }
@@ -1138,7 +1282,9 @@
       .simple-answer h3 { margin-bottom: 8px; }
       .simple-answer p { color: #20282f; font-size: 15px; line-height: 1.75; }
       h3 { margin: 0 0 7px; color: #bf780d; font: 700 17px/1.4 "Microsoft YaHei UI", sans-serif; }
-      h3 span { display: inline-block; width: 23px; font-size: 20px; }
+      h3 > span:not([data-label]) { display: inline-block; width: 23px; font-size: 20px; }
+      .coverage-note { display: block; color: #81725d; margin: 6px 0; font-size: 12px; line-height: 1.5; }
+      .coverage-note[hidden] { display: none; }
       p { margin: 0; overflow-wrap: anywhere; }
       .section p { padding-left: 29px; color: #20282f; }
       .streaming { color: #8d8981; }

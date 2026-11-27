@@ -9,10 +9,18 @@
   <body>
     <main>
       <div class="brand">“ 语流 ”</div>
-      <h1>连接免费模型 <small id="version"></small></h1>
-      <p class="intro">API Key 只保存在这个 Chrome 插件中，不会写入网页。</p>
+      <h1>连接模型 <small id="version"></small></h1>
+      <p class="intro">密钥保存在本机扩展存储（非加密保险库），不会写入网页或诊断导出。解释时，选中内容和相关原文会发送给所选服务商。</p>
+      <label for="provider">解释服务商</label>
+      <select id="provider"><option value="bigmodel">智谱（原配置）</option><option value="openai">OpenAI（使用 API 额度）</option></select>
+      <div id="openaiOptions" hidden>
+        <label for="openaiModel">OpenAI 模型</label>
+        <select id="openaiModel"><option value="gpt-6-astra">GPT-6 Astra（高能力，先测少量案例）</option><option value="gpt-6.1-sol">GPT-6.1 Sol（能力与成本平衡）</option><option value="gpt-4.1">GPT-4.1（旧模型对照）</option><option value="gpt-4.1-mini">GPT-4.1 mini（旧模型对照）</option></select>
+        <p class="privacy">Astra / Sol 正式解释：中等推理；短连接测试：低推理。每次生成最多 8192 个输出 token（含推理），短测试最多 1024；上限不是实际消耗量。Astra 成本较高，先测一条再看用量。原来保存的模型不会被静默替换，请选择新模型后保存。</p>
+        <p class="privacy">独立 API 计费，不扣 Codex 周额度。一次语境解释含生成与核验，最多 4 次请求；失败不会切到智谱。补充解释不启用联网搜索。旧专项评测仍固定使用智谱。</p>
+      </div>
 
-      <label for="apiKey">智谱 API Key</label>
+      <label for="apiKey" id="keyLabel">智谱 API Key</label>
       <div class="key-row">
         <input id="apiKey" type="password" autocomplete="off" placeholder="粘贴你的 API Key" />
         <button id="toggleKey" class="quiet" type="button">显示</button>
@@ -20,6 +28,8 @@
 
       <button id="save" class="primary" type="button">保存到此 Chrome（只需一次）</button>
       <p id="status" role="status"></p>
+      <button id="testOpenAI" class="diagnostic-button" type="button" hidden>测试已保存的 OpenAI 连接（消耗少量额度）</button>
+      <p id="testStatus" role="status" class="privacy"></p>
 
       <div class="steps">
         <strong>使用方法</strong>
@@ -42,6 +52,7 @@
         <button id="openDiagnostics" class="diagnostic-button" type="button">打开诊断后台</button>
       </section>
     </main>
+    <script src="openai-provider.js"></script>
     <script src="popup.js"></script>
   </body>
 </html>

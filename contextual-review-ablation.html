@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>语流｜核验是否值得：三组对照</title><link rel="stylesheet" href="diagnostics.css">
+<link rel="stylesheet" href="contextual-evaluation.css"><link rel="stylesheet" href="contextual-review-ablation.css"></head>
+<body><header class="topbar"><div><p class="eyebrow">语流 · 受控组件消融 · 不影响正式回答</p>
+<h1>核验到底在纠错，还是在增加负担？</h1>
+<p>相同4例、同一模型、相同选中位置与证据。B与C共用初稿，直接看核验前后变化。</p>
+<a href="diagnostics.html">返回诊断后台</a></div></header>
+<main><p><a href="contextual-lightweight-comparison.html">下一步：原A与轻量候选对照（不再运行B/C）</a></p>
+<section class="privacy-card"><strong>只使用已有的4个虚构开发案例，不读取私人文档</strong>
+<span>A：简短自然语言指令，直接回答；B：现有结构化生成，不核验；C：B的同一份初稿加现有核验和程序检查。</span>
+<span>每轮最多12次真实请求，默认2轮共24次。每次请求最长15秒；不重试、不切换模型。C方案耗时包含共享的B生成耗时，但总请求数不重复计算B。此实验比较单次生成/核验组件，不覆盖正式流程的故障恢复。</span>
+<span>验收标准提前固定：选中义项正确；主体、动作和条件方向正确；不虚构职责；引用确实支持结论。关键词命中不算通过。结果由人逐条评审，不由参赛模型给自己打分。</span>
+<span>这是开发小样本，不是独立盲测；A/B还包含指令复杂度与输出格式差异，不能仅归因于JSON。2轮只能初步观察波动，不能证明所有文档或模型上都更好。</span></section>
+<section class="toolbar"><label>固定模型 <select id="model"><option>glm-4-flash-250414</option><option>glm-4.7-flash</option></select></label>
+<label>重复轮数 <select id="rounds"><option value="2">2轮（建议）</option><option value="1">1轮</option></select></label>
+<button id="run" disabled>开始三组真实对照</button><button id="stop" disabled>本例结束后停止</button>
+<button id="export" disabled>导出完整对照报告</button></section>
+<p id="progress" role="status">正在检查运行环境；尚未调用模型。</p>
+<section id="summary"></section><section id="cases"></section></main>
+<script src="contextual-review-ablation.js"></script></body></html>

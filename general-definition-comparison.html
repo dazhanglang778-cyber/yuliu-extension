@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>语流｜通用定义搜索对照</title><link rel="stylesheet" href="general-definition-comparison.css"></head>
+<body><main>
+<a href="diagnostics.html">返回诊断后台</a>
+<h1>通用定义：搜索是否真的有帮助？</h1>
+<p>A：直接生成。B：搜索辅助生成。使用设置中同一个 OpenAI 模型、相同公开语境与定义要求，仅改变搜索相关要求和工具配置。</p>
+<p>本页只发送内置的公开概念和人工编写的语境，不读取当前网页、内部文档或诊断记录；不会改变日常双击流程。密钥只在扩展后台使用，不进入本页或报告。</p>
+<p><strong>每次点击最多两次模型请求，B 额外允许最多两次搜索工具调用，会消耗 API 额度。</strong>每组最多等 90 秒，不自动重试或降级。可切走本页，不占用鼠标；关闭页面不保证取消已发请求。</p>
+<p id="model">正在读取模型设置……</p>
+<label>公开案例 <select id="case"></select></label>
+<label>执行顺序 <select id="order"><option value="AB">A → B</option><option value="BA">B → A（复测时交换）</option></select></label>
+<button id="run" disabled>运行所选案例（消耗额度）</button>
+<button id="export" disabled>导出完整对照报告</button>
+<p id="status" role="status" aria-live="polite">只打开页面不会请求模型。</p>
+<p>建议先测 IDS，再测旁路及旁路方式；需要复测时交换顺序，减小先后顺序影响。只有四个开发案例，不能代表所有领域。</p>
+<section id="results"></section>
+</main><script src="evaluation/general-definition-comparison.js"></script><script src="general-definition-comparison.js"></script></body></html>

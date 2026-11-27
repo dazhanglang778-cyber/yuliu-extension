@@ -1,0 +1,9 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>语流｜离线诊断复现</title><link rel="stylesheet" href="diagnostics.css"><link rel="stylesheet" href="contextual-audit.css"></head>
+<body>
+<header class="topbar"><div><p class="eyebrow">语流 · 开发检查，不是质量通过报告</p><h1>离线诊断与定位回归</h1><p class="lead">用人工合成文本检查“选中后一次”的定位，以及预设的空泛回答是否被放行。</p><a href="diagnostics.html">返回开发诊断后台</a></div></header>
+<main><section class="privacy-card"><strong>0 次外部模型请求</strong><span>真实执行本地选区截取、组装和验收代码；模型输出是预设数据。下方“后台最终回答”是协议回放结果，不是大模型实测，不包含任何真实会议原文。</span></section>
+<p id="status" role="status">正在本地复现……</p><div id="result"></div></main>
+<script src="contextual-reasoning.js"></script><script src="contextual-audit.js"></script><script src="contextual-audit-view.js"></script><script src="evaluation/audit-reproductions.js"></script><script src="contextual-audit-demo.js"></script>
+</body></html>

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>语流｜开发诊断后台</title>
     <link rel="stylesheet" href="diagnostics.css" />
+    <link rel="stylesheet" href="contextual-audit.css" />
   </head>
   <body>
     <header class="topbar">
@@ -19,20 +20,59 @@
     <main>
       <section class="privacy-card">
         <strong>记录边界</strong>
-        <span>会记录选中词、所在局部段落、检索词、候选义项、来源、模型原始输出、校验结果、最终展示内容和耗时。</span>
-        <span>不会记录 API Key、Authorization、完整网页正文，也不会自动上传。</span>
+        <span>会记录选中词、所在局部段落、检索词、候选义项、来源、实际模型输入、每轮原始输出、核验理由、最终展示内容和耗时。</span>
+        <span>不会记录 API Key 或 Authorization。语境分析记录包含本次采用的原文片段与核验结果，保存在本机，不会自动上传诊断日志。</span>
+      </section>
+
+      <section class="evaluation" aria-labelledby="general-search-title">
+        <h2 id="general-search-title">当前步骤：通用定义搜索对照</h2>
+        <p>固定同一 OpenAI 模型，比较直接生成与搜索辅助生成。只用公开概念和人工语境，不发送内部文档。每例最多两次模型请求，搜索另计工具用量；不会替换日常解释流程。</p>
+        <a href="general-definition-comparison.html">打开通用定义搜索对照（先测 IDS）</a>
+      </section>
+
+      <section class="evaluation" aria-labelledby="replay-title">
+        <h2 id="replay-title">历史实验：两款免费模型选型（非当前步骤）</h2>
+        <p>RAG、API、黑盒式、DB。模型对照固定 B 组自然解释指令及原文，比 glm-4-flash-250414 与 glm-4.7-flash，单轮共8次请求。
+          同一服务商、同一密钥；4.7关闭深度思考；两组均15秒超时，不重试或自动换模型。可使用其他软件，不需保持前台。</p>
+        <p>2026-11-01核对：<a href="https://www.zhipuai.cn/zh/news/148" target="_blank" rel="noopener noreferrer">智谱官方说明 GLM-4.7-Flash 免费调用</a>。
+          引文未经程序校验，均需人工评阅；只比较本次配置，不代表模型最高能力。不替换正式双击流程。</p>
+        <p>旧生成方式对照为12～16次请求，旧重放为8～12次；各模式报告独立保存，切换查看不会自动请求模型。</p>
+        <label>查看/运行模式：<select id="replayMode">
+          <option value="models">当前步骤：两款免费模型（8次请求）</option>
+          <option value="comparison">旧对照：结构化与自然解释</option>
+          <option value="replay">旧重放：查看 v8.2 历史结果或重跑</option>
+        </select></label>
+        <div class="evaluation-actions">
+          <button id="replayRun" type="button">开始两款模型对照</button>
+          <button id="replayStop" type="button" disabled>本例结束后停止</button>
+          <button id="replayExport" type="button" disabled>导出四例完整结果</button>
+        </div>
+        <p id="replayStatus" role="status" aria-live="polite">尚未运行。运行后可在此直接比较具体答案。</p>
+        <div id="replayResults"></div>
       </section>
 
       <section class="summary" aria-label="诊断概览">
         <article><span>已记录会话</span><strong id="total">0</strong></article>
         <article><span>含异常</span><strong id="failed">0</strong></article>
-        <article><span>平均耗时</span><strong id="average">—</strong></article>
+        <article><span>平均首次答案耗时</span><strong id="average">—</strong></article>
         <article><span>最近记录</span><strong id="latest">—</strong></article>
       </section>
 
       <section class="toolbar">
+        <a href="contextual-evaluation.html">通用语境专项测试（查看具体回答）</a>
+        <a href="contextual-quality-evaluation.html">有用解释与证据专项（7例合成材料，查看真实回答）</a>
+        <a href="contextual-relation-evaluation.html">主体与状态迁移专项（12例合成对照，检查通用性）</a>
+        <a href="contextual-protocol-smoke.html">核验协议小样本（先跑4例，结果独立保存）</a>
+        <a href="contextual-inference-smoke.html">有限推断正反对照（2例，结果独立保存）</a>
+        <a href="contextual-transfer-evaluation.html">跨场景语境对照（8例，实际回答与依据）</a>
+        <a href="contextual-selection-review-smoke.html">v8选中用法与精简核验（先跑4例，独立保存）</a>
+        <a href="contextual-review-ablation.html">三组受控对照：直接解释／结构化／加核验</a>
+        <a href="contextual-lightweight-comparison.html">下一步：原A与轻量候选对照（4例，无模型核验）</a>
+        <a href="contextual-citation-attribution.html">引用归因对照：原L／调整引用指令（4例，顺序与编号分别测试）</a>
+        <a href="contextual-audit-demo.html">离线诊断示例（非模型实测）</a>
         <input id="search" type="search" placeholder="按选中词、页面或异常原因筛选" />
-        <button id="export" type="button">导出诊断 JSON</button>
+        <button id="export" type="button">导出实际使用记录 JSON</button>
+        <button id="exportAudit" type="button">导出分层诊断报告</button>
         <button id="clear" class="danger" type="button">清空本地记录</button>
       </section>
 
@@ -45,15 +85,15 @@
           </div>
           <div class="evaluation-actions">
             <button id="runEvaluation" type="button">运行完整评测</button>
-            <button id="exportEvaluation" type="button" disabled>导出可读报告</button>
-            <button id="exportEvaluationJson" type="button" disabled>导出诊断 JSON</button>
+            <button id="exportEvaluation" type="button" disabled title="请先运行本区固定评测">导出固定评测可读报告</button>
+            <button id="exportEvaluationJson" type="button" disabled title="请先运行本区固定评测">导出固定评测 JSON</button>
           </div>
         </div>
         <div id="evaluationProgress" class="evaluation-progress" hidden>
           <progress max="1" value="0"></progress>
           <span>准备评测……</span>
         </div>
-        <p id="evaluationMessage" class="evaluation-message">尚未运行实时模型评测。检索基线已通过，但这不能替代最终语义评分。</p>
+        <p id="evaluationMessage" class="evaluation-message">暂无固定评测结果，下面的导出按钮不可用。日常选词的数据请用上方“导出实际使用记录 JSON”。</p>
         <div id="evaluationSummary" class="evaluation-summary" hidden></div>
         <div id="evaluationFailures" class="evaluation-failures" hidden></div>
         <div id="evaluationCases" class="evaluation-cases" hidden></div>
@@ -65,10 +105,15 @@
       </section>
       <section id="sessions" class="sessions" aria-live="polite"></section>
     </main>
+    <script src="discourse-context.js"></script>
     <script src="document-retrieval.js"></script>
     <script src="claim-verification.js"></script>
     <script src="evaluation/scorer.js"></script>
     <script src="evaluation/browser-runner.js"></script>
+    <script src="contextual-audit.js"></script>
+    <script src="contextual-audit-view.js"></script>
+    <script src="diagnostic-timing.js"></script>
     <script src="diagnostics.js"></script>
+    <script src="diagnostics-replay.js"></script>
   </body>
 </html>

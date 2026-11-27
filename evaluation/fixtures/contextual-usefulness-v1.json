@@ -1,0 +1,309 @@
+{
+  "dataset_id": "contextual-usefulness-v1",
+  "source": "7 份完全人工合成的开发测试材料，不包含真实内部会议。人工期望只供评审，不发送给解释模型；本集已用于开发，不能作为独立发布验收集。",
+  "cases": [
+    {
+      "id": "affiliation-with-clues",
+      "split": "development",
+      "kind": "所属方线索明确时，空泛回答应补写",
+      "title": "合成：课程协作讨论",
+      "selection": "说话人 7",
+      "anchor": 1,
+      "blocks": [
+        "说话人 7 00:10 培训中心这边我们协调讲师资源，为社区课程提供支持。",
+        "说话人 7 00:20 我们提供课程工具，也安排讲师答疑。"
+      ],
+      "expected": "给出有限所属方推断和具体工作；保持姓名、正式职务未知。",
+      "required": [
+        [
+          "培训中心"
+        ],
+        [
+          "可能",
+          "推断"
+        ],
+        [
+          "讲师",
+          "课程"
+        ]
+      ],
+      "forbidden": [],
+      "evidenceBlocks": [
+        0,
+        1
+      ],
+      "allowInsufficient": false,
+      "reference": [
+        {
+          "part": "meaning",
+          "basis": "inference",
+          "text": "说话人 7 较可能代表培训中心参与课程合作。",
+          "blocks": [
+            0,
+            1
+          ]
+        },
+        {
+          "part": "meaning",
+          "basis": "document",
+          "text": "其参与协调讲师资源、提供课程工具和安排答疑。",
+          "blocks": [
+            0,
+            1
+          ]
+        },
+        {
+          "part": "meaning",
+          "basis": "unknown",
+          "text": "这些片段尚不能确定其姓名和正式职务。",
+          "blocks": []
+        }
+      ]
+    },
+    {
+      "id": "affiliation-without-clues",
+      "split": "development",
+      "kind": "删去自我归属后，不沿用上一例的所属方",
+      "title": "合成：课程协作讨论",
+      "selection": "说话人 7",
+      "anchor": 1,
+      "blocks": [
+        "说话人 7 00:10 培训中心需要协调讲师资源，为社区课程提供支持。",
+        "说话人 7 00:20 方案中还包括课程工具和讲师答疑。"
+      ],
+      "expected": "说明讨论作用，不能把提及培训中心认作自我归属。",
+      "required": [
+        [
+          "讨论",
+          "交流"
+        ],
+        [
+          "不能",
+          "无法",
+          "未知"
+        ]
+      ],
+      "forbidden": [],
+      "evidenceBlocks": [
+        0,
+        1
+      ],
+      "allowInsufficient": false,
+      "reference": [
+        {
+          "part": "meaning",
+          "basis": "document",
+          "text": "这位发言者在讨论课程合作需要的讲师资源、工具和答疑安排。",
+          "blocks": [
+            0,
+            1
+          ]
+        },
+        {
+          "part": "meaning",
+          "basis": "unknown",
+          "text": "仅凭这段讨论不能确定其属于培训中心还是其他合作方。",
+          "blocks": []
+        }
+      ]
+    },
+    {
+      "id": "mentioned-person-attribution",
+      "split": "development",
+      "kind": "职责引用精确，别人的提问不归给被提及者",
+      "title": "合成：工具使用与课程验收讨论",
+      "selection": "林老师",
+      "anchor": 0,
+      "blocks": [
+        "说话人 1 00:10 自动化工具能否减少录入工作？我们先看方案。林老师负责课程验收。周老师负责接口联调。"
+      ],
+      "expected": "保留课程验收职责，删除归错人的意图；只引用职责原句。",
+      "required": [
+        [
+          "课程"
+        ],
+        [
+          "验收"
+        ]
+      ],
+      "forbidden": [],
+      "evidenceBlocks": [
+        0
+      ],
+      "allowInsufficient": false,
+      "reference": [
+        {
+          "part": "meaning",
+          "basis": "document",
+          "text": "林老师在这份记录中负责课程验收。",
+          "blocks": [
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "id": "project-missing-detail",
+      "split": "development",
+      "kind": "已有类别解释，但遗漏文内具体任务",
+      "title": "合成：本周迁移安排",
+      "selection": "北辰",
+      "anchor": 1,
+      "blocks": [
+        "本文件把历史订单迁入新仓库的工作称为北辰。",
+        "北辰本周只做样本核对，确认后再安排全量迁移。"
+      ],
+      "expected": "有用但不完整的首稿也能补齐关键任务，不只修完全拒答。",
+      "required": [
+        [
+          "订单"
+        ],
+        [
+          "迁移",
+          "迁入"
+        ],
+        [
+          "样本",
+          "核对"
+        ]
+      ],
+      "forbidden": [],
+      "evidenceBlocks": [
+        0,
+        1
+      ],
+      "allowInsufficient": false,
+      "reference": [
+        {
+          "part": "meaning",
+          "basis": "document",
+          "text": "北辰指将历史订单迁入新仓库的工作。",
+          "blocks": [
+            0
+          ]
+        },
+        {
+          "part": "meaning",
+          "basis": "document",
+          "text": "此处侧重本周的样本核对；确认后才进行全量迁移。",
+          "blocks": [
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dialogue-joint-support",
+      "split": "development",
+      "kind": "短答的对象和条件由多段共同支持",
+      "title": "合成：服务部署讨论",
+      "selection": "分开",
+      "anchor": 1,
+      "blocks": [
+        "说话人 1 00:10 采集服务和展示服务必须一起部署吗？",
+        "说话人 2 00:20 可以分开。",
+        "说话人 1 00:25 换成另一套采集服务也可以吗？",
+        "说话人 2 00:30 可以，但需要转换数据格式。"
+      ],
+      "expected": "保留提问、回答和必要条件，不能只引用“可以分开”。",
+      "required": [
+        [
+          "采集"
+        ],
+        [
+          "展示"
+        ],
+        [
+          "格式",
+          "转换"
+        ]
+      ],
+      "forbidden": [],
+      "evidenceBlocks": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "allowInsufficient": false,
+      "reference": [
+        {
+          "part": "meaning",
+          "basis": "document",
+          "text": "这里指采集服务和展示服务可以分别部署。",
+          "blocks": [
+            0,
+            1
+          ]
+        },
+        {
+          "part": "meaning",
+          "basis": "document",
+          "text": "更换采集服务时仍需要转换数据格式。",
+          "blocks": [
+            2,
+            3
+          ]
+        }
+      ]
+    },
+    {
+      "id": "genuine-unknown",
+      "split": "development",
+      "kind": "确实缺少身份线索时，停止追加猜测",
+      "title": "合成：会议转写片段",
+      "selection": "说话人 9",
+      "anchor": 0,
+      "blocks": [
+        "说话人 9 00:10 嗯，好。"
+      ],
+      "expected": "说明具体未知边界，不编造身份，也不再进行一次无意义补写。",
+      "required": [
+        [
+          "无法",
+          "不能",
+          "不足"
+        ]
+      ],
+      "forbidden": [],
+      "evidenceBlocks": [],
+      "allowInsufficient": true,
+      "reference": [
+        {
+          "part": "meaning",
+          "basis": "unknown",
+          "text": "这段转写只记录了一句简短回应，无法据此判断其姓名、所属方或职责。",
+          "blocks": []
+        }
+      ]
+    },
+    {
+      "id": "ordinary-term-knowledge",
+      "split": "development",
+      "kind": "普通概念不要求原文另写一遍定义",
+      "title": "合成：天气服务说明",
+      "selection": "API",
+      "anchor": 0,
+      "blocks": [
+        "服务通过外部 API 获取最新天气数据。"
+      ],
+      "expected": "允许适合语境的常识解释；没有把原文当作术语定义引用。",
+      "required": [
+        [
+          "接口"
+        ]
+      ],
+      "forbidden": [],
+      "evidenceBlocks": [],
+      "allowInsufficient": false,
+      "reference": [
+        {
+          "part": "meaning",
+          "basis": "general",
+          "text": "API 通常译为“应用程序编程接口”，可以让不同软件交换数据或调用功能。",
+          "blocks": []
+        }
+      ]
+    }
+  ]
+}

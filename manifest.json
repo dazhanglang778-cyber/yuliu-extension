@@ -1,10 +1,10 @@
 {
   "manifest_version": 3,
   "name": "语流",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "description": "选中阅读障碍，再双击选区，在不中断阅读的情况下理解它在这里具体指什么。",
   "permissions": ["storage"],
-  "host_permissions": ["https://open.bigmodel.cn/*"],
+  "host_permissions": ["https://open.bigmodel.cn/*", "https://api.openai.com/*"],
   "background": {
     "service_worker": "background.js"
   },
@@ -19,7 +19,7 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["parser.js", "evidence-view-model.js", "document-context.js", "document-retrieval.js", "content.js"],
+      "js": ["parser.js", "evidence-view-model.js", "document-context.js", "discourse-context.js", "document-retrieval.js", "content.js"],
       "run_at": "document_idle"
     }
   ]

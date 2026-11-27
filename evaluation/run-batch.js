@@ -2,7 +2,7 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const Retrieval = require("../document-retrieval.js");
-const Grounding = require("../grounding.js");
+const ContextualReasoning = require("../contextual-reasoning.js");
 const Scorer = require("./scorer.js");
 
 const root = path.resolve(__dirname);
@@ -100,11 +100,12 @@ function retrievalTrace(entry) {
   };
 }
 
-async function callModel(apiKey, messages, model = "glm-4.7-flash") {
-  const body = { model, messages, temperature: 0, max_tokens: 900, stream: false };
+async function callModel(apiKey, messages, model = "glm-4.7-flash", maxTokens = 2100) {
+  const body = { model, messages, temperature: 0, max_tokens: maxTokens, stream: false };
   if (model === "glm-4.7-flash") body.thinking = { type: "disabled" };
   const response = await fetch(API_URL, {
     method: "POST",
+    signal: AbortSignal.timeout(90000),
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
@@ -122,40 +123,27 @@ async function runLive(prepared, args) {
   for (const entry of prepared) {
     const startedAt = Date.now();
     const request = { selection: entry.gold.selection.exact, documentContext: entry.snapshot };
-    let raw = "";
-    let validation = null;
-    let attempts = 0;
-    let error = "";
-    try {
-      for (attempts = 1; attempts <= 2; attempts += 1) {
-        const messages = Grounding.buildMessages(request, attempts === 2 ? { errors: validation.errors, raw } : null);
-        raw = await callModel(apiKey, messages, args.model);
-        validation = Grounding.validateStructured(raw, request);
-        if (validation.ok) break;
-      }
-    } catch (caught) {
-      error = caught?.message || String(caught);
-    }
-    const salvaged = validation?.ok ? null : Grounding.salvageLowRisk?.(validation, request);
-    const result = validation?.ok ? validation.result : salvaged?.result || Grounding.fallbackResult(request);
+    const outcome = await ContextualReasoning.run(request, ({ messages, maxTokens }) => callModel(apiKey, messages, args.model, maxTokens));
+    const result = outcome.result;
     predictions.push({
       case_id: entry.gold.case_id,
       result,
       _meta: {
-        validation_attempts: Math.min(attempts, 2),
-        valid: validation?.ok === true || !!salvaged,
-        locally_degraded: !!salvaged,
-        removed_claim_ids: salvaged?.removed_claim_ids || [],
-        validation_errors: validation?.errors || [],
+        validation_attempts: outcome.trace.attempts || 0,
+        valid: !outcome.trace.error,
+        locally_degraded: !!outcome.trace.rejected?.length,
+        removed_claim_ids: (outcome.trace.rejected || []).map((s) => s.id),
+        validation_errors: outcome.trace.rejected || [],
         elapsed_ms: Date.now() - startedAt,
-        error,
+        error: outcome.trace.error || "",
       },
       trace: {
         ...retrievalTrace(entry),
+        ...outcome.trace,
         expected_certainty: entry.gold.expected.certainty,
       },
     });
-    process.stdout.write(`${entry.gold.case_id}: ${validation?.ok ? "已通过结构校验" : "已安全降级"}\n`);
+    process.stdout.write(`${entry.gold.case_id}: ${outcome.trace.error ? "需要检查" : "已完成生成与核验，待语义评测"}\n`);
   }
   return predictions;
 }

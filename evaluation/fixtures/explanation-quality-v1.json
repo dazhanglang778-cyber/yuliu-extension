@@ -1,0 +1,13 @@
+{
+  "version":"explanation-quality-v1",
+  "split":"development",
+  "notice":"人工编写的跨领域开发案例与评审边界，不是模型结果，不得发送reference或checks给模型。",
+  "cases":[
+    {"id":"method-versus-solution","selection":"分层抽样","anchor":0,"title":"调查安排","blocks":["这套基于分层抽样的调查方案用于了解不同年级学生的阅读情况。","先按年级分组，再从各组抽取学生参与调查。"],"evidenceBlocks":[0,1],"reference":"这里指先按年级分组、再从各组抽取学生的抽样方法；本次调查用它了解不同年级的阅读情况。","checks":["区分抽样方法与整套调查方案","不把用途限定为只能调查阅读"]},
+    {"id":"tool-versus-workflow","selection":"接口","anchor":0,"title":"库存对接","blocks":["库存查询流程通过接口向仓库系统获取可用数量，再决定是否接受订单。"],"evidenceBlocks":[0],"reference":"这里指向仓库系统查询库存的调用入口，订单流程通过它拿到可用数量。","checks":["解释接口而非复述整套接单流程","不虚构具体协议"]},
+    {"id":"contrast-direction","selection":"黑盒式","anchor":0,"title":"状态展示","blocks":["旧流程是黑盒式的，只显示处理结果。新流程会显示当前步骤，但不会公开内部隐私内容。"],"evidenceBlocks":[0],"reference":"这里指使用者只能看到处理结果，看不到中间步骤；与之对比的新流程会展示当前进度。","checks":["黑盒与可见步骤的对比对象正确","不把透明理解为公开全部隐私"]},
+    {"id":"short-abbreviation","selection":"DB","anchor":0,"title":"提交前检查","blocks":["提交订单前先查询DB，确认该订单编号是否已存在。"],"evidenceBlocks":[0],"reference":"DB是数据库；这里用来检查订单编号是否已经存在。","checks":["不只展开数据库三个字","不虚构数据库品牌或类型"]},
+    {"id":"bounded-person","selection":"发言者甲","anchor":0,"title":"协作记录","blocks":["发言者甲：我们运营组今天会核对报名名单。"],"evidenceBlocks":[0],"reference":"从其自称看，他可能是运营组的一员，正在说明小组核对报名名单的安排；原文未明确其姓名或职位。","checks":["成员归属保留有限推断","不把团队任务写成个人负责"]},
+    {"id":"condition-preservation","selection":"可以","anchor":1,"title":"服务部署","blocks":["问：查询服务与归档服务能否独立部署？","答：可以，但仍必须使用同一权限目录。"],"evidenceBlocks":[0,1],"reference":"指两个服务可以分别部署，但权限目录仍必须共用。","checks":["许可对象是独立部署","共用目录是必要条件","需要问答联合支持"]}
+  ]
+}

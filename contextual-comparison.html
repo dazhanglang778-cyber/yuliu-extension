@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>语流｜上下文对照准备</title><link rel="stylesheet" href="diagnostics.css"><link rel="stylesheet" href="contextual-audit.css"></head>
+<body>
+<header class="topbar"><div><p class="eyebrow">语流 · 本地对照准备</p><h1>上下文对照准备</h1><p class="lead">对照插件实际读到的内容与人工整理的相关原文。本页不会调用模型，也不会发送你粘贴的文本。</p><a href="diagnostics.html">返回开发诊断后台</a></div></header>
+<main>
+<section class="privacy-card"><strong>当前阶段：仅本地脱敏与核对</strong><span>真实模型对照尚未启用。人工原文只是对照输入，不是模型答案，也不自动证明来源完整。本页不读取密钥、不外发文本；原始文档和本机诊断记录保持不变。</span><span>先准备两组输入，再遮盖身份与联系方式，核对预览后只导出脱敏副本。自动替换不保证完全匿名，业务细节仍可能暴露身份。关闭页面会丢失未导出的文本和替换清单。</span></section>
+<section class="comparison-panel">
+<label for="record">选择已记录的请求</label> <select id="record"></select>
+<p><label for="import">或导入本机诊断 JSON（不上传）</label> <input id="import" type="file" accept=".json,application/json"></p>
+<p id="status" role="status">正在读取本地记录……</p>
+</section>
+<div id="observed"></div>
+<section class="comparison-panel">
+<h2>人工整理的相关原文</h2>
+<p>粘贴原文而非期望答案；不同位置用空行隔开，尽量保留说话人、时间和前后问答。系统保留实际选区附近文字，与这些片段共同构成 B 组输入。</p>
+<label for="manual">原文片段（单段不超过 1500 字符）</label>
+<textarea id="manual" class="comparison-editor" placeholder="例如：00:12 发言者甲：我们研究中心负责整合资源。"></textarea>
+<div class="audit-actions"><button id="prepare">1. 准备本地两组输入</button></div>
+<p id="prepared-status" role="status"></p>
+<div id="prepared"></div>
+</section>
+<section class="comparison-panel">
+<h2>脱敏清单与预览</h2>
+<p>自动遮盖常见邮箱、大陆手机号、带区号电话、完整链接、IP 地址、18 位证件号及常见凭据格式。姓名、机构、项目和独特业务细节需核对补充，不能依靠自动规则认全。</p>
+<label for="entities">每行一个实体：类别：原名 | 同一实体的别称</label>
+<textarea id="entities" class="comparison-editor" placeholder="人物：张明 | 张老师&#10;研究院：明川研究院 | 明川院&#10;公司：星河科技&#10;项目：青禾计划"></textarea>
+<p class="audit-note">可用类别：人物、机构、公司、学校、研究院、学院、项目、地点、敏感片段。别称必须已确认指向同一对象，不能根据猜测合并。机构类别也应来自明确原文；不确定时填“机构”。不要把“我们”“研究院”等泛称整批删除。</p>
+<p class="audit-note">同一实体在两组输入中使用同一代称；说话人编号、发言时间、角色关系、条件与否定尽量保留。若需遮盖独特的业务描述，可加入“敏感片段：需遮盖的原文”，并检查是否破坏测试所需线索。</p>
+<div class="audit-actions"><button id="suggest" disabled>添加明确发言标签中的人名候选</button><button id="preview" disabled>2. 生成脱敏预览</button></div>
+<p id="redaction-status" role="status"></p>
+<div id="redaction-warnings"></div>
+<details id="mapping-panel" hidden><summary>本页替换对应（含原词，仅本地查看，不进入导出文件）</summary><pre id="mapping" class="redaction-preview"></pre></details>
+<p>下方为将要保存的副本。它不包含原始模型请求、回答、页面地址、文档内部编号和原网页位置；仅用于语义对照，不能拿来测试原网页定位或高亮。</p>
+<pre id="redacted" class="redaction-preview" aria-label="脱敏导出预览"></pre>
+<label class="redaction-consent"><input id="reviewed" type="checkbox" disabled>我已检查两组预览、补充遗漏的敏感信息，并确认可在本机保存此副本。此勾选不授权发送给模型或其他服务。</label>
+<div class="audit-actions"><button id="export" disabled>3. 导出已核对的脱敏 JSON</button></div>
+</section>
+</main>
+<script src="contextual-audit.js"></script><script src="contextual-audit-view.js"></script><script src="contextual-redaction.js"></script><script src="contextual-comparison.js"></script>
+</body></html>

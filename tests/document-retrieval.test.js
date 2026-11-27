@@ -146,7 +146,7 @@ test("发给后台的紧凑快照只保留召回块而非整篇正文", () => {
   assert.equal(compact.request_id, "req-1");
   assert.equal(compact.blocks.length, result.candidates.length);
   assert.ok(compact.blocks.length < snapshot.blocks.length);
-  assert.equal(compact.retrieval.strategy, "local_multi_signal_v1");
+  assert.equal(compact.retrieval.strategy, "heading_body_v2");
 });
 
 test("扩展按文档上下文、检索层、界面脚本的顺序加载", () => {

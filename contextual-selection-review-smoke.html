@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>语流｜选中用法与精简核验</title><link rel="stylesheet" href="diagnostics.css"><link rel="stylesheet" href="contextual-evaluation.css"></head>
+<body data-dataset="evaluation/fixtures/contextual-transfer-v1.json" data-cases="transfer-window-time,transfer-window-ui,transfer-person-roster,transfer-condition" data-subset-name="selection-review-smoke" data-storage="yuliuSelectionReviewSmokeV8">
+<header class="topbar"><div><p class="eyebrow">语流 · v8 开发对照</p><h1>选中用法与精简核验 · 4例</h1><p class="lead">同词异义两处、动作方向、问答联合引用。先看具体回答、修改经过和耗时，再看关键词检查。</p><a href="diagnostics.html">返回诊断后台</a> · <a href="contextual-transfer-evaluation.html">原8例跨场景回归</a> · <a href="contextual-inference-smoke.html">有限推断正反对照</a></div></header>
+<main>
+<p><a href="contextual-review-ablation.html">下一步：固定模型三组对照（不增加案例、不修改正式流程）</a></p>
+<section class="privacy-card"><strong>虚构开发材料，不含内部会议内容</strong><span>这是已经用于定位问题的开发回归，不是独立盲测，也不验证真实网页采集。期望不发给模型。尚未运行时不显示虚构实测结果。</span><span>先在扩展管理页重新加载语流，再刷新此页。规则应显示 context-selection-review-v8-2026-10-28。正常2次流程调用；只有格式、编号或引用定位问题才最多3次，底层网络请求可能另有重试。核验可直接改正文，修正文不会再调用第三个模型复核。</span><span>结果单独保存，不覆盖原8例报告。检查：两处“窗口”不能串义；林禾是被联系方；“可以”的引用应包含提问及回答。不把引文真实等同于解释正确。</span></section>
+<section class="toolbar"><button id="run">运行4例真实模型测试</button><button id="stop" disabled>本例结束后停止</button><button id="export" disabled>导出原文、实际回答与耗时</button></section>
+<p id="progress" role="status">尚未运行；下方仅为测试输入与期望。</p><section id="cases"></section>
+</main>
+<script src="discourse-context.js"></script><script src="document-retrieval.js"></script><script src="evaluation/contextual-suite.js"></script><script src="contextual-evaluation.js"></script>
+</body></html>

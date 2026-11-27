@@ -84,6 +84,9 @@ button.danger { border-color: #d2aaa6; color: #a13f36; background: #fff9f8; }
 .event pre { margin: 0; padding: 10px 12px; border-radius: 9px; background: #f4f5f4; color: #394149; font: 12px/1.55 Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
 .empty { display: grid; place-items: center; gap: 8px; min-height: 220px; border: 1px dashed #cfc7b8; border-radius: 14px; color: #77736c; text-align: center; }
 .empty[hidden] { display: none; }
+#replayResults p { white-space: pre-wrap; overflow-wrap: anywhere; }
+#replayResults pre { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 420px; overflow: auto; }
+#replayResults article { padding: 16px; margin-top: 16px; }
 @media (max-width: 760px) {
   .topbar { align-items: flex-start; flex-direction: column; }
   .privacy-card { grid-template-columns: 1fr; }

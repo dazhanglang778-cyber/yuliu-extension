@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>语流｜引用归因对照</title><link rel="stylesheet" href="diagnostics.css">
+<link rel="stylesheet" href="contextual-evaluation.css"><link rel="stylesheet" href="contextual-review-ablation.css"></head>
+<body data-experiment="attribution"><header class="topbar"><div>
+<p class="eyebrow">语流 · 独立实验 · 不改正式双击流程</p>
+<h1>漏引用：是内容判断，还是顺序与编号偏好？</h1>
+<p>L1 保持原轻量提示；L2 仅调整引用归因指令。两组均一次生成，不加模型核验，不强制引用条数。</p>
+<a href="diagnostics.html">返回诊断后台</a> · <a href="contextual-lightweight-comparison.html">查看上轮A/L对照</a></div></header>
+<main><section class="privacy-card"><strong>原来的4个虚构案例 × 3种排列条件 × 2组提示 = 默认24次请求</strong>
+<span>原样：不变；只换顺序：编号仍跟着各自原文；只换编号：排列不变，交换e1/e2。原文、选中位置、模型、输出格式和预算保持不变。默认1轮，若需重复验证可选2轮（48次请求）。</span>
+<span>看什么：单段可解释的案例不应被迫凑引用；人物身份与局部作用、问题与回答需要联合来源时，是否漏掉真正支持信息的另一段。更换编号后按原文段落p0/p1比较，而不是只数e1/e2。</span>
+<span>每组展示真实回答、引文、输入排列和完整调用记录。格式/定位提醒不是语义评分，正常返回也不等于正确。未调用模型核验，不重试、不切换模型，单次最长15秒。</span>
+<span>这里只是已见开发小样本，不能证明所有文档都可靠。报告独立保存，不覆盖旧报告，不读取私人文档；不导出密钥。Chrome重新加载语流扩展后，从诊断后台打开本页；file://预览不能运行。</span></section>
+<section class="toolbar"><label>固定模型 <select id="model"><option>glm-4-flash-250414</option><option>glm-4.7-flash</option></select></label>
+<label>重复轮数 <select id="rounds"><option value="1">1轮（24次，先诊断）</option><option value="2">2轮（48次，重复验证）</option></select></label>
+<button id="run" disabled>开始引用归因对照</button><button id="stop" disabled>本例结束后停止</button>
+<button id="export" disabled>导出完整对照报告</button></section>
+<p id="progress" role="status">尚未运行真实模型。</p><section id="summary"></section><section id="cases"></section></main>
+<script src="contextual-review-ablation.js"></script></body></html>

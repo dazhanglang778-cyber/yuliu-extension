@@ -8,6 +8,8 @@ secrets.*
 
 # 语流开发诊断数据（可能包含用户选词和局部原文）
 语流-诊断记录-*.json
+语流-语境专项实测.json
+语流-*-实测.json
 diagnostics-export/
 diagnostic-data/
 

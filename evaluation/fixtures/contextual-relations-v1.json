@@ -1,0 +1,324 @@
+{
+  "dataset_id": "contextual-relations-v1",
+  "source": "12例完全虚构的开发对照；人工期望不进入模型输入。不是独立保留验收集。",
+  "cases": [
+    {
+      "id": "relation-team-self",
+      "pair_id": "team",
+      "split": "development",
+      "kind": "主体与范围",
+      "title": "合成：交付会议摘录",
+      "selection": "发言者 1",
+      "anchor": 0,
+      "blocks": [
+        "发言者 1 00:10 我们交付组负责整理客户合同，今天先核对缺页。"
+      ],
+      "expected": "可有限判断发言者以交付组一方参与；整理合同是团队工作，不能升级为个人负责人。",
+      "required": [
+        [
+          "合同"
+        ],
+        [
+          "团队",
+          "交付组"
+        ]
+      ],
+      "forbidden": [],
+      "allowInsufficient": false,
+      "evidenceBlocks": [],
+      "reference": []
+    },
+    {
+      "id": "relation-team-mentioned",
+      "pair_id": "team",
+      "split": "development",
+      "kind": "主体与范围",
+      "title": "合成：交付会议摘录",
+      "selection": "发言者 1",
+      "anchor": 0,
+      "blocks": [
+        "发言者 1 00:10 交付组需要整理客户合同，今天会上讨论缺页问题。"
+      ],
+      "expected": "可以说明他在讨论合同整理需求；不能据此确定他属于交付组或本人承担整理工作。",
+      "required": [
+        [
+          "合同"
+        ],
+        [
+          "不能",
+          "无法",
+          "未明确",
+          "不确定"
+        ]
+      ],
+      "forbidden": [],
+      "allowInsufficient": false,
+      "evidenceBlocks": [],
+      "reference": []
+    },
+    {
+      "id": "relation-feature-planned",
+      "pair_id": "feature",
+      "split": "development",
+      "kind": "时间与计划",
+      "title": "合成：版本说明",
+      "selection": "离线模式",
+      "anchor": 0,
+      "blocks": [
+        "离线模式计划在下一版上线，目前尚未开放给用户。"
+      ],
+      "expected": "解释离线阅读用法时保留计划和当前未开放，不能说目前已经可用。",
+      "required": [
+        [
+          "计划",
+          "下一版"
+        ],
+        [
+          "未",
+          "尚"
+        ]
+      ],
+      "forbidden": [],
+      "allowInsufficient": false,
+      "evidenceBlocks": [],
+      "reference": []
+    },
+    {
+      "id": "relation-feature-current",
+      "pair_id": "feature",
+      "split": "development",
+      "kind": "时间与计划",
+      "title": "合成：版本说明",
+      "selection": "离线模式",
+      "anchor": 0,
+      "blocks": [
+        "离线模式已在当前版本上线，用户下载资料后可在断网时阅读。"
+      ],
+      "expected": "解释当前已提供的离线阅读能力及预先下载条件，不沿用上一例的未上线判断。",
+      "required": [
+        [
+          "阅读"
+        ],
+        [
+          "下载"
+        ]
+      ],
+      "forbidden": [],
+      "allowInsufficient": false,
+      "evidenceBlocks": [],
+      "reference": []
+    },
+    {
+      "id": "relation-cache-conditional",
+      "pair_id": "cache",
+      "split": "development",
+      "kind": "条件与可能性",
+      "title": "合成：缓存实验记录",
+      "selection": "回源",
+      "anchor": 1,
+      "blocks": [
+        "本记录中，回源指缓存未命中后向原始服务请求数据。",
+        "若关闭缓存，回源次数可能增加；实际增幅取决于流量。"
+      ],
+      "expected": "说明回源含义；此处增加是关闭缓存后的可能结果，不是任何情况下都必然增加。",
+      "required": [
+        [
+          "原始",
+          "原服务"
+        ],
+        [
+          "可能"
+        ]
+      ],
+      "forbidden": [],
+      "allowInsufficient": false,
+      "evidenceBlocks": [],
+      "reference": []
+    },
+    {
+      "id": "relation-cache-observed",
+      "pair_id": "cache",
+      "split": "development",
+      "kind": "条件与可能性",
+      "title": "合成：缓存实验记录",
+      "selection": "回源",
+      "anchor": 1,
+      "blocks": [
+        "本记录中，回源指缓存未命中后向原始服务请求数据。",
+        "本次实验已关闭缓存，观测到回源次数增加。"
+      ],
+      "expected": "说明回源含义和本次实验已经观测到增加，不扩大到所有系统的普遍规律。",
+      "required": [
+        [
+          "原始",
+          "原服务"
+        ],
+        [
+          "实验",
+          "本次"
+        ]
+      ],
+      "forbidden": [],
+      "allowInsufficient": false,
+      "evidenceBlocks": [],
+      "reference": []
+    },
+    {
+      "id": "relation-permission-denied",
+      "pair_id": "permission",
+      "split": "development",
+      "kind": "否定与范围",
+      "title": "合成：账户权限说明",
+      "selection": "导出",
+      "anchor": 1,
+      "blocks": [
+        "在此页面，导出是将当前报表保存为文件。",
+        "访客账户不允许导出，管理员账户可以导出。"
+      ],
+      "expected": "当前所选第一处导出受访客账户限制；不能写成所有账户禁止，也不能丢掉否定。",
+      "required": [
+        [
+          "访客"
+        ],
+        [
+          "不",
+          "禁止"
+        ]
+      ],
+      "forbidden": [],
+      "allowInsufficient": false,
+      "evidenceBlocks": [],
+      "reference": []
+    },
+    {
+      "id": "relation-permission-allowed",
+      "pair_id": "permission",
+      "split": "development",
+      "kind": "否定与范围",
+      "title": "合成：账户权限说明",
+      "selection": "导出",
+      "anchor": 1,
+      "blocks": [
+        "在此页面，导出是将当前报表保存为文件。",
+        "访客账户允许导出，但仅能导出已公开的字段。"
+      ],
+      "expected": "说明访客可导出且受公开字段限制，不能说完全禁止或不受限制。",
+      "required": [
+        [
+          "访客"
+        ],
+        [
+          "公开"
+        ]
+      ],
+      "forbidden": [],
+      "allowInsufficient": false,
+      "evidenceBlocks": [],
+      "reference": []
+    },
+    {
+      "id": "relation-opinion-reported",
+      "pair_id": "opinion",
+      "split": "development",
+      "kind": "转述归属",
+      "title": "合成：方案讨论记录",
+      "selection": "甲",
+      "anchor": 0,
+      "blocks": [
+        "甲转述乙的建议：旧方案不适合这次迁移。甲补充说自己尚未判断。"
+      ],
+      "expected": "甲是转述者，反对旧方案的是乙；甲自己的立场尚未形成，不把乙的建议归给甲。",
+      "required": [
+        [
+          "转述"
+        ],
+        [
+          "乙"
+        ]
+      ],
+      "forbidden": [],
+      "allowInsufficient": false,
+      "evidenceBlocks": [],
+      "reference": []
+    },
+    {
+      "id": "relation-opinion-direct",
+      "pair_id": "opinion",
+      "split": "development",
+      "kind": "转述归属",
+      "title": "合成：方案讨论记录",
+      "selection": "甲",
+      "anchor": 0,
+      "blocks": [
+        "甲提出自己的建议：旧方案不适合这次迁移。乙表示还需验证。"
+      ],
+      "expected": "甲是该建议的提出者；乙仍保留判断，不沿用上一例的转述关系。",
+      "required": [
+        [
+          "建议"
+        ],
+        [
+          "甲"
+        ]
+      ],
+      "forbidden": [],
+      "allowInsufficient": false,
+      "evidenceBlocks": [],
+      "reference": []
+    },
+    {
+      "id": "relation-dialogue-resolved",
+      "pair_id": "dialogue",
+      "split": "development",
+      "kind": "短答联合依据",
+      "title": "合成：部署讨论记录",
+      "selection": "分开",
+      "anchor": 1,
+      "blocks": [
+        "成员甲 00:10 采集服务与展示服务能分别部署吗？",
+        "成员乙 00:20 可以分开。"
+      ],
+      "expected": "补出采集服务与展示服务两个对象，最终引用应共同保留提问和回答。",
+      "required": [
+        [
+          "采集"
+        ],
+        [
+          "展示"
+        ]
+      ],
+      "forbidden": [],
+      "allowInsufficient": false,
+      "evidenceBlocks": [
+        0,
+        1
+      ],
+      "reference": []
+    },
+    {
+      "id": "relation-dialogue-unresolved",
+      "pair_id": "dialogue",
+      "split": "development",
+      "kind": "短答联合依据",
+      "title": "合成：部署讨论记录",
+      "selection": "分开",
+      "anchor": 0,
+      "blocks": [
+        "成员乙 00:20 可以分开。"
+      ],
+      "expected": "可说明是在回应允许分离，但这一个片段没有交代对象；不能继承另一案例的服务名称。",
+      "required": [
+        [
+          "未",
+          "无法",
+          "没有",
+          "不能"
+        ]
+      ],
+      "forbidden": [],
+      "allowInsufficient": true,
+      "evidenceBlocks": [],
+      "reference": []
+    }
+  ]
+}

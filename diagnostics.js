@@ -11,6 +11,15 @@ let evaluationRunning = false;
 let evaluationCancelled = false;
 
 const eventLabels = {
+  first_text_displayed: "首段文字已流式显示",
+  module_response_received: "展开模块接收完成（尚待输出检查）",
+  contextual_input: "进入模型前的选区与实际原文",
+  contextual_stage_started: "开始生成或核验",
+  contextual_stage_completed: "模型调用完成（含原始输入输出）",
+  contextual_draft: "语境初稿",
+  contextual_repair: "开始有界修复",
+  contextual_verified: "逐项核验完成",
+  contextual_completed: "语境链路完成",
   session_started: "开始解释",
   request_started: "发起请求",
   search_started: "开始检索资料",
@@ -60,6 +69,10 @@ async function boot() {
 enabled.addEventListener("change", () => chrome.storage.local.set({ [ENABLED_KEY]: enabled.checked }));
 search.addEventListener("input", render);
 document.querySelector("#export").addEventListener("click", exportDiagnostics);
+document.querySelector("#exportAudit").addEventListener("click", () => {
+  const reviews = (ledger.sessions || []).flatMap((s) => YuliuContextualAudit.fromSession(s));
+  downloadText("语流-分层诊断报告.md", YuliuContextualAudit.markdown(reviews), "text/markdown");
+});
 document.querySelector("#clear").addEventListener("click", clearDiagnostics);
 document.querySelector("#runEvaluation").addEventListener("click", runEvaluation);
 document.querySelector("#exportEvaluation").addEventListener("click", exportEvaluation);
@@ -118,13 +131,23 @@ async function runEvaluation() {
   } finally {
     evaluationRunning = false;
     runButton.textContent = "重新运行完整评测";
-    if (!latestEvaluation) document.querySelector("#exportEvaluation").disabled = true;
-    if (!latestEvaluation) document.querySelector("#exportEvaluationJson").disabled = true;
+    document.querySelector("#exportEvaluation").disabled = !latestEvaluation;
+    document.querySelector("#exportEvaluationJson").disabled = !latestEvaluation;
   }
 }
 
 function renderEvaluation(report) {
-  if (!report) return;
+  for (const id of ["exportEvaluation", "exportEvaluationJson"]) {
+    const button = document.querySelector(`#${id}`);
+    button.disabled = !report || evaluationRunning;
+    button.title = report ? "导出本区固定评测结果，不含日常选词记录" : "请先运行本区固定评测；日常选词数据请用上方导出按钮";
+  }
+  if (!report) {
+    for (const id of ["evaluationSummary", "evaluationFailures", "evaluationCases", "evaluationProgress"])
+      document.querySelector(`#${id}`).hidden = true;
+    setEvaluationMessage("暂无固定评测结果，导出按钮不可用。日常选词的数据请用上方‘导出实际使用记录 JSON’。");
+    return;
+  }
   const summary = report.summary || {};
   const summaryElement = document.querySelector("#evaluationSummary");
   const failuresElement = document.querySelector("#evaluationFailures");
@@ -168,8 +191,8 @@ function renderEvaluation(report) {
     failuresElement.append(list);
   }
   failuresElement.hidden = false;
-  document.querySelector("#exportEvaluation").disabled = false;
-  document.querySelector("#exportEvaluationJson").disabled = false;
+  document.querySelector("#exportEvaluation").disabled = evaluationRunning;
+  document.querySelector("#exportEvaluationJson").disabled = evaluationRunning;
   renderEvaluationCases(report);
   const completed = Number(report.completed_cases ?? summary.total_cases ?? 0);
   const planned = Number(report.planned_cases ?? summary.total_cases ?? 0);
@@ -221,7 +244,7 @@ function failureLabel(code) {
 }
 
 function exportEvaluation() {
-  if (!latestEvaluation) return;
+  if (!latestEvaluation) { setEvaluationMessage("暂无固定评测结果。实际使用数据请用上方导出按钮。"); return; }
   downloadText(
     `语流-核心语义评测-${new Date().toISOString().slice(0, 10)}.md`,
     evaluationMarkdown(latestEvaluation),
@@ -230,7 +253,7 @@ function exportEvaluation() {
 }
 
 function exportEvaluationJson() {
-  if (!latestEvaluation) return;
+  if (!latestEvaluation) { setEvaluationMessage("暂无固定评测结果。实际使用数据请用上方导出按钮。"); return; }
   downloadText(
     `语流-核心语义评测-${new Date().toISOString().slice(0, 10)}.json`,
     JSON.stringify(latestEvaluation, null, 2),
@@ -425,6 +448,7 @@ function escapeHtml(value) {
 }
 
 function render() {
+  const openSessions = new Set([...sessionsElement.querySelectorAll("details.session[open]")].map((n) => n.dataset.sessionId));
   const all = Array.isArray(ledger.sessions) ? ledger.sessions : [];
   const query = search.value.trim().toLocaleLowerCase();
   const visible = query
@@ -432,29 +456,47 @@ function render() {
     : all;
   document.querySelector("#total").textContent = String(all.length);
   document.querySelector("#failed").textContent = String(all.filter((item) => item.hasIssue === true).length);
-  const durations = all.map(sessionDuration).filter((value) => value > 0);
+  const durations = all.map(sessionDuration).filter((value) => value != null);
   document.querySelector("#average").textContent = durations.length ? formatDuration(Math.round(durations.reduce((a, b) => a + b, 0) / durations.length)) : "—";
+  document.querySelector("#average").title = `仅统计已有初始答案的 ${durations.length} 个会话，不含阅读、展开和关闭时间。旧记录按匹配请求事件估算。`;
   document.querySelector("#latest").textContent = all[0] ? formatRelative(all[0].updatedAt) : "—";
   empty.hidden = all.length > 0;
   sessionsElement.replaceChildren(...visible.map(renderSession));
+  for (const item of sessionsElement.querySelectorAll("details.session")) item.open = openSessions.has(item.dataset.sessionId);
 }
 
 function renderSession(session) {
   const details = document.createElement("details");
   details.className = "session";
+  details.dataset.sessionId = session.id;
   const summary = document.createElement("summary");
   const term = span("term", session.selection || "未记录选中词");
   const meta = span("meta", session.pageTitle || "未记录页面标题");
   const badge = span(`badge${session.hasIssue ? " error" : ""}`, session.outcome || "运行中");
-  const timing = span("time", formatDuration(sessionDuration(session)));
+  const measurement = YuliuDiagnosticTiming.initialAnswer(session);
+  const timing = span("time", measurement.ms == null ? "首次答案未记录" : `${measurement.estimated ? "约 " : ""}${formatDuration(measurement.ms)}`);
+  timing.title = measurement.estimated ? "首次答案耗时：旧记录按匹配请求事件估算" : "首次答案耗时：从前端发起请求到完整答案显示，不含后续阅读与点击";
   summary.append(term, meta, badge, timing);
   const body = document.createElement("div");
   body.className = "details";
   if (session.localContext) body.append(span("context", session.localContext));
+  for (const review of YuliuContextualAudit.fromSession(session)) {
+    body.append(YuliuContextualAuditView.render(review));
+    if (review.input?.evidence?.length && !review.warnings.some((w) => w.code === "PARTIAL_TRACE")) {
+      const link = document.createElement("a");
+      link.textContent = "整理人工相关原文，准备上下文对照（仅本地）";
+      link.href = "contextual-comparison.html?session=" + encodeURIComponent(session.id) + "&request=" + encodeURIComponent(review.request_id);
+      body.append(link);
+    }
+  }
   const timeline = document.createElement("div");
   timeline.className = "timeline";
   for (const event of session.events || []) timeline.append(renderEvent(event));
-  body.append(timeline);
+  const raw = document.createElement("details");
+  const rawTitle = document.createElement("summary");
+  rawTitle.textContent = "原始事件时间线";
+  raw.append(rawTitle, timeline);
+  body.append(raw);
   details.append(summary, body);
   return details;
 }
@@ -485,11 +527,11 @@ function span(className, text) {
 }
 
 function sessionDuration(session) {
-  return Math.max(0, Number(session.updatedAt || 0) - Number(session.startedAt || 0));
+  return YuliuDiagnosticTiming.initialAnswer(session).ms;
 }
 
 function formatDuration(ms) {
-  if (!ms) return "—";
+  if (ms == null || !Number.isFinite(ms)) return "—";
   if (ms < 1000) return `${ms} ms`;
   return `${(ms / 1000).toFixed(ms < 10000 ? 1 : 0)} 秒`;
 }

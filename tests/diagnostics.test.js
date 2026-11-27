@@ -78,7 +78,8 @@ vm.runInContext(fs.readFileSync(require.resolve("../background.js"), "utf8"), co
   assert.ok(dashboard.includes("候选义项"));
   assert.ok(dashboard.includes("不会记录 API Key"));
   assert.ok(dashboard.includes('id="evaluationCases"'));
-  assert.ok(dashboard.includes("导出可读报告"));
+  assert.ok(dashboard.includes("导出固定评测可读报告"));
+  assert.ok(dashboard.includes("导出实际使用记录 JSON"));
   assert.ok(dashboardScript.includes("人工预期"));
   assert.ok(dashboardScript.includes("实际输出"));
   assert.ok(dashboardScript.includes("RAG实际召回的依据"));

@@ -1,0 +1,223 @@
+{
+  "dataset_id": "contextual-transfer-v1",
+  "source": "8例纯合成跨场景开发对照，非独立保留验收集；人工期望不进入模型输入。历史会议案例保持在原数据集，不复制内部会议。",
+  "cases": [
+    {
+      "split": "development",
+      "forbidden": [],
+      "allowInsufficient": false,
+      "reference": [],
+      "id": "transfer-api",
+      "kind": "普通术语与局部用途",
+      "title": "合成：订阅提醒说明",
+      "selection": "API",
+      "anchor": 1,
+      "blocks": [
+        "提醒服务按订阅者所在城市发送降雨通知。",
+        "服务通过气象平台的API获取未来两小时的降雨数据，再决定是否推送。"
+      ],
+      "expected": "API可解释为程序调用外部服务的接口，这里用于取得降雨数据；不要求原文提供词典定义，不编造接口地址或厂商。",
+      "required": [
+        [
+          "接口"
+        ],
+        [
+          "降雨",
+          "气象"
+        ]
+      ],
+      "evidenceBlocks": [
+        1
+      ]
+    },
+    {
+      "split": "development",
+      "forbidden": [],
+      "allowInsufficient": false,
+      "reference": [],
+      "id": "transfer-local-metaphor",
+      "kind": "文内约定优先",
+      "title": "合成：展览维护手册",
+      "selection": "余温",
+      "anchor": 2,
+      "blocks": [
+        "为方便交接，本手册把展览撤场后仍需处理的借展归还与费用结算称作“余温”。",
+        "布展期的设备温度另由安全日志记录，与这项交接称呼无关。",
+        "本周余温尚未结束，负责人需要继续跟进。"
+      ],
+      "expected": "余温是文内对撤场后的归还和结算事务的称呼，不是物理温度，也不能推出借展物已经全部归还。",
+      "required": [
+        [
+          "归还"
+        ],
+        [
+          "结算"
+        ]
+      ],
+      "evidenceBlocks": [
+        0
+      ]
+    },
+    {
+      "split": "development",
+      "forbidden": [],
+      "allowInsufficient": false,
+      "reference": [],
+      "id": "transfer-window-time",
+      "kind": "同词不同局部用法",
+      "title": "合成：预约系统说明",
+      "selection": "窗口",
+      "anchor": 0,
+      "blocks": [
+        "预约窗口为周一九点至周三十八点，逾期不能提交申请。",
+        "提交后会弹出确认窗口，其中显示申请编号和撤回按钮。"
+      ],
+      "expected": "这里是允许提交预约的时间范围，不是软件弹出的界面窗口。",
+      "required": [
+        [
+          "时间",
+          "时段",
+          "期限"
+        ]
+      ],
+      "evidenceBlocks": [
+        0
+      ]
+    },
+    {
+      "split": "development",
+      "forbidden": [],
+      "allowInsufficient": false,
+      "reference": [],
+      "id": "transfer-window-ui",
+      "kind": "同词不同局部用法",
+      "title": "合成：预约系统说明",
+      "selection": "窗口",
+      "anchor": 1,
+      "blocks": [
+        "预约窗口为周一九点至周三十八点，逾期不能提交申请。",
+        "提交后会弹出确认窗口，其中显示申请编号和撤回按钮。"
+      ],
+      "expected": "这里指提交后显示编号和撤回按钮的界面，不是前段预约开放时间；同词核心义项应随实际语境变化。",
+      "required": [
+        [
+          "界面",
+          "弹出",
+          "对话框"
+        ],
+        [
+          "编号",
+          "撤回"
+        ]
+      ],
+      "evidenceBlocks": [
+        1
+      ]
+    },
+    {
+      "split": "development",
+      "forbidden": [],
+      "allowInsufficient": false,
+      "reference": [],
+      "id": "transfer-alias",
+      "kind": "跨段别名与事实状态",
+      "title": "合成：迁移项目周报",
+      "selection": "北桥",
+      "anchor": 2,
+      "blocks": [
+        "“北桥”是本次旧数据库迁移项目的内部代号，周报也称它为B2。",
+        "B2计划周五进行切换演练，目前还没有正式切换生产环境。",
+        "北桥仍在准备阶段，需要补齐回滚清单。"
+      ],
+      "expected": "北桥与B2指同一数据库迁移项目，不是地理桥梁；目前准备演练，不可说已完成生产切换。",
+      "required": [
+        [
+          "迁移"
+        ],
+        [
+          "准备",
+          "计划",
+          "尚未",
+          "还未",
+          "没有"
+        ]
+      ],
+      "evidenceBlocks": [
+        0,
+        1
+      ]
+    },
+    {
+      "split": "development",
+      "forbidden": [],
+      "allowInsufficient": false,
+      "reference": [],
+      "id": "transfer-person-roster",
+      "kind": "明确证据不限自我介绍",
+      "title": "合成：活动联络安排",
+      "selection": "林禾",
+      "anchor": 1,
+      "blocks": [
+        "本次活动联络表：林禾｜志愿者协调员；赵岚｜场地联络员。",
+        "有志愿者临时缺席时，请联系林禾。"
+      ],
+      "expected": "明确介绍林禾是本次活动的志愿者协调员；不必因为没有自称我是而降成可能或拒答，不推断其雇主和永久职位。",
+      "required": [
+        [
+          "志愿者"
+        ],
+        [
+          "协调"
+        ]
+      ],
+      "evidenceBlocks": [
+        0
+      ]
+    },
+    {
+      "split": "development",
+      "forbidden": [],
+      "allowInsufficient": false,
+      "reference": [],
+      "id": "transfer-condition",
+      "kind": "短答补全对象与条件",
+      "title": "合成：服务部署问答",
+      "selection": "可以",
+      "anchor": 1,
+      "blocks": [
+        "问：归档服务能否与查询服务分别部署？",
+        "答：可以，但独立部署时仍须使用同一个权限目录。"
+      ],
+      "expected": "可以指两项服务分别部署，同时保留共用权限目录的条件，不能解释成完全无依赖。",
+      "required": [
+        [
+          "部署"
+        ],
+        [
+          "权限"
+        ]
+      ],
+      "evidenceBlocks": [
+        0,
+        1
+      ]
+    },
+    {
+      "split": "development",
+      "forbidden": [],
+      "allowInsufficient": true,
+      "reference": [],
+      "id": "transfer-unknown-code",
+      "kind": "真正未知的局部代号",
+      "title": "合成：暂存便签",
+      "selection": "QX",
+      "anchor": 0,
+      "blocks": [
+        "便签写着：QX待确认。没有附加说明。"
+      ],
+      "expected": "可以说明这是便签里的待确认项或代号，但无依据确定其全称、领域和具体对象，不应硬编某个专业缩写释义。",
+      "required": [],
+      "evidenceBlocks": []
+    }
+  ]
+}
